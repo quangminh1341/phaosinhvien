@@ -25,14 +25,21 @@ jobs:
       - name: Deploy to VPS
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+            # Bật chế độ debug, in ra các lệnh sẽ chạy
+            set -x
+            
             cd /var/www/psv || exit 1
             if [ ! -d .git ]; then
               git init
               git remote add origin git@github.com:${{ github.repository }}.git
             fi
             
-            # Thêm GIT_SSH_COMMAND vào dòng dưới đây để gỡ lỗi
-            GIT_SSH_COMMAND=\"ssh -vvv\" git fetch --all
+            # Xuất biến môi trường để bật log chi tiết cho SSH
+            export GIT_SSH_COMMAND='ssh -vvv'
+            git fetch --all
+            
+            # Sau khi xong, có thể tắt biến môi trường đi
+            unset GIT_SSH_COMMAND
             
             git reset --hard origin/main
           "
