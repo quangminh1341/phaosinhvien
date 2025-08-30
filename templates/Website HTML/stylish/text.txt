@@ -1,0 +1,17 @@
+@@title@@
+Stylish - Shoe Store eCommerce HTML
+
+@@about@@
+Stylish là một mẫu website HTML CSS thương mại điện tử (eCommerce) dành cho cửa hàng giày dép, được xây dựng trên nền tảng Bootstrap 5. Mẫu này phù hợp với bất kỳ cửa hàng thương mại điện tử (eCommerce store), website mua sắm trực tuyến (online shopping website), cửa hàng công nghệ (tech store), website siêu thị mua sắm (shopping mart website), giỏ hàng trực tuyến (online shopping cart), cửa hàng điện thoại (mobile store), cửa hàng thiết bị (gadgets store), cửa hàng điện (electric store), cửa hàng quy mô nhỏ (mini store), cửa hàng quần áo (clothing store), hoặc cửa hàng giày dép thường ngày (casual shoe store), v.v.
+
+@@product@@
+File Size: 7.24 MB, Layout: Responsive, Columns: 12
+
+@@cost@@
+350
+
+@@link@@
+https://stylish-one.vercel.app
+
+@@features@@
+8 Different pages, Contact form, Beautiful Vibrant Design, 100% Customizable, Specific elements for e-commerce store, Responsive and mobile-friendly, Free Google Fonts, HTML5 and CSS3

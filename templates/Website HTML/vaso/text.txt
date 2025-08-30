@@ -1,0 +1,17 @@
+@@title@@
+Vaso – Decor eCommerce HTML Website
+
+@@about@@
+Vaso là một mẫu website HTML thương mại điện tử (eCommerce) sử dụng Bootstrap 5, dành cho các cửa hàng nội thất trang trí (interior decor store). Mẫu này phù hợp với bất kỳ cửa hàng thương mại điện tử (eCommerce store), website mua sắm trực tuyến (online shopping website), cửa hàng trang sức (jewelry store), website siêu thị mua sắm (shopping mart website), giỏ hàng trực tuyến (online shopping cart), cửa hàng điện thoại (mobile store), cửa hàng quần áo (clothing store), cửa hàng thời trang (fashion store), cửa hàng áo thun (t-shirt store), cửa hàng nội thất trang trí (interior decor), cửa hàng bình trang trí (vases store), hoặc cửa hàng thương mại điện tử chuyên về trang trí phòng (room decor eCommerce store), v.v.
+
+@@product@@
+File Size: 17.87 MB, Layout: Responsive, Columns: 12
+
+@@cost@@
+350
+
+@@link@@
+https://vaso-alpha.vercel.app
+
+@@features@@
+10 Different pages, Animations and Parallax effects, Beautiful Minimalist Design, 100% Customizable, Responsive and mobile-friendly, Free Google Fonts, HTML5 and CSS3, Bootstrap 5, Free for both personal and commercial use

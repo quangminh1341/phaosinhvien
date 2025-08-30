@@ -1,0 +1,17 @@
+@@title@@
+Runway – eCommerce Bootstrap 4
+
+@@about@@
+Runway E-commerce Bootstrap 4 Template là một mẫu HTML5 hiện đại, sạch sẽ, đơn giản và responsive dành cho các website cửa hàng thời trang trực tuyến (online fashion store websites). Mẫu eCommerce này được xây dựng trên nền tảng Bootstrap 4, mang lại sự linh hoạt và dễ dàng tùy chỉnh.
+
+@@product@@
+File Size: 2.01 MB, Layout: Responsive, Columns: 1
+
+@@cost@@
+350
+
+@@link@@
+https://runaway-drab.vercel.app
+
+@@features@@
+Owl Carousel slider use, Google Font, Line awesome and themify icon use, Valid HTML5 & CSS3, User Friendly, Fully Responsive, Cross Browser Optimization, Well Commented HTML & CSS files, Well Documented, dynamic contact form, Beautiful and Unique Design

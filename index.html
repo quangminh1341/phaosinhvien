@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phao Sinh Viên</title>
+    <link rel="icon" href="images/logo.png" type="image/x-icon">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <link rel="stylesheet" href="style.css?v=1.1">
+    <link rel="stylesheet" href="header/header.css?v=1.1">
+</head>
+<body>
+
+    <div id="header-placeholder"></div>
+
+    <div id="horizontal-container">
+        <section id="trangchu-panel" class="panel panel-1">            
+            <div id="animation-1-wrapper"> 
+                <div class="home-animation-container">
+                    <div class="image-showcase">
+                        <img src="images/1-1.avif" srcset="images/1-1-small.avif 480w, images/1-1.avif 800w" sizes="(max-width: 600px) 90vw, 50vw" alt="Image 1" class="showcase-img img-1">
+                        <img src="images/1-2.avif" srcset="images/1-2-small.avif 480w, images/1-2.avif 800w" sizes="(max-width: 600px) 90vw, 50vw" alt="Image 2" class="showcase-img img-2">
+                        <img src="images/1-3.avif" srcset="images/1-3-small.avif 480w, images/1-3.avif 800w" sizes="(max-width: 600px) 90vw, 50vw" alt="Image 3" class="showcase-img img-3">
+                    </div>
+                    <div class="home-text-content">
+                        <h2>Phao Sinh Viên</h2>
+                        <h3>Nâng tầm sinh viên Việt.</h3>
+                        <p>Hỗ trợ bạn trong các bài tập, dự án. Bảo hành và tư vấn nhiệt tình nhanh chóng!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="trangchu-panel-2" class="sub-panel panel-2">
+                <div class="home-animation-container reverse">
+                    <div class="home-text-content-2">
+                        <h2>Hỗ trợ đa dạng dự án</h2>
+                        <ul>
+                            <li>Website Tĩnh</li>
+                            <li>Fullstack</li>
+                            <li>Custom Website</li>
+                        </ul>
+                    </div>
+                    <div class="image-showcase-2">
+                        <img src="images/2-1.jpg" srcset="images/2-1-small.jpg 480w, images/2-1.jpg 800w" sizes="(max-width: 600px) 90vw, 50vw" alt="Image 1" class="showcase-img-2 img-4">
+                        <img src="images/2-2.jpg" srcset="images/2-2-small.jpg 480w, images/2-2.jpg 800w" sizes="(max-width: 600px) 90vw, 50vw" alt="Image 2" class="showcase-img-2 img-5">
+                        <img src="images/2-3.jpg" srcset="images/2-3-small.jpg 480w, images/2-3.jpg 800w" sizes="(max-width: 600px) 90vw, 50vw" alt="Image 3" class="showcase-img-2 img-6">
+                    </div>
+                </div>
+            </div>
+            <footer class="site-footer-panel">
+                <p>&copy;2024 POWERED BY MDT NETWORK.</p>
+            </footer>
+        </section>
+
+        <section id="dichvu-panel" class="panel panel-service">
+            <div class="service-list-container">
+                <button class="close-service-list-btn">&times;</button>
+                <div class="list-header">
+                    <label for="project-select">Dự án:</label>
+                    <select name="projects" id="project-select"></select>
+                </div>
+                <div class="thumbnail-gallery-wrapper">
+                    <div class="thumbnail-gallery"></div>
+                </div>
+            </div>
+            
+            <div class="product-detail-container">
+                <div class="product-detail-main">
+                    <div class="product-gallery">
+                        <div class="gallery-thumbnails"></div>
+                        <div class="gallery-main">
+                            <div class="image-overlay-buttons">
+                                <button class="zoom-btn"><i class="fas fa-search-plus"></i></button>
+                                <a href="#" target="_blank" class="live-demo-btn">Live Demo</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="product-payment-info">
+                        <h2 class="product-title">Tên sản phẩm</h2>
+                        <div class="price-section">
+                            <div class="product-price">Giá tiền</div>
+                            <div class="discount-container">
+                                <span class="discount-label">Giảm giá</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="discount-toggle">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <ul class="policy-list">
+                            <li>Miễn phí chỉnh sửa trong lần đầu tiên.</li>
+                            <li>Giảm 20% cho lần mua đầu tiên khi đăng ký.</li>
+                            <li>Bảo hành sản phẩm cho tới khi kết thúc bài kiểm tra, dự án. (tối đa 30 ngày)</li>
+                            <li><b>Đề cử:</b> Liên hệ trực tiếp để có sản phẩm tốt nhất.</li>
+                        </ul>
+                        <button class="order-button sp-button">Đặt hàng</button>
+                    </div>
+                </div>
+                <div class="product-additional-info">
+                    <div class="product-description">
+                        <h3>Về sản phẩm</h3>
+                        <div class="product-about-content"></div>
+                        <div class="product-links">
+                             <a href="#" class="support-link sp-action-button">Liên hệ hỗ trợ</a>
+                        </div>
+                    </div>
+                    <div class="product-specs">
+                        <h3>Thông số</h3>
+                        <ul class="product-specs-list"></ul>
+                    </div>
+                    <div class="product-features">
+                        <h3>Tính năng chính</h3>
+                        <ul class="product-features-list"></ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="lienhe-panel" class="panel panel-3">
+            <div class="contact-scroll-area">
+                <div class="contact-container">
+                    <div class="policy-card">
+                        <h2>Chính sách mua hàng</h2>
+                        <ol>
+                            <li>
+                                <strong>Phạm vi dịch vụ</strong>
+                                <ul>
+                                    <li>Bên bán (chúng tôi) cung cấp dịch vụ thiết kế, lập trình website Frontend hoặc Fullstack theo yêu cầu mà khách hàng đã đặt hàng và thanh toán.</li>
+                                    <li>Sản phẩm được bàn giao là mã nguồn và/hoặc file triển khai theo thỏa thuận ban đầu.</li>
+                                    <li>Bên bán không chịu trách nhiệm về việc vận hành, bảo trì, lưu trữ (hosting) hay triển khai thực tế trừ khi có hợp đồng dịch vụ riêng.</li>
+                                </ul>
+                            </li>
+                            <li>
+                                <strong>Quyền và trách nhiệm của khách hàng</strong>
+                                <ul>
+                                    <li>Khách hàng có quyền sử dụng mã nguồn/dự án đã mua cho mục đích cá nhân hoặc thương mại theo nhu cầu.</li>
+                                    <li>Khách hàng tự chịu toàn bộ trách nhiệm pháp lý đối với việc sử dụng sản phẩm, bao gồm nhưng không giới hạn ở:
+                                        <ul>
+                                            <li>Nội dung được đăng tải trên website sau khi sử dụng sản phẩm.</li>
+                                            <li>Hoạt động kinh doanh, quảng cáo hoặc các hành vi phát sinh từ việc sử dụng website.</li>
+                                            <li>Vi phạm pháp luật, bản quyền, hoặc tranh chấp phát sinh trong quá trình khai thác sản phẩm.</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li>
+                                <strong>Quyền và trách nhiệm của bên bán</strong>
+                                <ul>
+                                    <li>Bên bán có trách nhiệm bàn giao sản phẩm đúng với thỏa thuận (theo bản mô tả, hợp đồng hoặc đơn đặt hàng).</li>
+                                    <li>Bên bán không chịu trách nhiệm cho:
+                                        <ul>
+                                            <li>Các sự cố, rủi ro phát sinh sau khi bàn giao (lỗi vận hành, bảo mật, vi phạm pháp luật…).</li>
+                                            <li>Bất kỳ thiệt hại trực tiếp hay gián tiếp nào từ việc khách hàng sử dụng sản phẩm.</li>
+                                        </ul>
+                                    </li>
+                                    <li>Bên bán chỉ cam kết hỗ trợ trong phạm vi dịch vụ đã thỏa thuận trước khi mua hàng.</li>
+                                </ul>
+                            </li>
+                            <li>
+                                <strong>Chính sách hoàn tiền và khiếu nại</strong>
+                                <ul>
+                                    <li>Do sản phẩm là mã nguồn/dự án phần mềm số, không áp dụng hoàn tiền sau khi bàn giao.</li>
+                                    <li>Khiếu nại chỉ được chấp nhận trong trường hợp sản phẩm bàn giao không đúng mô tả hoặc yêu cầu đã thỏa thuận.</li>
+                                </ul>
+                            </li>
+                            <li>
+                                <strong>Điều khoản chung</strong>
+                                <ul>
+                                    <li>Khi tiến hành đặt hàng và thanh toán, khách hàng được xem là đã đọc, hiểu và đồng ý với toàn bộ Chính sách mua hàng này.</li>
+                                    <li>Chính sách có thể được cập nhật bất kỳ lúc nào, và phiên bản mới nhất sẽ được công bố công khai trên website.</li>
+                                </ul>
+                        </div>
+                    <div class="contact-info-card">
+                        <div class="card-content">
+                            <div class="contact-details">
+                                <h3>Thông tin liên lạc</h3>
+                                <ul>
+                                    <li><i class="fas fa-phone"></i><a href="tel:0943962337">0943962337</a></li>
+                                    <li><i class="fab fa-facebook-f"></i><a href="https://www.facebook.com/profile.php?id=61580061745033" target="_blank">Phao Sinh Viên</a></li>
+                                    <li><i class="fas fa-envelope"></i><a href="mailto:mdt.tech.network@gmail.com">mdt.tech.network@gmail.com</a></li>
+                                    <li><i class="fab fa-discord"></i><a href="https://discord.gg/7Q8mzW4DGt" target="_blank">Gemstone</a></li>
+                                </ul>
+                            </div>
+                            <div class="contact-logo">
+                                <img src="images/logo.png" alt="Logo">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <footer class="site-footer-panel">
+                    <p>&copy;2024 POWERED BY MDT NETWORK.</p>
+                </footer>
+            </div>
+        </section>
+    </div>
+
+    <button class="back-button">Xem</button>
+
+    <div id="order-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="close-modal-btn">&times;</button>
+            <h2>Thông tin đơn hàng</h2>
+            <form id="order-form">
+                <div class="form-group"><label for="order-name">Tên đơn hàng:</label><input type="text" id="order-name" name="orderName" readonly></div>
+                <div class="form-group"><label for="order-request">Nội dung yêu cầu:</label><textarea id="order-request" name="orderRequest" rows="4" required></textarea></div>
+                <div class="form-group"><label for="order-contact">Địa chỉ liên hệ (Email/Facebook/Zalo):</label><input type="text" id="order-contact" name="orderContact" required></div>
+                <div class="form-group"><label for="order-phone">Số điện thoại:</label><input type="tel" id="order-phone" name="orderPhone" required></div>
+                <button type="submit" class="sp-button form-submit-btn">Xác nhận</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="image-zoom-modal" class="modal-overlay">
+        <div class="zoom-modal-content">
+            <button class="close-zoom-modal-btn">&times;</button>
+            <img src="" alt="Zoomed Product Image">
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollToPlugin.min.js"></script>
+    
+    <script src="header/header.js?v=1.1"></script>
+    <script src="script.js?v=1.1"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('header/header.html')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('header-placeholder').innerHTML = data;
+                    initializePage(); 
+                });
+        });
+    </script>
+</body>
+</html>

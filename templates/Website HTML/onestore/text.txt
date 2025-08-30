@@ -1,0 +1,17 @@
+@@title@@
+Onestore — Store
+
+@@about@@
+Onestore – là một template HTML/CSS với thiết kế one-page hoàn toàn responsive. Đây là một giải pháp tuyệt vời dành cho các cửa hàng và nền tảng thương mại điện tử (e-commerce). Mẫu template này hiển thị đẹp trên mọi thiết bị bạn sử dụng.
+
+@@product@@
+File Size: 2.04 MB, Layout: Responsive, Columns: 12
+
+@@cost@@
+350
+
+@@link@@
+https://onestore-delta.vercel.app
+
+@@features@@
+100% Mobile Responsive, Well Commented Codes, Built with HTML5 & CSS3, Clean and Professional Looking, Built with Bootstrap, W3C Valid HTML and Css

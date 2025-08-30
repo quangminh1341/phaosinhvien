@@ -1,0 +1,18 @@
+@@title@@
+Micas – Bookstore Website
+
+@@about@@
+Mẫu website HTML Bootstrap 5 cho cửa hàng sách trực tuyến (online bookstore) với thiết kế sạch sẽ và tinh gọn. Mẫu website này phù hợp cho bất kỳ hiệu sách (bookstore) hoặc cửa hàng sách (bookshop) nào. Giao diện tối giản và sạch sẽ của nó tạo nên một mẫu website đẹp, rất phù hợp cho các cửa hàng sách trực tuyến.
+
+@@product@@
+File Size: 4.34 MB, Layout: Responsive, Columns: 12
+
+@@cost@@
+350
+
+@@link@@
+https://micas-mauve.vercel.app
+
+@@features@@
+Clean and Minimal, Bootstrap 5, HTML5 and CSS3, Cart Dropdown, Fully Responsive and Mobile-Friendly, 100% Customizable, Total 11 Different Pages, Beautifully Designed Elements, Free Stock Images, Free Google Fonts
+

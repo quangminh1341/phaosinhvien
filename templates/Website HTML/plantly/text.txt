@@ -1,0 +1,17 @@
+@@title@@
+Plantly - Plant Selling eCommerce
+
+@@about@@
+Plantly là một mẫu website HTML CSS thương mại điện tử (e-commerce) dành cho việc bán cây cảnh. Mẫu này phù hợp với bất kỳ cửa hàng thương mại điện tử (e-commerce store), website mua sắm trực tuyến (online shopping website), cửa hàng cây cảnh (plant store), nhà vườn (nursery), cửa hàng hoa (florist), cửa hàng quy mô nhỏ (mini store), v.v.
+
+@@product@@
+File Size: 11.56 MB, Layout: Responsive, Columns: 12
+
+@@cost@@
+350
+
+@@link@@
+https://plantly-eta.vercel.app
+
+@@features@@
+7 Different pages, Contact form, Beautiful Vibrant Design, 100% Customizable, Responsive and mobile-friendly, Free Google Fonts, HTML5 and CSS3

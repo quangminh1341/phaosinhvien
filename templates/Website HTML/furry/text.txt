@@ -1,0 +1,17 @@
+@@title@@
+Furry – Pet Store Website
+
+@@about@@
+Furry là một mẫu website HTML Bootstrap 5 dành cho các cửa hàng thương mại điện tử (e-commerce stores) liên quan đến thú cưng. Mẫu này phù hợp với bất kỳ cửa hàng thương mại điện tử nào, website mua sắm trực tuyến (online shopping website), cửa hàng thú cưng (pet store), website siêu thị mua sắm (shopping mart website), giỏ hàng trực tuyến (online shopping cart), cửa hàng quần áo (clothing store), cửa hàng đồ chơi (toy store), v.v. Tuy nhiên, nó được thiết kế chuyên biệt chủ yếu cho các cửa hàng thú cưng.
+
+@@product@@
+File Size: 3.33 MB, Layout: Responsive, Columns: 12
+
+@@cost@@
+350
+
+@@link@@
+https://furry-blond.vercel.app
+
+@@features@@
+Bootstrap 5, HTML5 and CSS3, Well organized code, 100% Responsive, 13 different pages, Customized Components, Modern and unique design, Free Google fonts

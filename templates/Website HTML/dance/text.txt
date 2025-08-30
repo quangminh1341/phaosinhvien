@@ -1,0 +1,17 @@
+@@title@@
+Dance - Dance Studio Web 
+
+@@about@@
+Dance là một mẫu website responsive. Bạn có thể sử dụng nó cho website học viện khiêu vũ (dance academy website), trang giới thiệu khóa học khiêu vũ (dance course landing page), hoặc bất kỳ studio khiêu vũ (dance studio) nào.
+
+@@product@@
+File Size: 10.95 MB, Layout: Responsive, Columns: 12
+
+@@cost@@
+350
+
+@@link@@
+https://dance-dusky.vercel.app
+
+@@features@@
+Minimal and Clean Design, 100% Customizable, Responsive and mobile-friendly, Free Google Fonts, HTML5 and CSS3

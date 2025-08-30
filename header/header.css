@@ -1,0 +1,255 @@
+/* header/header.css */
+
+/* --- Header --- */
+.site-header {
+    position: fixed; /* Giữ nguyên hoặc đổi thành fixed */
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: var(--header-height);
+    padding: 0 40px;
+    z-index: 100;
+    box-sizing: border-box;
+    background-color: var(--bg-primary); /* Rất quan trọng để header có nền */
+}
+
+.site-header::after {
+    content: '';
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 33.33%;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.5), transparent);
+    opacity: 0.7;
+}
+
+body.light-mode .site-header::after {
+    background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.2), transparent);
+}
+
+.site-header a, .logo {
+    color: var(--header-text-color);
+    text-decoration: none;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 500;
+    position: relative;
+    z-index: 1;
+}
+
+.site-nav {
+    position: absolute;
+    left: 50%;
+    top: 35px;
+    transform: translate(-50%, -50%);
+}
+
+.site-nav a {
+    margin: 0 20px;
+    opacity: 0;
+    transform: translateY(-30px);
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.site-nav a:hover {
+    color: var(--thumbnail-hover);
+    transform: translateY(-6px);
+}
+
+.site-nav a.active {
+    color: var(--accent-primary);
+    transform: translateY(-5px);
+}
+
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.nav-toggle { display: none; }
+
+
+/* --- Responsive cho Header --- */
+@media (max-width: 768px) {
+    .site-header { align-items: center; }
+    .site-header::after { display: none; }
+    
+    .site-nav {
+        position: absolute;
+        top: calc(var(--header-height) - 10px);
+        right: 20px;
+        left: auto;
+        width: 220px;
+        background: var(--bg-secondary);
+        border-radius: 8px;
+        box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+        border: 1px solid var(--border-color);
+        padding: 10px 0;
+        opacity: 0;
+        transform: scale(0.95) translateY(-10px);
+        transform-origin: top right;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        pointer-events: none;
+        z-index: 150;
+    }
+    .site-nav.nav-open {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+        pointer-events: auto;
+    }
+    .site-nav a {
+        display: block;
+        opacity: 1;
+        transform: translateY(0);
+        margin: 0;
+        padding: 12px 20px;
+        font-size: 1rem;
+        transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    .site-nav a:hover {
+        background-color: var(--accent-primary);
+        color: var(--text-on-accent);
+        transform: none;
+    }
+    
+    .header-controls {
+        gap: 5px;
+    }
+
+    .nav-toggle {
+        display: block;
+        position: relative;
+        z-index: 200;
+        background: transparent;
+        border: 0;
+        padding: 10px;
+        cursor: pointer;
+    }
+    .hamburger {
+        display: block;
+        position: relative;
+        width: 25px;
+        height: 2px;
+        background: var(--header-text-color);
+        transition: transform 0.3s ease, background-color 0.3s ease;
+    }
+    .hamburger::before,
+    .hamburger::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: var(--header-text-color);
+        transition: transform 0.3s ease, top 0.3s ease, bottom 0.3s ease;
+    }
+    .hamburger::before { top: -8px; }
+    .hamburger::after { bottom: -8px; }
+    .nav-open .hamburger { background: transparent; }
+    .nav-open .hamburger::before { top: 0; transform: rotate(45deg); }
+    .nav-open .hamburger::after { bottom: 0; transform: rotate(-45deg); }
+}
+
+@media (max-width: 480px) {
+    .site-header { padding: 0 20px; height: 70px; }
+    .nav-toggle {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+    .product-gallery {
+        /* Đổi thành column-reverse để đưa ảnh lớn lên trên */
+        flex-direction: column-reverse; 
+        gap: 15px; /* Thêm khoảng cách giữa ảnh lớn và danh sách ảnh nhỏ */
+    }
+
+    .gallery-main {
+        /* Quan trọng: Thêm 2 dòng này để ảnh lớn có kích thước và không bị ẩn */
+        width: 100%;
+        aspect-ratio: 4 / 3; /* Tỷ lệ khung hình 4:3 phổ biến cho ảnh sản phẩm */
+    }
+
+    .gallery-thumbnails {
+        width: 100%;
+        flex-direction: row;
+        overflow-x: auto;
+        padding-bottom: 10px;
+        max-height: 80px;
+    }
+}
+
+/* --- Theme Toggle Button --- */
+#theme-toggle {
+    /* Đặt vị trí cố định so với cửa sổ trình duyệt */
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    z-index: 101; /* Đảm bảo nó nổi lên trên các thành phần khác */
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+    border: none;
+    background-color: transparent;
+}
+
+#theme-toggle:hover {
+    transform: scale(1.1);
+}
+
+#theme-toggle i {
+    font-size: 1.4rem;
+    position: absolute;
+    top: 0; left: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+
+#theme-toggle .fa-sun {
+    opacity: 0;
+    transform: translateY(10px);
+    background-color: #FF69B4;
+    color: #fff;
+}
+
+#theme-toggle .fa-moon {
+    opacity: 1;
+    transform: translateY(0);
+    background-color: var(--accent-secondary);
+    color: var(--text-on-accent);
+}
+
+#theme-toggle:hover .fa-moon {
+    background-color: var(--bg-primary);
+    color: var(--accent-secondary);
+}
+
+body.light-mode #theme-toggle .fa-sun {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+body.light-mode #theme-toggle .fa-moon {
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+body.light-mode #theme-toggle:hover .fa-sun {
+    background-color: #fff;
+    color: #FF69B4;
+}

@@ -1,0 +1,18 @@
+@@title@@
+Waggy - Pet Shop
+
+@@about@@
+Waggy là một mẫu website HTML sử dụng Bootstrap 5 dành cho các cửa hàng thú cưng thương mại điện tử (pet shop e-commerce store). Mẫu này phù hợp với bất kỳ cửa hàng thương mại điện tử (e-commerce store), website mua sắm trực tuyến (online shopping website), cửa hàng thú cưng (pet store), website siêu thị mua sắm (shopping mart website), giỏ hàng trực tuyến (online shopping cart), cửa hàng thú cưng (pet shop), cửa hàng quần áo (clothing store), cửa hàng đồ chơi (toy store), v.v. Tuy nhiên, nó được thiết kế đặc biệt chuyên biệt cho các cửa hàng thú cưng.
+
+@@product@@
+File Size: 5 MB, Layout: Responsive, Columns: 12
+
+@@cost@@
+350
+
+@@link@@
+https://waggy-rose.vercel.app
+
+@@features@@
+Bootstrap 5, HTML5 and CSS3, Well-organized code, 100% Responsive, 15 different pages, Working Contact form, 20+ Customized Components, Modern and unique design, Free Google fonts
+

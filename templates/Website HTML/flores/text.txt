@@ -1,0 +1,17 @@
+@@title@@
+Flores - Skincare Ecommerce
+
+@@about@@
+Tải xuống mẫu website Skincare Products Ecommerce Bootstrap 5 HTML này. Mẫu HTML CSS này phù hợp với bất kỳ sản phẩm chăm sóc da (skincare products), sản phẩm làm đẹp (beauty products), hoặc mỹ phẩm (cosmetic products) nào. Giao diện hiện đại và độc đáo của nó tạo nên một mẫu website tuyệt đẹp cho các cửa hàng chăm sóc da hoặc cửa hàng làm đẹp.
+
+@@product@@
+File Size: 3.14 MB, Layout: Responsive, Columns: 12
+
+@@cost@@
+350
+
+@@link@@
+https://flores-ten-rho.vercel.app
+
+@@features@@
+Modern and Unique, Bootstrap 5, HTML5 and CSS3, Cart Dropdown, Fully Responsive and Mobile-Friendly, 100% Customizable, Total 16 Different Pages, Beautifully designed Elements, Free Stock Images, Free Google Fonts, Free for both personal and commercial use

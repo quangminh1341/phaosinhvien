@@ -1,0 +1,17 @@
+@@title@@
+Eliza - eCommerce Website
+
+@@about@@
+Eliza – eCommerce Bootstrap 5 Template là một mẫu HTML5 nhanh và thân thiện với người dùng dành cho cửa hàng điện tử (E-store) của bạn. Mẫu này có khả năng responsive vượt trội và hoạt động hoàn hảo trên mọi thiết bị. Eliza được xây dựng trên nền tảng Bootstrap 4. Thiết kế sáng tạo và thông minh này dễ sử dụng cho cả người có chuyên môn kỹ thuật và người không chuyên. Không cần kiến thức về lập trình (code).
+
+@@product@@
+File Size: 4.39 MB, Layout: Responsive, Columns: 4
+
+@@cost@@
+350
+
+@@link@@
+https://eliza-psi-three.vercel.app
+
+@@features@@
+Owl Carousel slider use, Sass Supported, Google Font, Line awesome and themify icon use, Valid HTML5 & CSS3, User Friendly, Fully Responsive, Built Based on Bootstrap v5.0.2, Cross Browser Optimization, Well Commented HTML & CSS files, Well Documented, dynamic contact form, Beautiful and Unique Design

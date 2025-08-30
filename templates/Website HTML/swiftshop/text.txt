@@ -1,0 +1,17 @@
+@@title@@
+Swiftshop Ecommerce Website
+
+@@about@@
+Swiftshop là một mẫu website HTML thương mại điện tử (e-commerce) cao cấp, responsive, được xây dựng bằng Bootstrap dành cho các website cửa hàng trực tuyến chuyên về thời trang (Fashions), dụng cụ (Tools), phụ tùng máy móc (Machinery Parts) và phụ kiện (Accessories). Mẫu này sở hữu thiết kế hiện đại, sạch sẽ và độc đáo (Unique Design). Swiftshop được phát triển dựa trên framework CSS phổ biến – Bootstrap phiên bản 5.1.0, hoàn toàn responsive và hoạt động hoàn hảo trên mọi thiết bị như điện thoại di động (Mobile), máy tính bảng (Tablet), laptop, v.v.
+
+@@product@@
+File Size: 4.75 MB, Layout: Responsive, Columns: 12
+
+@@cost@@
+350
+
+@@link@@
+https://swiftshop-azure.vercel.app
+
+@@features@@
+Build with Bootstrap v5.1.0, 100% Responsive Ecommerce Template, HTML5 + CSS3, 8+ HTML Pages, Amazing Megamenu, W3C valid Code, Multi-Browser Support, Using Google Fonts, Well Documented, 

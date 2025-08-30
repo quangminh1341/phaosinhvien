@@ -1,0 +1,17 @@
+@@title@@
+MiniStore – eCommerce Store
+
+@@about@@
+MiniStore là một mẫu website eCommerce đơn giản dành cho các cửa hàng điện tử. Nó phù hợp với bất kỳ cửa hàng thương mại điện tử (eCommerce store), website mua sắm trực tuyến (online shopping website), cửa hàng công nghệ (tech store), website siêu thị mua sắm (shopping mart website), giỏ hàng trực tuyến (online shopping cart), cửa hàng điện thoại (mobile store), cửa hàng thiết bị (gadgets store), cửa hàng điện (electric store), cửa hàng quy mô nhỏ (mini store), v.v.
+
+@@product@@
+File Size: 6.03 MB, Layout: Responsive, Columns: 12
+
+@@cost@@
+350
+
+@@link@@
+https://ministore-mu.vercel.app
+
+@@features@@
+9 Different pages, Contact form, Beautiful Minimal Design, 100% Customizable, Responsive and mobile-friendly, Free Google Fonts, HTML5 and CSS3, Free for both personal and commercial use

@@ -1,0 +1,17 @@
+@@title@@
+Clothique – eCommerce Store 
+
+@@about@@
+Clothique là một mẫu website thương mại điện tử (eCommerce store) có thiết kế responsive. Nó phù hợp nhất cho các cửa hàng quần áo (clothing stores), cửa hàng thời trang (fashion stores), phụ kiện (accessories), v.v.
+
+@@product@@
+File Size: 2.34 MB, Layout: Responsive, Columns: 12
+
+@@cost@@
+350
+
+@@link@@
+https://clothique-rosy.vercel.app
+
+@@features@@
+Minimal and Modern Design, 100% Customizable, Made with Bootstrap 5 Framework, Responsive and mobile-friendly, Free Google Fonts, HTML5 and CSS3
