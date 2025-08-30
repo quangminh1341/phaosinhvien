@@ -14,4 +14,5 @@ Thương lượng
 
 
 @@features@@
-Font-end: 100% Customizable - Responsive and mobile-friendly - Free Google Fonts - HTML5 and CSS3 - NodeJS,Back-end: CI/CD - API Doccuments - Bảo mật API, Ngôn ngữ & Framework: Node.js = JavaScript - React - C++ - C# - Java,Database: Moongodb - PostgreDB - MySQL
+Font-end: 100% Customizable - Responsive and mobile-friendly - Free Google Fonts - HTML5 and CSS3 - NodeJS,Back-end: CI/CD - API Doccuments - Bảo mật API, Ngôn ngữ & Framework: Node.js = JavaScript - React - C++ - C# - Java,Database: Moongodb - PostgreDB - MySQL,Support: Code dễ bảo trì và dễ đọc
+
