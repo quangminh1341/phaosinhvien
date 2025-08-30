@@ -1,11 +1,12 @@
 {
   "Fullstack": [
     {
-      "title": "Liên hệ trực tiếp",
+      "title": "Custom Fullstack",
       "about": "Có thể sử dụng các mẫu Website HTML có sẵn để làm Fullstack, hoặc custom Fullstack cho 1 dự án cụ thể trong yêu cầu của khách hàng.",
       "product": "File Size: >10 MB, Layout: Responsive, Columns: Custom",
-      "cost": "Thương lượng",
+      "cost": "0.0",
       "link": "features",
+      "features": "100% Customizable, Responsive and mobile-friendly, Free Google Fonts, HTML5 and CSS3",
       "imageUrl": "templates/Fullstack/Liên hệ trực tiếp/1.webp",
       "imageGallery": [
         "templates/Fullstack/Liên hệ trực tiếp/1.webp"
