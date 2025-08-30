@@ -25,21 +25,9 @@ jobs:
       - name: Deploy to VPS
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
-            # Bật chế độ debug, in ra các lệnh sẽ chạy
-            set -x
+            # Xóa thư mục cũ để đảm bảo trạng thái sạch sẽ
+            rm -rf /var/www/psv
             
-            cd /var/www/psv || exit 1
-            if [ ! -d .git ]; then
-              git init
-              git remote add origin git@github.com:${{ github.repository }}.git
-            fi
-            
-            # Xuất biến môi trường để bật log chi tiết cho SSH
-            export GIT_SSH_COMMAND='ssh -vvv'
-            git fetch --all
-            
-            # Sau khi xong, có thể tắt biến môi trường đi
-            unset GIT_SSH_COMMAND
-            
-            git reset --hard origin/main
+            # Clone lại toàn bộ repository từ đầu vào đúng thư mục đó
+            git clone git@github.com:${{ github.repository }}.git /var/www/psv
           "
