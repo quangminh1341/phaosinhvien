@@ -6,6 +6,7 @@ let currentProject = "";
 let isAnimating = false;
 let currentProductData = null;
 let isDetailViewActive = false;
+let currentZoomIndex = 0;
 const discordWebhookUrl = 'https://discord.com/api/webhooks/1410604044707434587/k1qjnS9rookO1XC4XjTJCR7v0zy2JKkiGCrBqvgoLTBuugR4AmJ3JLRg_dOPATdyiz2E';
 
 let homeTl, panel2Tl;
@@ -38,6 +39,8 @@ const liveDemoBtn = document.querySelector('.live-demo-btn');
 const imageZoomModal = document.getElementById('image-zoom-modal');
 const closeZoomModalBtn = document.querySelector('.close-zoom-modal-btn');
 const zoomedImage = imageZoomModal.querySelector('img');
+const prevZoomBtn = document.getElementById('prev-zoom-btn');
+const nextZoomBtn = document.getElementById('next-zoom-btn');
 
 
 // --- HÀM KHỞI TẠO CHÍNH ---
@@ -178,6 +181,8 @@ function initializeServicePanel() {
     imageZoomModal.addEventListener('click', (e) => {
         if (e.target === imageZoomModal) { closeImageZoom(); }
     });
+    prevZoomBtn.addEventListener('click', () => updateZoomedImage(currentZoomIndex - 1));
+    nextZoomBtn.addEventListener('click', () => updateZoomedImage(currentZoomIndex + 1));
 }
 function renderGallery(items) {
     if (!items) {
@@ -344,26 +349,66 @@ function handleGalleryClick(e) {
         }
     });
 }
+
+function updateZoomedImage(index) {
+    if (!currentProductData || !currentProductData.imageGallery) return;
+    const gallery = currentProductData.imageGallery;
+    if (index < 0) {
+        currentZoomIndex = gallery.length - 1;
+    } else if (index >= gallery.length) {
+        currentZoomIndex = 0;
+    } else {
+        currentZoomIndex = index;
+    }
+    zoomedImage.src = gallery[currentZoomIndex];
+    zoomedImage.parentElement.scrollTop = 0;
+}
+
 function handleImageZoom(e) {
     if (e.target.closest('.zoom-btn')) {
-        const activeImg = galleryMain.querySelector('.gallery-main-item.active img');
-        if (activeImg) {
-            zoomedImage.src = activeImg.src;
+        const activeMainItem = galleryMain.querySelector('.gallery-main-item.active');
+        if (activeMainItem) {
+            const activeIndex = parseInt(activeMainItem.dataset.index, 10);
+            updateZoomedImage(activeIndex);
             imageZoomModal.classList.add('visible');
+            if (currentProductData.imageGallery && currentProductData.imageGallery.length > 1) {
+                prevZoomBtn.classList.add('active');
+                nextZoomBtn.classList.add('active');
+            } else {
+                prevZoomBtn.classList.remove('active');
+                nextZoomBtn.classList.remove('active');
+            }
         }
     }
 }
-function closeImageZoom() { imageZoomModal.classList.remove('visible'); }
+
+function closeImageZoom() {
+    imageZoomModal.classList.remove('visible');
+    prevZoomBtn.classList.remove('active');
+    nextZoomBtn.classList.remove('active');
+}
+
 function openOrderModal() {
     if (!currentProductData) return;
     orderNameInput.value = currentProductData.title;
     orderModal.classList.add('visible');
 }
 function closeOrderModal() { orderModal.classList.remove('visible'); }
+
+function generateOrderID() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 10; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+}
+
 async function handleOrderSubmit(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
+    data.orderID = generateOrderID(); 
     try {
         await sendDiscordWebhook(data);
         closeOrderModal();
@@ -377,8 +422,9 @@ async function handleOrderSubmit(e) {
 async function sendDiscordWebhook(data) {
     const embed = {
         title: "📢 Yêu Cầu Đặt Hàng Mới",
-        color: 65280,
+        color: 0x2ecc71, // Green
         fields: [
+            { name: "Mã Đơn Hàng", value: `\`\`\`${data.orderID}\`\`\``, inline: false },
             { name: "Tên sản phẩm", value: data.orderName, inline: false },
             { name: "Thông tin liên lạc", value: data.orderContact, inline: false },
             { name: "Số điện thoại", value: `||${data.orderPhone}||`, inline: false },
