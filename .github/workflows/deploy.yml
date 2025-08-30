@@ -2,21 +2,26 @@ name: Deploy Website to VPS
 
 on:
   push:
-    branches: [ "main" ]  # chạy mỗi khi push lên branch main
+    branches: [ "main" ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # Bước 1: Lấy mã nguồn vào runner (không thay đổi)
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Bước 2: Chuẩn bị key để KẾT NỐI VÀO VPS (không thay đổi)
+      # Key này dùng cho chặng Runner -> VPS
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.5.4
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
+      # Bước 3: Thực thi lệnh trên VPS
+      # VPS sẽ tự dùng Deploy Key của nó để kết nối với GitHub
       - name: Deploy to VPS
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
