@@ -406,6 +406,25 @@ function generateOrderID() {
 
 async function handleOrderSubmit(e) {
     e.preventDefault();
+
+    const contactInput = document.getElementById('order-contact').value.trim();
+    const phoneInput = document.getElementById('order-phone').value.trim();
+
+    // --- VALIDATION START ---
+    // 1. Validate contact info: if it's an email, it must be a @gmail.com address
+    if (contactInput.includes('@') && !contactInput.toLowerCase().endsWith('@gmail.com')) {
+        alert("Lỗi: Nếu bạn nhập email, vui lòng chỉ sử dụng địa chỉ @gmail.com.");
+        return; // Stop the function
+    }
+
+    // 2. Validate phone number: must start with 0 and be exactly 10 digits
+    const phoneRegex = /^0\d{9}$/;
+    if (!phoneRegex.test(phoneInput)) {
+        alert("Lỗi: Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại bắt đầu bằng 0 và có đúng 10 chữ số.");
+        return; // Stop the function
+    }
+    // --- VALIDATION END ---
+
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
     data.orderID = generateOrderID(); 

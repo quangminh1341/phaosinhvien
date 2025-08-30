@@ -210,8 +210,8 @@
             <form id="order-form">
                 <div class="form-group"><label for="order-name">Tên đơn hàng:</label><input type="text" id="order-name" name="orderName" readonly></div>
                 <div class="form-group"><label for="order-request">Nội dung yêu cầu:</label><textarea id="order-request" name="orderRequest" rows="4" required></textarea></div>
-                <div class="form-group"><label for="order-contact">Địa chỉ liên hệ (Email/Facebook/Zalo):</label><input type="text" id="order-contact" name="orderContact" required></div>
-                <div class="form-group"><label for="order-phone">Số điện thoại:</label><input type="tel" id="order-phone" name="orderPhone" required></div>
+                <div class="form-group"><label for="order-contact">Địa chỉ gmail:</label><input type="text" id="order-contact" name="orderContact" required></div>
+                <div class="form-group"><label for="order-phone">Số điện thoại:</label><input type="tel" id="order-phone" name="orderPhone" required pattern="0[0-9]{9}" maxlength="10" title="Số điện thoại phải bắt đầu bằng số 0 và có đúng 10 chữ số."></div>
                 <button type="submit" class="sp-button form-submit-btn">Xác nhận</button>
             </form>
         </div>
