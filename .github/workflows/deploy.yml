@@ -30,6 +30,9 @@ jobs:
               git init
               git remote add origin git@github.com:${{ github.repository }}.git
             fi
-            git fetch --all
+            
+            # Thêm GIT_SSH_COMMAND vào dòng dưới đây để gỡ lỗi
+            GIT_SSH_COMMAND=\"ssh -vvv\" git fetch --all
+            
             git reset --hard origin/main
           "
