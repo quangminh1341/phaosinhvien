@@ -6,8 +6,10 @@
       "product": "File Size: >10 MB, Layout: Responsive, Columns: Custom",
       "cost": "Thương lượng",
       "link": "features",
-      "imageUrl": "placeholder.jpg",
-      "imageGallery": []
+      "imageUrl": "templates/Fullstack/Liên hệ trực tiếp/1.webp",
+      "imageGallery": [
+        "templates/Fullstack/Liên hệ trực tiếp/1.webp"
+      ]
     }
   ],
   "Website HTML": [
@@ -18,16 +20,16 @@
       "cost": "350",
       "link": "https://booksaw-dusky.vercel.app",
       "features": "One-page layout, Sticky navigation, Clean and minimal design, 9 different pages, 100% Customizable, Responsive and mobile-friendly, Free Google Fonts",
-      "imageUrl": "templates/Website HTML/booksaw/1.jpg",
+      "imageUrl": "templates/Website HTML/booksaw/1.webp",
       "imageGallery": [
-        "templates/Website HTML/booksaw/1.jpg",
-        "templates/Website HTML/booksaw/2.jpg",
-        "templates/Website HTML/booksaw/3.jpg",
-        "templates/Website HTML/booksaw/4.jpg",
-        "templates/Website HTML/booksaw/5.jpg",
-        "templates/Website HTML/booksaw/6.jpg",
-        "templates/Website HTML/booksaw/7.jpg",
-        "templates/Website HTML/booksaw/8.jpg"
+        "templates/Website HTML/booksaw/1.webp",
+        "templates/Website HTML/booksaw/2.webp",
+        "templates/Website HTML/booksaw/3.webp",
+        "templates/Website HTML/booksaw/4.webp",
+        "templates/Website HTML/booksaw/5.webp",
+        "templates/Website HTML/booksaw/6.webp",
+        "templates/Website HTML/booksaw/7.webp",
+        "templates/Website HTML/booksaw/8.webp"
       ]
     },
     {
@@ -37,14 +39,14 @@
       "cost": "350",
       "link": "https://clothique-rosy.vercel.app",
       "features": "Minimal and Modern Design, 100% Customizable, Made with Bootstrap 5 Framework, Responsive and mobile-friendly, Free Google Fonts, HTML5 and CSS3",
-      "imageUrl": "templates/Website HTML/clothique/1.jpg",
+      "imageUrl": "templates/Website HTML/clothique/1.webp",
       "imageGallery": [
-        "templates/Website HTML/clothique/1.jpg",
-        "templates/Website HTML/clothique/2.jpg",
-        "templates/Website HTML/clothique/3.jpg",
-        "templates/Website HTML/clothique/4.jpg",
-        "templates/Website HTML/clothique/5.jpg",
-        "templates/Website HTML/clothique/6.jpg"
+        "templates/Website HTML/clothique/1.webp",
+        "templates/Website HTML/clothique/2.webp",
+        "templates/Website HTML/clothique/3.webp",
+        "templates/Website HTML/clothique/4.webp",
+        "templates/Website HTML/clothique/5.webp",
+        "templates/Website HTML/clothique/6.webp"
       ]
     },
     {
@@ -54,15 +56,15 @@
       "cost": "350",
       "link": "https://dance-dusky.vercel.app",
       "features": "Minimal and Clean Design, 100% Customizable, Responsive and mobile-friendly, Free Google Fonts, HTML5 and CSS3",
-      "imageUrl": "templates/Website HTML/dance/1.jpg",
+      "imageUrl": "templates/Website HTML/dance/1.webp",
       "imageGallery": [
-        "templates/Website HTML/dance/1.jpg",
-        "templates/Website HTML/dance/2.jpg",
-        "templates/Website HTML/dance/3.jpg",
-        "templates/Website HTML/dance/4.jpg",
-        "templates/Website HTML/dance/5.jpg",
-        "templates/Website HTML/dance/6.jpg",
-        "templates/Website HTML/dance/7.jpg"
+        "templates/Website HTML/dance/1.webp",
+        "templates/Website HTML/dance/2.webp",
+        "templates/Website HTML/dance/3.webp",
+        "templates/Website HTML/dance/4.webp",
+        "templates/Website HTML/dance/5.webp",
+        "templates/Website HTML/dance/6.webp",
+        "templates/Website HTML/dance/7.webp"
       ]
     },
     {
@@ -72,10 +74,10 @@
       "cost": "350",
       "link": "https://eliza-psi-three.vercel.app",
       "features": "Owl Carousel slider use, Sass Supported, Google Font, Line awesome and themify icon use, Valid HTML5 & CSS3, User Friendly, Fully Responsive, Built Based on Bootstrap v5.0.2, Cross Browser Optimization, Well Commented HTML & CSS files, Well Documented, dynamic contact form, Beautiful and Unique Design",
-      "imageUrl": "templates/Website HTML/eliza/1.jpg",
+      "imageUrl": "templates/Website HTML/eliza/1.webp",
       "imageGallery": [
-        "templates/Website HTML/eliza/1.jpg",
-        "templates/Website HTML/eliza/2.jpg"
+        "templates/Website HTML/eliza/1.webp",
+        "templates/Website HTML/eliza/2.webp"
       ]
     },
     {
@@ -85,11 +87,11 @@
       "cost": "350",
       "link": "https://flores-ten-rho.vercel.app",
       "features": "Modern and Unique, Bootstrap 5, HTML5 and CSS3, Cart Dropdown, Fully Responsive and Mobile-Friendly, 100% Customizable, Total 16 Different Pages, Beautifully designed Elements, Free Stock Images, Free Google Fonts, Free for both personal and commercial use",
-      "imageUrl": "templates/Website HTML/flores/1.jpg",
+      "imageUrl": "templates/Website HTML/flores/1.webp",
       "imageGallery": [
-        "templates/Website HTML/flores/1.jpg",
-        "templates/Website HTML/flores/2.jpg",
-        "templates/Website HTML/flores/3.jpg"
+        "templates/Website HTML/flores/1.webp",
+        "templates/Website HTML/flores/2.webp",
+        "templates/Website HTML/flores/3.webp"
       ]
     },
     {
@@ -99,14 +101,14 @@
       "cost": "350",
       "link": "https://furry-blond.vercel.app",
       "features": "Bootstrap 5, HTML5 and CSS3, Well organized code, 100% Responsive, 13 different pages, Customized Components, Modern and unique design, Free Google fonts",
-      "imageUrl": "templates/Website HTML/furry/1.jpg",
+      "imageUrl": "templates/Website HTML/furry/1.webp",
       "imageGallery": [
-        "templates/Website HTML/furry/1.jpg",
-        "templates/Website HTML/furry/2.jpg",
-        "templates/Website HTML/furry/3.jpg",
-        "templates/Website HTML/furry/4.jpg",
-        "templates/Website HTML/furry/5.jpg",
-        "templates/Website HTML/furry/6.jpg"
+        "templates/Website HTML/furry/1.webp",
+        "templates/Website HTML/furry/2.webp",
+        "templates/Website HTML/furry/3.webp",
+        "templates/Website HTML/furry/4.webp",
+        "templates/Website HTML/furry/5.webp",
+        "templates/Website HTML/furry/6.webp"
       ]
     },
     {
@@ -116,20 +118,20 @@
       "cost": "350",
       "link": "https://micas-mauve.vercel.app",
       "features": "Clean and Minimal, Bootstrap 5, HTML5 and CSS3, Cart Dropdown, Fully Responsive and Mobile-Friendly, 100% Customizable, Total 11 Different Pages, Beautifully Designed Elements, Free Stock Images, Free Google Fonts",
-      "imageUrl": "templates/Website HTML/micas/1.jpg",
+      "imageUrl": "templates/Website HTML/micas/1.webp",
       "imageGallery": [
-        "templates/Website HTML/micas/1.jpg",
-        "templates/Website HTML/micas/2.jpg",
-        "templates/Website HTML/micas/3.jpg",
-        "templates/Website HTML/micas/4.jpg",
-        "templates/Website HTML/micas/5.jpg",
-        "templates/Website HTML/micas/6.jpg",
-        "templates/Website HTML/micas/7.jpg",
-        "templates/Website HTML/micas/8.jpg",
-        "templates/Website HTML/micas/9.jpg",
-        "templates/Website HTML/micas/10.jpg",
-        "templates/Website HTML/micas/11.jpg",
-        "templates/Website HTML/micas/12.jpg"
+        "templates/Website HTML/micas/1.webp",
+        "templates/Website HTML/micas/2.webp",
+        "templates/Website HTML/micas/3.webp",
+        "templates/Website HTML/micas/4.webp",
+        "templates/Website HTML/micas/5.webp",
+        "templates/Website HTML/micas/6.webp",
+        "templates/Website HTML/micas/7.webp",
+        "templates/Website HTML/micas/8.webp",
+        "templates/Website HTML/micas/9.webp",
+        "templates/Website HTML/micas/10.webp",
+        "templates/Website HTML/micas/11.webp",
+        "templates/Website HTML/micas/12.webp"
       ]
     },
     {
@@ -139,17 +141,17 @@
       "cost": "350",
       "link": "https://ministore-mu.vercel.app",
       "features": "9 Different pages, Contact form, Beautiful Minimal Design, 100% Customizable, Responsive and mobile-friendly, Free Google Fonts, HTML5 and CSS3, Free for both personal and commercial use",
-      "imageUrl": "templates/Website HTML/ministore/1.jpg",
+      "imageUrl": "templates/Website HTML/ministore/1.webp",
       "imageGallery": [
-        "templates/Website HTML/ministore/1.jpg",
-        "templates/Website HTML/ministore/2.jpg",
-        "templates/Website HTML/ministore/3.jpg",
-        "templates/Website HTML/ministore/4.jpg",
-        "templates/Website HTML/ministore/5.jpg",
-        "templates/Website HTML/ministore/6.jpg",
-        "templates/Website HTML/ministore/7.jpg",
-        "templates/Website HTML/ministore/8.jpg",
-        "templates/Website HTML/ministore/9.jpg"
+        "templates/Website HTML/ministore/1.webp",
+        "templates/Website HTML/ministore/2.webp",
+        "templates/Website HTML/ministore/3.webp",
+        "templates/Website HTML/ministore/4.webp",
+        "templates/Website HTML/ministore/5.webp",
+        "templates/Website HTML/ministore/6.webp",
+        "templates/Website HTML/ministore/7.webp",
+        "templates/Website HTML/ministore/8.webp",
+        "templates/Website HTML/ministore/9.webp"
       ]
     },
     {
@@ -159,11 +161,11 @@
       "cost": "350",
       "link": "https://onestore-delta.vercel.app",
       "features": "100% Mobile Responsive, Well Commented Codes, Built with HTML5 & CSS3, Clean and Professional Looking, Built with Bootstrap, W3C Valid HTML and Css",
-      "imageUrl": "templates/Website HTML/onestore/1.jpg",
+      "imageUrl": "templates/Website HTML/onestore/1.webp",
       "imageGallery": [
-        "templates/Website HTML/onestore/1.jpg",
-        "templates/Website HTML/onestore/2.jpg",
-        "templates/Website HTML/onestore/3.jpg"
+        "templates/Website HTML/onestore/1.webp",
+        "templates/Website HTML/onestore/2.webp",
+        "templates/Website HTML/onestore/3.webp"
       ]
     },
     {
@@ -173,10 +175,10 @@
       "cost": "350",
       "link": "https://plantly-eta.vercel.app",
       "features": "7 Different pages, Contact form, Beautiful Vibrant Design, 100% Customizable, Responsive and mobile-friendly, Free Google Fonts, HTML5 and CSS3",
-      "imageUrl": "templates/Website HTML/plantly/1.jpg",
+      "imageUrl": "templates/Website HTML/plantly/1.webp",
       "imageGallery": [
-        "templates/Website HTML/plantly/1.jpg",
-        "templates/Website HTML/plantly/2.jpg"
+        "templates/Website HTML/plantly/1.webp",
+        "templates/Website HTML/plantly/2.webp"
       ]
     },
     {
@@ -186,12 +188,12 @@
       "cost": "350",
       "link": "https://runaway-drab.vercel.app",
       "features": "Owl Carousel slider use, Google Font, Line awesome and themify icon use, Valid HTML5 & CSS3, User Friendly, Fully Responsive, Cross Browser Optimization, Well Commented HTML & CSS files, Well Documented, dynamic contact form, Beautiful and Unique Design",
-      "imageUrl": "templates/Website HTML/runway/1.jpg",
+      "imageUrl": "templates/Website HTML/runway/1.webp",
       "imageGallery": [
-        "templates/Website HTML/runway/1.jpg",
-        "templates/Website HTML/runway/2.jpg",
-        "templates/Website HTML/runway/3.jpg",
-        "templates/Website HTML/runway/4.jpg"
+        "templates/Website HTML/runway/1.webp",
+        "templates/Website HTML/runway/2.webp",
+        "templates/Website HTML/runway/3.webp",
+        "templates/Website HTML/runway/4.webp"
       ]
     },
     {
@@ -201,14 +203,14 @@
       "cost": "350",
       "link": "https://stylish-one.vercel.app",
       "features": "8 Different pages, Contact form, Beautiful Vibrant Design, 100% Customizable, Specific elements for e-commerce store, Responsive and mobile-friendly, Free Google Fonts, HTML5 and CSS3",
-      "imageUrl": "templates/Website HTML/stylish/1.jpg",
+      "imageUrl": "templates/Website HTML/stylish/1.webp",
       "imageGallery": [
-        "templates/Website HTML/stylish/1.jpg",
-        "templates/Website HTML/stylish/2.jpg",
-        "templates/Website HTML/stylish/3.jpg",
-        "templates/Website HTML/stylish/4.jpg",
-        "templates/Website HTML/stylish/5.jpg",
-        "templates/Website HTML/stylish/6.jpg"
+        "templates/Website HTML/stylish/1.webp",
+        "templates/Website HTML/stylish/2.webp",
+        "templates/Website HTML/stylish/3.webp",
+        "templates/Website HTML/stylish/4.webp",
+        "templates/Website HTML/stylish/5.webp",
+        "templates/Website HTML/stylish/6.webp"
       ]
     },
     {
@@ -218,11 +220,11 @@
       "cost": "350",
       "link": "https://swiftshop-azure.vercel.app",
       "features": "Build with Bootstrap v5.1.0, 100% Responsive Ecommerce Template, HTML5 + CSS3, 8+ HTML Pages, Amazing Megamenu, W3C valid Code, Multi-Browser Support, Using Google Fonts, Well Documented,",
-      "imageUrl": "templates/Website HTML/swiftshop/1.jpg",
+      "imageUrl": "templates/Website HTML/swiftshop/1.webp",
       "imageGallery": [
-        "templates/Website HTML/swiftshop/1.jpg",
-        "templates/Website HTML/swiftshop/2.jpg",
-        "templates/Website HTML/swiftshop/3.jpg"
+        "templates/Website HTML/swiftshop/1.webp",
+        "templates/Website HTML/swiftshop/2.webp",
+        "templates/Website HTML/swiftshop/3.webp"
       ]
     },
     {
@@ -232,9 +234,9 @@
       "cost": "350",
       "link": "https://vaso-alpha.vercel.app",
       "features": "10 Different pages, Animations and Parallax effects, Beautiful Minimalist Design, 100% Customizable, Responsive and mobile-friendly, Free Google Fonts, HTML5 and CSS3, Bootstrap 5, Free for both personal and commercial use",
-      "imageUrl": "templates/Website HTML/vaso/1.jpg",
+      "imageUrl": "templates/Website HTML/vaso/1.webp",
       "imageGallery": [
-        "templates/Website HTML/vaso/1.jpg"
+        "templates/Website HTML/vaso/1.webp"
       ]
     },
     {
@@ -244,11 +246,11 @@
       "cost": "350",
       "link": "https://waggy-rose.vercel.app",
       "features": "Bootstrap 5, HTML5 and CSS3, Well-organized code, 100% Responsive, 15 different pages, Working Contact form, 20+ Customized Components, Modern and unique design, Free Google fonts",
-      "imageUrl": "templates/Website HTML/waggy/1.jpg",
+      "imageUrl": "templates/Website HTML/waggy/1.webp",
       "imageGallery": [
-        "templates/Website HTML/waggy/1.jpg",
-        "templates/Website HTML/waggy/2.jpg",
-        "templates/Website HTML/waggy/3.jpg"
+        "templates/Website HTML/waggy/1.webp",
+        "templates/Website HTML/waggy/2.webp",
+        "templates/Website HTML/waggy/3.webp"
       ]
     }
   ]

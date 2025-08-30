@@ -56,7 +56,7 @@ try {
 
             // --- THAY ĐỔI: Lấy tất cả các file ảnh .avif ---
             const imageFiles = fs.readdirSync(projectPath)
-                                 .filter(file => file.endsWith('.jpg'))
+                                 .filter(file => file.endsWith('.webp'))
                                  .sort((a, b) => { // Sắp xếp theo số thứ tự
                                     const numA = parseInt(a.match(/\d+/)?.[0] || 0);
                                     const numB = parseInt(b.match(/\d+/)?.[0] || 0);
