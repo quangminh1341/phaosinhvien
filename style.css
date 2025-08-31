@@ -1098,7 +1098,7 @@ body.light-mode .site-footer-panel::before {
     font-weight: 700;
     padding: 4px 10px;
     border-radius: 15px;
-    color: var(--text-primary);
+    color: floralwhite;
     background-color: #6c757d;
     text-transform: uppercase;
 }
