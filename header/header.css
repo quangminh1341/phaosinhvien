@@ -1,8 +1,24 @@
-/* header/header.css */
+/* --- Biến CSS cho màu sắc --- */
+:root {
+    --color-dark-strip-1: #f3ab10; /* Vàng đậm */
+    --color-dark-strip-2: #f8c355; /* Vàng nhạt */
+    --color-light-strip-1: #FF69B4; /* Hồng đậm */
+    --color-light-strip-2: #ff89c8; /* Hồng nhạt */
+}
+
+body.light-mode {
+    --current-strip-1: var(--color-light-strip-1);
+    --current-strip-2: var(--color-light-strip-2);
+}
+
+body:not(.light-mode) {
+    --current-strip-1: var(--color-dark-strip-1);
+    --current-strip-2: var(--color-dark-strip-2);
+}
 
 /* --- Header --- */
 .site-header {
-    position: fixed; /* Giữ nguyên hoặc đổi thành fixed */
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
@@ -13,7 +29,7 @@
     padding: 0 40px;
     z-index: 100;
     box-sizing: border-box;
-    background-color: var(--bg-primary); /* Rất quan trọng để header có nền */
+    background-color: var(--bg-primary);
 }
 
 .site-header::after {
@@ -70,16 +86,81 @@ body.light-mode .site-header::after {
 .header-controls {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 25px;
 }
 
 .nav-toggle { display: none; }
+
+/* --- Auth Buttons (Desktop) --- */
+.header-auth {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.auth-btn {
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-weight: 500;
+    text-decoration: underline;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.login-btn {
+    background-color: transparent;
+}
+
+.login-btn:hover {
+    color: var(--hover-color);
+}
+
+.register-btn {
+    background-color: var(--accent-primary);
+    color: var(--text-on-accent);
+}
+
+.register-btn:hover {
+    background-color: #333;
+    color: #fff;
+    border-color: #333;
+}
+
+body.light-mode .register-btn {
+    background-color: var(--accent-primary);
+}
+
+body.light-mode .register-btn:hover {
+    background-color: #f0f0f0;
+    color: #000;
+    border-color: #ddd;
+}
+
+.nav-separator,
+.auth-link-mobile {
+    display: none;
+}
 
 
 /* --- Responsive cho Header --- */
 @media (max-width: 768px) {
     .site-header { align-items: center; }
     .site-header::after { display: none; }
+    
+    .header-auth {
+        display: none;
+    }
+
+    .nav-separator {
+        display: block;
+        height: 1px;
+        background-color: var(--border-color);
+        margin: 8px 20px;
+    }
+
+    .auth-link-mobile {
+        display: block;
+    }
     
     .site-nav {
         position: absolute;
@@ -166,15 +247,13 @@ body.light-mode .site-header::after {
         transform: translateY(-50%);
     }
     .product-gallery {
-        /* Đổi thành column-reverse để đưa ảnh lớn lên trên */
         flex-direction: column-reverse; 
-        gap: 15px; /* Thêm khoảng cách giữa ảnh lớn và danh sách ảnh nhỏ */
+        gap: 15px;
     }
 
     .gallery-main {
-        /* Quan trọng: Thêm 2 dòng này để ảnh lớn có kích thước và không bị ẩn */
         width: 100%;
-        aspect-ratio: 4 / 3; /* Tỷ lệ khung hình 4:3 phổ biến cho ảnh sản phẩm */
+        aspect-ratio: 4 / 3;
     }
 
     .gallery-thumbnails {
@@ -188,14 +267,13 @@ body.light-mode .site-header::after {
 
 /* --- Theme Toggle Button --- */
 #theme-toggle {
-    /* Đặt vị trí cố định so với cửa sổ trình duyệt */
     position: fixed;
     bottom: 20px;
     right: 20px;
     width: 50px;
     height: 50px;
     cursor: pointer;
-    z-index: 101; /* Đảm bảo nó nổi lên trên các thành phần khác */
+    z-index: 101;
     border-radius: 50%;
     transition: transform 0.3s ease;
     border: none;
@@ -252,4 +330,616 @@ body.light-mode #theme-toggle .fa-moon {
 body.light-mode #theme-toggle:hover .fa-sun {
     background-color: #fff;
     color: #FF69B4;
+}
+
+/* --- Auth Modal --- */
+#auth-modal-overlay {
+    z-index: 999;
+}
+
+.auth-container {
+    background-color: var(--bg-primary);
+    border-radius: 10px;
+    box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+    position: relative;
+    overflow: hidden;
+    width: 768px;
+    max-width: 100%;
+    min-height: 520px;
+    color: var(--text-primary);
+    transform: scale(0.9);
+    transition: transform 0.3s ease-in-out;
+}
+
+.modal-overlay.visible .auth-container {
+    transform: scale(1);
+}
+
+.auth-close-btn {
+    position: absolute;
+    top: 5px;
+    right: 15px;
+    z-index: 101;
+    font-size: 2.5rem;
+    color: var(--text-on-accent);
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.6s ease-in-out;
+}
+
+.auth-container.right-panel-active .auth-close-btn {
+    color: var(--text-primary);
+}
+
+.auth-close-btn:hover {
+    color: var(--bg-primary);
+}
+
+
+.form-container {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    transition: all 0.6s ease-in-out;
+}
+
+.sign-in-container {
+    left: 0;
+    width: 50%;
+    z-index: 2;
+}
+
+.auth-container.right-panel-active .sign-in-container {
+    transform: translateX(100%);
+    opacity: 0;
+}
+
+.sign-up-container {
+    left: 0;
+    width: 50%;
+    opacity: 0;
+    z-index: 1;
+}
+
+.auth-container.right-panel-active .sign-up-container {
+    transform: translateX(100%);
+    opacity: 1;
+    z-index: 5;
+    animation: show 0.6s;
+}
+
+@keyframes show {
+    0%, 49.99% { opacity: 0; z-index: 1; }
+    50%, 100% { opacity: 1; z-index: 5; }
+}
+
+.overlay-container {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 50%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 100;
+    transition: transform 0.6s ease-in-out;
+}
+
+.overlay-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        -25deg,
+        var(--current-strip-2) 50%,
+        var(--current-strip-1) 50%
+    );
+    clip-path: polygon(25% 0, 100% 0, 75% 100%, 0% 100%);
+    z-index: -1;
+    transition: transform 0.6s ease-in-out, background 0.3s ease-in-out;
+}
+
+.auth-container.right-panel-active .overlay-container::before {
+    transform: scaleX(-1);
+}
+
+.auth-container.right-panel-active .overlay-container{
+    transform: translateX(-100%);
+}
+
+.overlay {
+    background: transparent;
+    color: var(--text-on-accent);
+    position: relative;
+    left: -100%;
+    height: 100%;
+    width: 200%;
+    transform: translateX(0);
+    transition: transform 0.6s ease-in-out;
+}
+
+.auth-container.right-panel-active .overlay {
+    transform: translateX(50%);
+}
+
+.overlay-panel {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    top: 0;
+    height: 100%;
+    width: 50%;
+    transform: translateX(0);
+    transition: transform 0.6s ease-in-out;
+    box-sizing: border-box;
+    padding: 0 40px;
+}
+
+.overlay-left {
+    transform: translateX(-20%);
+}
+.auth-container.right-panel-active .overlay-left {
+    transform: translateX(0);
+}
+
+.overlay-right {
+    right: 0;
+    transform: translateX(0);
+}
+.auth-container.right-panel-active .overlay-right {
+    transform: translateX(20%);
+}
+
+.form-container form {
+    background-color: var(--bg-primary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 50px;
+    height: 100%;
+    text-align: center;
+    box-sizing: border-box;
+    gap: 25px;
+}
+
+.form-container h1 {
+    font-weight: bold;
+    margin: 0;
+    font-size: 1.8rem;
+    color: var(--text-primary);
+    flex-shrink: 0;
+    position: relative;
+    bottom: 20px;
+}
+
+.overlay-panel h1 {
+    color: var(--text-on-accent);
+    line-height: 1.2;
+    margin: 0;
+    padding: 0;
+}
+
+.overlay-panel.overlay-left h1:first-of-type {
+    font-size: 1.8rem;
+    font-weight: 500;
+}
+
+.overlay-panel.overlay-left h1:nth-of-type(2) {
+    font-size: 2.1rem;
+    font-weight: 700;
+    white-space: nowrap;
+    margin: 5px 0 15px 0;
+    position: relative;
+    left: 5px;
+}
+
+.overlay-panel.overlay-right h1 {
+    font-size: 2.1rem; 
+}
+
+/* Quy tắc chung cho tất cả các thẻ p trong overlay */
+.overlay-panel p {
+    font-size: 1rem;
+    max-width: 90%;
+    line-height: 1.5;
+}
+
+.overlay-panel.overlay-left p {
+    position: relative; 
+    left: 12px;          
+}
+
+.form-container input {
+    background-color: var(--fomt-box-color);
+    border: none;
+    padding: 12px 15px;
+    margin: 0;
+    width: 100%;
+    border-radius: 5px;
+    color: var(--text-primary);
+}
+.form-container input:focus {
+    outline: 2px solid var(--accent-primary);
+}
+
+.auth-button {
+    border-radius: 20px;
+    border: 1px solid var(--accent-primary);
+    background-color: var(--accent-primary);
+    color: var(--text-on-accent);
+    font-size: 12px;
+    font-weight: bold;
+    padding: 12px 45px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: transform 80ms ease-in, background-color 0.2s;
+    cursor: pointer;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+.auth-button:active {
+    transform: scale(0.95);
+}
+.auth-button:focus {
+    outline: none;
+}
+
+body.light-mode .auth-button:not(.google-btn):hover {
+    background-color: #ff89c8;
+}
+body:not(.light-mode) .auth-button:not(.google-btn):hover {
+    background-color: #f8c355;
+}
+
+.google-btn {
+    background-color: #fff;
+    color: #333;
+    border: 1px solid #ddd;
+    margin: 0; 
+    width: 100%; 
+}
+.google-btn i {
+    color: #DB4437;
+    font-size: 1.2rem;
+}
+.google-btn:hover {
+    background-color: #f7f7f7;
+}
+
+.form-switcher-text {
+    font-size: 14px;
+    margin: 0;
+    padding: 0;
+}
+.form-switcher-text a {
+    font-weight: bold;
+    color: var(--accent-primary);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .auth-container {
+        width: 95vw;
+        max-width: 400px;
+        min-height: 500px;
+    }
+    .overlay-container {
+        display: none;
+    }
+    .form-container {
+        width: 100%;
+        position: absolute;
+    }
+    
+    .sign-in-container {
+        opacity: 1;
+        transform: translateX(0);
+        z-index: 1;
+    }
+    .sign-up-container {
+        opacity: 0;
+        transform: translateX(0);
+        z-index: 5;
+        pointer-events: none;
+    }
+    
+    .auth-container.right-panel-active .sign-in-container {
+        opacity: 0;
+        z-index: 1;
+        pointer-events: none;
+    }
+    .auth-container.right-panel-active .sign-up-container {
+        opacity: 1;
+        z-index: 5;
+        pointer-events: auto;
+    }
+     
+    .auth-close-btn { color: var(--text-primary); }
+    
+    .auth-container, body.light-mode .auth-container {
+        background: var(--bg-primary);
+    }
+}
+
+/* --- CSS cho hiệu ứng animation modal --- */
+.auth-container h1, .auth-container p {
+    visibility: hidden;
+}
+
+.char {
+    transform: translateY(15%);
+    transition: transform .5s;
+}
+
+/* --- CSS cho hiệu ứng animation modal --- */
+.auth-container h1, .auth-container p {
+    visibility: hidden;
+}
+
+.char {
+    transform: translateY(15%);
+    transition: transform .5s;
+}
+
+/* --- User Profile Dropdown Styles --- */
+.profile-container {
+    position: relative;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.user-profile-button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background-color: transparent;
+    border: 1px solid var(--accent-primary);
+    padding: 6px 12px 6px 6px;
+    border-radius: 50px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.user-profile-button:hover {
+    background-color: var(--fomt-box-color);
+    border-color: var(--accent-primary);
+}
+
+.profile-avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.profile-details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    font-weight: 500;
+}
+
+.profile-name {
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+
+.profile-money {
+    font-size: 0.8rem;
+    color: var(--accent-primary);
+    font-weight: 700;
+}
+
+.profile-chevron {
+    color: var(--text-primary);
+    margin-left: 8px;
+    transition: transform 0.3s ease;
+}
+
+.user-profile-button.active .profile-chevron {
+    transform: rotate(180deg); /* Xoay icon khi menu mở */
+}
+
+.profile-dropdown {
+    position: absolute;
+    top: calc(100% + 10px); /* Vị trí menu dưới nút bấm */
+    right: 0;
+    width: 220px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    z-index: 110;
+    overflow: hidden;
+    
+    /* Hiệu ứng xuất hiện */
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.profile-dropdown.active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.profile-dropdown a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 15px;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-family: 'Montserrat', sans-serif;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.profile-dropdown a i {
+    width: 16px; /* Căn chỉnh icon */
+    text-align: center;
+}
+
+.profile-dropdown a:hover {
+    background-color: var(--accent-primary);
+    color: var(--text-on-accent);
+}
+
+.profile-dropdown .logout-btn {
+    border-top: 1px solid var(--border-color);
+}
+
+/* --- Notification Bell Styles --- */
+.notification-container {
+    position: relative;
+}
+
+.notification-bell-btn {
+    background: transparent;
+    border: none;
+    color: var(--header-text-color);
+    font-size: 1.5rem;
+    cursor: pointer;
+    position: relative;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.notification-bell-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 1px solid var(--accent-primary);
+    box-sizing: border-box;
+}
+
+.notification-bell-btn:hover {
+    background-color: var(--fomt-box-color);
+}
+
+
+.notification-badge {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: red;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: 0.7rem;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid var(--bg-primary);
+}
+
+.notification-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 350px;
+    max-height: 400px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    z-index: 110;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+
+    /* Hiệu ứng xuất hiện */
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.notification-dropdown.active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.notification-header {
+    padding: 15px;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.notification-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+.notification-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+.notification-item {
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.notification-item:last-child {
+    border-bottom: none;
+}
+
+.notification-item:hover {
+    background-color: var(--fomt-box-color);
+}
+
+.notification-item .unread-dot {
+    width: 8px;
+    height: 8px;
+    background-color: var(--accent-primary);
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.notification-item-content p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: var(--text-primary);
+}
+
+.notification-item-content .timestamp {
+    font-size: 0.75rem;
+    color: #aaa;
+    margin-top: 5px;
 }

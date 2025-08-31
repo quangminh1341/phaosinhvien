@@ -4,9 +4,47 @@
         <a href="#" data-target="#trangchu-panel" data-text="Trang chủ">Trang chủ</a>
         <a href="#" data-target="#dichvu-panel" data-text="Dịch vụ">Dịch vụ</a>
         <a href="#" data-target="#lienhe-panel" data-text="Liên hệ">Liên hệ</a>
+        
+        <div class="nav-separator"></div>
+        <a href="#" class="auth-link-mobile">Đăng nhập</a>
+        <a href="#" class="auth-link-mobile">Đăng ký</a>
     </nav>
 
     <div class="header-controls">
+        <div class="header-auth">
+            <a href="#" class="auth-btn login-btn">Đăng nhập</a>
+            <a href="#" class="auth-btn register-btn">Đăng ký</a>
+        </div>
+
+        <div class="notification-container" style="display: none;">
+            <button class="notification-bell-btn">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge"></span>
+            </button>
+            <div class="notification-dropdown">
+                <div class="notification-header">
+                    <h3>Thông báo</h3>
+                </div>
+                <ul class="notification-list">
+                    </ul>
+            </div>
+        </div>
+        <div class="profile-container" style="display: none;">
+            <button class="user-profile-button">
+                <img src="images/logo.png" alt="User Avatar" class="profile-avatar">
+                <div class="profile-details">
+                    <span class="profile-name"></span>
+                    <span class="profile-money"></span>
+                </div>
+                <i class="fas fa-chevron-down profile-chevron"></i>
+            </button>
+            <div class="profile-dropdown">
+                <a href="#" id="profile-info-btn"> <i class="fas fa-user-circle"></i> Thông tin </a>
+                <a href="#" id="profile-orders-btn"> <i class="fas fa-receipt"></i> Đơn hàng </a>
+                <a href="#" id="profile-payments-btn"> <i class="fas fa-wallet"></i> Thanh toán </a>
+                <a href="#" class="logout-btn"> <i class="fas fa-sign-out-alt"></i> Đăng xuất </a>
+            </div>
+        </div>
         <div id="theme-toggle">
             <i class="fas fa-sun"></i>
             <i class="fas fa-moon"></i>
@@ -15,4 +53,4 @@
             <span class="hamburger"></span>
         </button>
     </div>
-</header>   
+</header>
