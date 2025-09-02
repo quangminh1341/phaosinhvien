@@ -1,4 +1,3 @@
-// --- DỮ LIỆU GIẢ ĐỊNH (GIỮ NGUYÊN CHO CÁC TÍNH NĂNG KHÔNG LIÊN QUAN ĐẾN USER) ---
 
 // Dữ liệu thông báo giả định
 const mockNotifications = [
@@ -70,7 +69,7 @@ const mockCommissionHistory = [
 
 // --- CẤU HÌNH API ---
 const API_BASE_URL = 'https://phaosinhvien-backend.onrender.com/api';
-let currentUser = null; // Biến toàn cục để lưu thông tin người dùng
+let currentUser = null;
 
 // --- HÀM TRỢ GIÚP API ---
 async function apiRequest(endpoint, method = 'GET', body = null, token = null) {
