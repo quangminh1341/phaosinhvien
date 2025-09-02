@@ -1,21 +1,4 @@
-
-// Dữ liệu người dùng giả định được cập nhật
-const mockUser = {
-  id: 'a1b2c3d4-e5f6-7890-123A-567890abcdef',
-  email: 'quangminh01341@gmail.com',
-  full_name: 'Zaiiky',
-  referral_code: 'MINHDEPTRAI',
-  invited_by: 'Minh Đức',
-  money: 2000000,
-  money_commission: 50000, 
-  referrals: 12, 
-  level_id: '123',
-  created_at: '2025-08-31T14:43:26Z',
-  role: 'member',
-  phone: '0912345678',
-  gender: 'Nam',
-  dob: '2003-10-25'
-};
+// --- DỮ LIỆU GIẢ ĐỊNH (GIỮ NGUYÊN CHO CÁC TÍNH NĂNG KHÔNG LIÊN QUAN ĐẾN USER) ---
 
 // Dữ liệu thông báo giả định
 const mockNotifications = [
@@ -85,6 +68,184 @@ const mockCommissionHistory = [
 ];
 
 
+// --- CẤU HÌNH API ---
+const API_BASE_URL = 'https://phaosinhvien-backend.onrender.com/api';
+let currentUser = null; // Biến toàn cục để lưu thông tin người dùng
+
+// --- HÀM TRỢ GIÚP API ---
+async function apiRequest(endpoint, method = 'GET', body = null, token = null) {
+    const headers = { 'Content-Type': 'application/json' };
+    const authToken = token || localStorage.getItem('accessToken');
+    if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+    }
+
+    const config = {
+        method,
+        headers,
+    };
+
+    if (body && method !== 'GET') {
+        config.body = JSON.stringify(body);
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ message: response.statusText }));
+            throw new Error(errorData.message || `Lỗi HTTP: ${response.status}`);
+        }
+        return response.json();
+    } catch (error) {
+        console.error(`Lỗi API tại ${endpoint}:`, error);
+        throw error;
+    }
+}
+
+// --- HÀM XÁC THỰC ---
+
+function handleGoogleRedirect(action) {
+    localStorage.setItem('authAction', action);
+    if (action === 'register') {
+        const fullName = document.getElementById('register-username').value;
+        const phoneNumber = document.getElementById('register-phone').value;
+        if (!fullName || !phoneNumber) {
+            alert('Vui lòng nhập đầy đủ Tên và Số điện thoại.');
+            return;
+        }
+        localStorage.setItem('pendingRegistrationData', JSON.stringify({ fullName, phoneNumber }));
+    }
+    window.location.href = `${API_BASE_URL}/auth/google`;
+}
+
+async function handleOAuthCallback() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const dataParam = urlParams.get('data');
+
+    if (!dataParam) return;
+
+    // Xóa query param khỏi URL để tránh xử lý lại
+    window.history.replaceState({}, document.title, window.location.pathname);
+
+    try {
+        const authData = JSON.parse(dataParam);
+        const { access_token, user } = authData;
+        const { isExsit } = user;
+        
+        const authAction = localStorage.getItem('authAction');
+        localStorage.removeItem('authAction');
+        
+        const authModalOverlay = document.getElementById('auth-modal-overlay');
+        const closeModalBtn = authModalOverlay.querySelector('.auth-close-btn');
+
+        if (authAction === 'login') {
+            if (isExsit) {
+                localStorage.setItem('accessToken', access_token);
+                await fetchAndDisplayUserProfile();
+                if(closeModalBtn) closeModalBtn.click(); // Đóng modal
+            } else {
+                alert("Tài khoản của bạn chưa được Đăng ký, hãy Đăng ký để có thể Đăng nhập");
+            }
+        } else if (authAction === 'register') {
+            if (isExsit) {
+                alert("Gmail này đã được đăng ký trước đó rồi");
+            } else {
+                // Đăng ký thành công, tiến hành cập nhật profile
+                const pendingData = JSON.parse(localStorage.getItem('pendingRegistrationData'));
+                localStorage.removeItem('pendingRegistrationData');
+
+                if (pendingData) {
+                    const profileUpdate = {
+                        user: {
+                            full_name: pendingData.fullName,
+                            phone_number: pendingData.phoneNumber,
+                        }
+                    };
+                    // Cập nhật profile với access_token vừa nhận được
+                    await apiRequest('/users/me/profile', 'PATCH', profileUpdate, access_token);
+                }
+                
+                // Lưu token và tải thông tin người dùng
+                localStorage.setItem('accessToken', access_token);
+                await fetchAndDisplayUserProfile();
+                alert('Đăng ký thành công!');
+                if(closeModalBtn) closeModalBtn.click(); // Đóng modal
+            }
+        }
+    } catch (error) {
+        console.error('Lỗi xử lý callback OAuth:', error);
+        alert('Đã có lỗi xảy ra trong quá trình xác thực.');
+    }
+}
+
+async function fetchAndDisplayUserProfile() {
+    try {
+        const response = await apiRequest('/users/me/profile');
+        currentUser = response.data;
+        showLoggedInState(currentUser);
+    } catch (error) {
+        console.error("Phiên đăng nhập không hợp lệ hoặc đã hết hạn.", error);
+        handleLogout();
+    }
+}
+
+async function checkLoginStatus() {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+        await fetchAndDisplayUserProfile();
+    } else {
+        showLoggedOutState();
+    }
+}
+
+function handleLogout() {
+    localStorage.removeItem('accessToken');
+    currentUser = null;
+    showLoggedOutState();
+}
+
+
+// --- CÁC HÀM CẬP NHẬT GIAO DIỆN ---
+
+function showLoggedInState(user) {
+    const headerAuth = document.querySelector('.header-auth');
+    const profileContainer = document.querySelector('.profile-container');
+    const notificationContainer = document.querySelector('.notification-container');
+
+    if (headerAuth && profileContainer && notificationContainer && user) {
+        profileContainer.querySelector('.profile-name').textContent = user.full_name || user.email;
+        profileContainer.querySelector('.profile-money').textContent = `Số dư: ${user.moneys?.toLocaleString('vi-VN') || 0} VNĐ`;
+        
+        const profileAvatar = profileContainer.querySelector('.profile-avatar');
+        if (user.avatar_url) profileAvatar.src = user.avatar_url;
+
+        headerAuth.style.display = 'none';
+        profileContainer.style.display = 'block';
+        notificationContainer.style.display = 'block';
+        
+        updateNotificationUI(mockNotifications);
+
+        const panelUsername = document.querySelector('.panel-username');
+        const panelAvatar = document.querySelector('.panel-avatar');
+        if (panelUsername) panelUsername.textContent = user.full_name || user.email;
+        if (panelAvatar) panelAvatar.src = user.avatar_url || 'images/logo.png';
+        
+        populateProfilePanel(user);
+    }
+}
+
+function showLoggedOutState() {
+    const headerAuth = document.querySelector('.header-auth');
+    const profileContainer = document.querySelector('.profile-container');
+    const notificationContainer = document.querySelector('.notification-container');
+    if (headerAuth && profileContainer && notificationContainer) {
+        headerAuth.style.display = 'flex';
+        profileContainer.style.display = 'none';
+        notificationContainer.style.display = 'none';
+    }
+}
+
+
 function updateContactLogo(theme) {
     const contactLogo = document.querySelector('.contact-info-card .contact-logo img');
     if (contactLogo) {
@@ -138,6 +299,7 @@ function updateNotificationUI(notifications) {
     }
 }
 
+// Các hàm render dữ liệu giả định khác giữ nguyên
 function renderOrders() {
     const orderListContainer = document.querySelector('.order-list');
     const searchInput = document.getElementById('order-search-input');
@@ -216,14 +378,14 @@ function populateProfilePanel(user) {
     const balanceSpan = document.getElementById('profile-balance');
     const commissionSpan = document.getElementById('profile-commission');
 
-    if (avatarPreview) avatarPreview.src = 'images/logo.png';
-    if(balanceSpan) balanceSpan.textContent = user.money.toLocaleString('vi-VN') + ' VNĐ';
-    if(commissionSpan) commissionSpan.textContent = user.money_commission.toLocaleString('vi-VN') + ' VNĐ';
+    if (avatarPreview) avatarPreview.src = user.avatar_url || 'images/logo.png';
+    if(balanceSpan) balanceSpan.textContent = (user.moneys || 0).toLocaleString('vi-VN') + ' VNĐ';
+    if(commissionSpan) commissionSpan.textContent = (user.moneys_commission || 0).toLocaleString('vi-VN') + ' VNĐ';
 
     const nameInput = document.getElementById('profile-name');
     const referralInput = document.getElementById('profile-referral-code');
-    if (nameInput) nameInput.value = user.full_name;
-    if (referralInput) referralInput.value = user.referral_code;
+    if (nameInput) nameInput.value = user.full_name || '';
+    if (referralInput) referralInput.value = user.referral_code || '';
 
     const emailInput = document.getElementById('profile-email');
     if (emailInput && user.email) {
@@ -248,10 +410,10 @@ function populateProfilePanel(user) {
     phoneEditWrapper.style.display = 'none';
     phoneInput.style.display = 'none';
 
-    if (user.phone) {
+    if (user.phone_number) {
         phoneDisplayWrapper.style.display = 'flex';
-        const start = user.phone.substring(0, 2);
-        const end = user.phone.substring(user.phone.length - 2);
+        const start = user.phone_number.substring(0, 2);
+        const end = user.phone_number.substring(user.phone_number.length - 2);
         maskedPhoneInput.value = `${start}******${end}`;
     } else {
         addPhoneBtn.style.display = 'inline-flex';
@@ -271,11 +433,11 @@ function populateProfilePanel(user) {
         yearSelect.innerHTML = [...Array(100).keys()].map(i => `<option value="${currentYear - i}">${currentYear - i}</option>`).join('');
     }
 
-    if (user.dob) {
-        const [year, month, day] = user.dob.split('-');
-        daySelect.value = parseInt(day, 10);
-        monthSelect.value = parseInt(month, 10);
-        yearSelect.value = year;
+    if (user.birthday) {
+        const dob = new Date(user.birthday);
+        daySelect.value = dob.getDate();
+        monthSelect.value = dob.getMonth() + 1;
+        yearSelect.value = dob.getFullYear();
     }
 }
 
@@ -479,7 +641,9 @@ function renderCommissionView() {
 }
 
 
+// --- HÀM KHỞI TẠO CHÍNH ---
 function initializeHeader() {
+    // Xử lý chung cho Giao diện
     const navToggle = document.querySelector('.nav-toggle');
     const siteNav = document.querySelector('.site-nav');
     if (navToggle && siteNav) {
@@ -510,35 +674,8 @@ function initializeHeader() {
         });
     }
 
-    const headerAuth = document.querySelector('.header-auth');
-    const profileContainer = document.querySelector('.profile-container');
-    const notificationContainer = document.querySelector('.notification-container');
+    // Logic cho Modal Xác thực
     const authModalOverlay = document.getElementById('auth-modal-overlay');
-
-    const showLoggedInState = (user) => {
-        if (headerAuth && profileContainer && notificationContainer) {
-            profileContainer.querySelector('.profile-name').textContent = user.full_name;
-            profileContainer.querySelector('.profile-money').textContent = `Số dư: ${user.money.toLocaleString('en-US')}`;
-            headerAuth.style.display = 'none';
-            profileContainer.style.display = 'block';
-            notificationContainer.style.display = 'block';
-            updateNotificationUI(mockNotifications);
-            const panelUsername = document.querySelector('.panel-username');
-            const panelAvatar = document.querySelector('.panel-avatar');
-            if (panelUsername) panelUsername.textContent = user.full_name;
-            if (panelAvatar) panelAvatar.src = 'images/logo.png';
-            populateProfilePanel(user);
-        }
-    };
-
-    const showLoggedOutState = () => {
-        if (headerAuth && profileContainer && notificationContainer) {
-            headerAuth.style.display = 'flex';
-            profileContainer.style.display = 'none';
-            notificationContainer.style.display = 'none';
-        }
-    };
-
     if (authModalOverlay) {
         const authContainer = document.getElementById('auth-container');
         const openLoginButtons = document.querySelectorAll('.login-btn, .auth-link-mobile:nth-child(5)');
@@ -546,7 +683,19 @@ function initializeHeader() {
         const closeModalBtn = authModalOverlay.querySelector('.auth-close-btn');
         const goSignUpLink = document.getElementById('goSignUp');
         const goSignInLink = document.getElementById('goSignIn');
+        
+        const registerForm = document.getElementById('register-form');
+        const registerStep1 = document.getElementById('register-step-1');
+        const googleRegisterBtn = document.getElementById('google-register-btn');
         let modalAnimation;
+
+        const resetRegisterForm = () => {
+            if (registerStep1 && googleRegisterBtn) {
+                registerStep1.style.display = 'flex';
+                googleRegisterBtn.style.display = 'none';
+                if(registerForm) registerForm.reset();
+            }
+        };
 
         if (authContainer) {
             const animatedText = new SplitType('.auth-container h1, .auth-container p', { types: 'lines, chars' });
@@ -568,26 +717,59 @@ function initializeHeader() {
                 authModalOverlay.classList.add('visible');
                 modalAnimation.timeScale(2).play();
             };
-            const closeModal = () => modalAnimation.timeScale(3.5).reverse();
+            const closeModal = () => {
+                modalAnimation.timeScale(3.5).reverse();
+                setTimeout(resetRegisterForm, 600);
+            };
 
             openLoginButtons.forEach(btn => btn.addEventListener('click', (e) => { e.preventDefault(); openModal(false); }));
             openRegisterButtons.forEach(btn => btn.addEventListener('click', (e) => { e.preventDefault(); openModal(true); }));
-            if (goSignUpLink) goSignUpLink.addEventListener('click', (e) => { e.preventDefault(); authContainer.classList.add('right-panel-active'); });
-            if (goSignInLink) goSignInLink.addEventListener('click', (e) => { e.preventDefault(); authContainer.classList.remove('right-panel-active'); });
+            
+            if (goSignUpLink) {
+                goSignUpLink.addEventListener('click', (e) => { 
+                    e.preventDefault(); 
+                    authContainer.classList.add('right-panel-active');
+                    resetRegisterForm();
+                });
+            }
+            if (goSignInLink) {
+                goSignInLink.addEventListener('click', (e) => { 
+                    e.preventDefault(); 
+                    authContainer.classList.remove('right-panel-active'); 
+                });
+            }
             if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
             authModalOverlay.addEventListener('click', (e) => { if (e.target === authModalOverlay) closeModal(); });
 
-            const signInButtonInModal = document.querySelector('.sign-in-container .auth-button');
-            if (signInButtonInModal) {
-                signInButtonInModal.addEventListener('click', (e) => {
+            if(registerForm && registerStep1 && googleRegisterBtn) {
+                registerForm.addEventListener('submit', (e) => {
                     e.preventDefault();
-                    showLoggedInState(mockUser);
-                    closeModal();
+                    if(registerForm.checkValidity()) {
+                        registerStep1.style.display = 'none';
+                        googleRegisterBtn.style.display = 'flex';
+                    }
+                });
+            }
+
+            // Gắn event listener cho các nút Google
+            const googleLoginBtn = document.querySelector('.sign-in-container .google-btn');
+            if(googleLoginBtn) {
+                googleLoginBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    handleGoogleRedirect('login');
+                });
+            }
+            if(googleRegisterBtn) {
+                googleRegisterBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    handleGoogleRedirect('register');
                 });
             }
         }
     }
 
+    // Logic Profile Dropdown
+    const profileContainer = document.querySelector('.profile-container');
     if (profileContainer) {
         const profileButton = profileContainer.querySelector('.user-profile-button');
         const profileDropdown = profileContainer.querySelector('.profile-dropdown');
@@ -607,10 +789,12 @@ function initializeHeader() {
 
         logoutButton.addEventListener('click', (e) => {
             e.preventDefault();
-            showLoggedOutState();
+            handleLogout();
         });
     }
 
+    // Logic chuông thông báo
+    const notificationContainer = document.querySelector('.notification-container');
     if (notificationContainer) {
         const bellButton = notificationContainer.querySelector('.notification-bell-btn');
         const notificationDropdown = notificationContainer.querySelector('.notification-dropdown');
@@ -626,6 +810,7 @@ function initializeHeader() {
         });
     }
     
+    // Logic User Panel Modal (Modal thông tin người dùng)
     const userPanelModal = document.getElementById('user-panel-modal');
     if (userPanelModal) {
         const profileInfoBtn = document.getElementById('profile-info-btn');
@@ -666,7 +851,7 @@ function initializeHeader() {
                 }
             }
             if (targetId === 'panel-profile') {
-                populateProfilePanel(mockUser);
+                populateProfilePanel(currentUser);
             }
             if (targetId === 'panel-orders') {
                 renderOrders();
@@ -676,7 +861,6 @@ function initializeHeader() {
                 renderTransactions();
             }
             if (targetId === 'panel-marketing') {
-                // Initial render for marketing panel
                 renderMarketingStats();
             }
         };
@@ -736,73 +920,7 @@ function initializeHeader() {
             }
         });
 
-        const avatarUpload = document.getElementById('avatar-upload');
-        const avatarPreview = document.getElementById('profile-avatar-preview');
-        avatarUpload.addEventListener('change', function() {
-            if (this.files && this.files[0]) {
-                avatarPreview.src = URL.createObjectURL(this.files[0]);
-            }
-        });
-
-        const addPhoneBtn = document.getElementById('add-phone-btn');
-        const phoneInput = document.getElementById('profile-phone');
-        const changePhoneBtn = document.getElementById('change-phone-btn');
-        const phoneDisplayWrapper = document.getElementById('phone-display-wrapper');
-        const phoneEditWrapper = document.getElementById('phone-edit-wrapper');
-        const oldPhoneInput = document.getElementById('profile-phone-old');
-        const newPhoneInput = document.getElementById('profile-phone-new');
-        const confirmChangeBtn = document.getElementById('confirm-phone-change-btn');
-        
-        addPhoneBtn.addEventListener('click', () => {
-            addPhoneBtn.style.display = 'none';
-            phoneInput.style.display = 'block';
-            phoneInput.focus();
-        });
-        
-        changePhoneBtn.addEventListener('click', () => {
-            document.getElementById('main-phone-label').style.display = 'none';
-            phoneDisplayWrapper.style.display = 'none';
-            phoneEditWrapper.style.display = 'block';
-        });
-
-        confirmChangeBtn.addEventListener('click', () => {
-            const oldPhone = oldPhoneInput.value.trim();
-            const newPhone = newPhoneInput.value.trim();
-            const phoneRegex = /^0\d{9}$/;
-
-            if (oldPhone !== mockUser.phone) {
-                alert('Lỗi: Số điện thoại cũ không chính xác.');
-                return;
-            }
-            if (!phoneRegex.test(newPhone)) {
-                alert('Lỗi: Số điện thoại mới không hợp lệ. Vui lòng nhập SĐT có 10 số và bắt đầu bằng 0.');
-                return;
-            }
-            if (oldPhone === newPhone) {
-                alert('Lỗi: Số điện thoại mới phải khác số điện thoại cũ.');
-                return;
-            }
-
-            mockUser.phone = newPhone;
-            alert('Thay đổi số điện thoại thành công!');
-            oldPhoneInput.value = '';
-            newPhoneInput.value = '';
-            populateProfilePanel(mockUser);
-        });
-        
-        phoneInput.addEventListener('blur', () => {
-            const phoneNumber = phoneInput.value.trim();
-            const phoneRegex = /^0\d{9}$/;
-
-            if (phoneNumber === '' || !phoneRegex.test(phoneNumber)) {
-                if (mockUser.phone === null) {
-                    phoneInput.value = '';
-                    phoneInput.style.display = 'none';
-                    addPhoneBtn.style.display = 'inline-flex';
-                }
-            }
-        });
-
+        // Các event listener khác trong User Panel...
         const copyReferralBtn = document.getElementById('copy-referral-btn');
         const referralCodeInput = document.getElementById('profile-referral-code');
 
@@ -817,25 +935,7 @@ function initializeHeader() {
                 console.error('Không thể sao chép: ', err);
             });
         });
-
-        const profileForm = document.getElementById('profile-form');
-        profileForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const newPhoneNumber = phoneInput.value.trim();
-            const phoneRegex = /^0\d{9}$/;
-
-            if(mockUser.phone === null) {
-                if (newPhoneNumber && phoneRegex.test(newPhoneNumber)) {
-                    mockUser.phone = newPhoneNumber;
-                }
-            }
-            
-            mockUser.full_name = document.getElementById('profile-name').value;
-            
-            populateProfilePanel(mockUser);
-            alert('Thông tin hồ sơ đã được cập nhật!');
-        });
-
+        
         const orderFilters = document.querySelector('.order-filters');
         const searchInput = document.getElementById('order-search-input');
 
@@ -868,7 +968,6 @@ function initializeHeader() {
             monthFilter.addEventListener('change', renderTransactions);
         }
         
-        // Marketing Panel Logic
         const marketingFilters = document.querySelector('.marketing-filters');
         const commissionMonthFilter = document.getElementById('commission-month-filter');
 
@@ -884,5 +983,47 @@ function initializeHeader() {
         if (commissionMonthFilter) {
             commissionMonthFilter.addEventListener('change', renderCommissionView);
         }
+        
+        // Logic chat box
+        const chatIcon = document.getElementById('chat-icon');
+        const chatBox = document.getElementById('chat-box');
+        const chatCloseBtn = document.getElementById('chat-close');
+        const chatInput = document.getElementById('chat-input');
+        const chatSendBtn = document.getElementById('chat-send-btn');
+        const chatBody = document.querySelector('.chat-body');
+
+        if (chatIcon && chatBox && chatCloseBtn) {
+            chatIcon.addEventListener('click', () => chatBox.classList.toggle('hidden'));
+            chatCloseBtn.addEventListener('click', () => chatBox.classList.add('hidden'));
+            window.addEventListener('click', (e) => {
+                if (!chatBox.contains(e.target) && !chatIcon.contains(e.target)) {
+                    chatBox.classList.add('hidden');
+                }
+            });
+        }
+        
+        const sendMessage = () => {
+            const messageText = chatInput.value.trim();
+            if (messageText === "") return;
+            const userMessage = document.createElement('div');
+            userMessage.classList.add('chat-message', 'message-user');
+            userMessage.textContent = messageText;
+            chatBody.appendChild(userMessage);
+            chatBody.scrollTop = chatBody.scrollHeight;
+            chatInput.value = '';
+            setTimeout(() => {
+                const systemMessage = document.createElement('div');
+                systemMessage.classList.add('chat-message', 'message-system');
+                systemMessage.textContent = 'Chúng tôi đã nhận được tin nhắn của bạn. Vui lòng chờ trong giây lát!';
+                chatBody.appendChild(systemMessage);
+                chatBody.scrollTop = chatBody.scrollHeight;
+            }, 1000);
+        }
+        chatSendBtn.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
     }
+    
+    // --- KHỞI CHẠY KIỂM TRA XÁC THỰC ---
+    handleOAuthCallback();
+    checkLoginStatus();
 }
