@@ -112,17 +112,34 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
 // --- HÀM XÁC THỰC ---
 
 function handleGoogleRedirect(action) {
-    localStorage.setItem('authAction', action);
+    // URL cơ sở của backend API
+    let redirectUrl = '/api/auth/google';
+
     if (action === 'register') {
         const fullName = document.getElementById('register-username').value;
         const phoneNumber = document.getElementById('register-phone').value;
+
         if (!fullName || !phoneNumber) {
             alert('Vui lòng nhập đầy đủ Tên và Số điện thoại.');
             return;
         }
-        localStorage.setItem('pendingRegistrationData', JSON.stringify({ fullName, phoneNumber }));
+
+        // 1. Tạo một object chứa dữ liệu cần gửi
+        const stateData = {
+            fullname: fullName,
+            sdt: phoneNumber
+        };
+
+        // 2. Chuyển object thành chuỗi JSON, sau đó mã hóa Base64
+        //    (btoa là hàm có sẵn trong trình duyệt để mã hóa Base64)
+        const encodedState = btoa(JSON.stringify(stateData));
+
+        // 3. Gắn chuỗi đã mã hóa vào URL dưới dạng query parameter 'state'
+        redirectUrl += `?state=${encodedState}`;
     }
-    window.location.href = `api/auth/google`;
+
+    // 4. Thực hiện redirect với URL đã có (hoặc không có) state
+    window.location.href = redirectUrl;
 }
 
 async function handleOAuthCallback() {
