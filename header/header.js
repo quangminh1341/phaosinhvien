@@ -69,7 +69,7 @@ const mockCommissionHistory = [
 let authModalOverlay, authContainer, modalAnimation, openModal;
 
 // --- CẤU HÌNH API ---
-const API_BASE_URL = 'http://194.233.72.98:3015/api';
+const API_BASE_URL = '/api';
 let currentUser = null;
 
 // --- HÀM TRỢ GIÚP API ---
