@@ -111,39 +111,51 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
 
 // --- HÀM XÁC THỰC ---
 
-function handleGoogleRedirect(action) {
-    let redirectUrl = '/api/auth/google';
+async function handleOAuthCallback() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const isExistParam = urlParams.get('isExist');
 
-    if (action === 'register') {
-        const fullName = document.getElementById('register-username').value;
-        const phoneNumber = document.getElementById('register-phone').value;
-
-        if (!fullName || !phoneNumber) {
-            alert('Vui lòng nhập đầy đủ Tên và Số điện thoại.');
-            return;
-        }
-
-        const params = new URLSearchParams();
-        params.append('full_name', fullName);
-        params.append('phone_number', phoneNumber);
-
-        redirectUrl += `?${params.toString()}`;
+    // If isExistParam is not present, do nothing and exit.
+    if (isExistParam === null) {
+        return;
     }
 
-    console.log('Redirecting to:', redirectUrl);
-    window.location.href = redirectUrl;
-}
+    // Clean the URL
+    window.history.replaceState({}, document.title, window.location.pathname);
+
+    const isExist = isExistParam === 'true';
+
+    if (isExist) {
+        // User exists. Server should have set an auth cookie.
+        // We just need to fetch the user profile and update the UI.
+        console.log("User exists, attempting to fetch profile.");
+        await fetchAndDisplayUserProfile();
+        
+        // Close the modal if it's open
+        const authModalOverlay = document.getElementById('auth-modal-overlay');
+        const closeModalBtn = authModalOverlay.querySelector('.auth-close-btn');
+        if(authModalOverlay && authModalOverlay.classList.contains('visible')) {
+           if(closeModalBtn) closeModalBtn.click();
+        }
+    } else {
+        // User does not exist.
+        // Show the registration form with a message.
+        const message = "Gmail này chưa được đăng ký. Vui lòng điền thông tin để hoàn tất đăng ký.";
+        console.log("User does not exist, showing registration modal.");
+        if (openModal) {
+            openModal(true, message); // openModal(showRegisterPanel = true, message)
+        }
+    }
+
 
 async function handleOAuthCallback() {
     console.log("DEBUG 1: handleOAuthCallback đã bắt đầu."); // BƯỚC 1
 
     const urlParams = new URLSearchParams(window.location.search);
-    const dataParam = urlParams.get('data');
     const isExistParam = urlParams.get('isExist');
 
     console.log("DEBUG 2: Dữ liệu từ URL:", { dataParam, isExistParam }); // BƯỚC 2
 
-    if (!dataParam || isExistParam === null) return;
 
     window.history.replaceState({}, document.title, window.location.pathname);
 
@@ -173,7 +185,7 @@ async function handleOAuthCallback() {
                 const message = "Gmail này đã tồn tại. Vui lòng đăng nhập.";
                 if (openModal) openModal(false, message);
             } else {
-                // ... (logic đăng ký cũ)
+
                 localStorage.setItem('accessToken', access_token);
                 console.log("DEBUG 3: Chuẩn bị gọi fetchAndDisplayUserProfile cho REGISTER."); // BƯỚC 3
                 await fetchAndDisplayUserProfile();
