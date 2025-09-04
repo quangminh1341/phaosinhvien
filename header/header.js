@@ -76,13 +76,10 @@ let currentUser = null;
 async function apiRequest(endpoint, method = 'GET', body = null) {
     const headers = { 'Content-Type': 'application/json' };
 
-    // Không cần xử lý token ở đây nữa. Trình duyệt sẽ lo việc đó.
-
     const config = {
         method,
         headers,
-        // Dòng này yêu cầu trình duyệt tự động gửi cookie đi kèm yêu cầu
-        credentials: 'include'
+        credentials: 'include' 
     };
 
     if (body && method !== 'GET') {
@@ -90,12 +87,10 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
     }
     
     try {
-        // Vẫn dùng /api/ để yêu cầu đi qua Nginx proxy của bạn
         const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
 
         if (!response.ok) {
             if (response.status === 401) {
-                 // Lỗi 401 có nghĩa là cookie không hợp lệ hoặc đã hết hạn
                  console.error("Xác thực thất bại (lỗi 401). Cookie có thể không hợp lệ.");
                  handleLogout(); 
             }
@@ -111,125 +106,149 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
 
 // --- HÀM XÁC THỰC ---
 
+/**
+ * Chuyển hướng người dùng đến trang xác thực Google.
+ * @param {string} action - Hành động là 'login' hoặc 'register'.
+ */
+function handleGoogleRedirect(action) {
+    let redirectUrl = '/api/auth/google';
+
+    if (action === 'register') {
+        const fullName = document.getElementById('register-username').value;
+        const phoneNumber = document.getElementById('register-phone').value;
+
+        if (!fullName || !phoneNumber) {
+            alert('Vui lòng nhập đầy đủ Tên và Số điện thoại.');
+            return;
+        }
+
+        // Tạo object state theo yêu cầu của backend
+        const state = {
+            fullname: fullName,
+            sdt: phoneNumber,
+        };
+        
+        // Chuyển object thành chuỗi JSON, sau đó mã hóa Base64
+        const encodedState = btoa(JSON.stringify(state));
+
+        // Gắn state đã mã hóa vào URL
+        redirectUrl += `?state=${encodeURIComponent(encodedState)}`;
+    }
+
+    console.log('Chuyển hướng đến:', redirectUrl);
+    window.location.href = redirectUrl;
+}
+
+/**
+ * Xử lý callback từ Google OAuth sau khi xác thực.
+ */
 async function handleOAuthCallback() {
     const urlParams = new URLSearchParams(window.location.search);
     const isExistParam = urlParams.get('isExist');
 
-    // If isExistParam is not present, do nothing and exit.
+    // Nếu không có param isExist, không làm gì cả
     if (isExistParam === null) {
         return;
     }
 
-    // Clean the URL
+    // Xóa query param khỏi URL để làm sạch
     window.history.replaceState({}, document.title, window.location.pathname);
 
     const isExist = isExistParam === 'true';
 
     if (isExist) {
-        // User exists. Server should have set an auth cookie.
-        // We just need to fetch the user profile and update the UI.
-        console.log("User exists, attempting to fetch profile.");
+        // Người dùng đã tồn tại. Backend đã set cookie xác thực.
+        // Chỉ cần lấy thông tin profile và cập nhật UI.
+        console.log("Người dùng đã tồn tại, đang lấy thông tin profile.");
         await fetchAndDisplayUserProfile();
         
-        // Close the modal if it's open
+        // Đóng modal nếu nó đang mở
         const authModalOverlay = document.getElementById('auth-modal-overlay');
-        const closeModalBtn = authModalOverlay.querySelector('.auth-close-btn');
         if(authModalOverlay && authModalOverlay.classList.contains('visible')) {
+           const closeModalBtn = authModalOverlay.querySelector('.auth-close-btn');
            if(closeModalBtn) closeModalBtn.click();
         }
     } else {
-        // User does not exist.
-        // Show the registration form with a message.
+        // Người dùng chưa tồn tại.
+        // Hiển thị form đăng ký với thông báo.
         const message = "Gmail này chưa được đăng ký. Vui lòng điền thông tin để hoàn tất đăng ký.";
-        console.log("User does not exist, showing registration modal.");
+        console.log("Người dùng chưa tồn tại, hiển thị modal đăng ký.");
         if (openModal) {
-            openModal(true, message); // openModal(showRegisterPanel = true, message)
+            openModal(true, message); // openModal(hiển thị form đăng ký = true, thông báo)
         }
-    }
-
-
-async function handleOAuthCallback() {
-    console.log("DEBUG 1: handleOAuthCallback đã bắt đầu."); // BƯỚC 1
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const isExistParam = urlParams.get('isExist');
-
-    console.log("DEBUG 2: Dữ liệu từ URL:", { dataParam, isExistParam }); // BƯỚC 2
-
-
-    window.history.replaceState({}, document.title, window.location.pathname);
-
-    try {
-        const authData = JSON.parse(dataParam);
-        const { access_token, user } = authData;
-        const isExist = isExistParam === 'true';
-        
-        const authAction = localStorage.getItem('authAction');
-        localStorage.removeItem('authAction');
-        
-        const authModalOverlay = document.getElementById('auth-modal-overlay');
-        const closeModalBtn = authModalOverlay.querySelector('.auth-close-btn');
-
-        if (authAction === 'login') {
-            if (isExist) {
-                localStorage.setItem('accessToken', access_token);
-                console.log("DEBUG 3: Chuẩn bị gọi fetchAndDisplayUserProfile cho LOGIN."); // BƯỚC 3
-                await fetchAndDisplayUserProfile();
-                if(closeModalBtn) closeModalBtn.click();
-            } else {
-                const message = "Gmail này chưa được đăng ký. Vui lòng điền thông tin để hoàn tất đăng ký.";
-                if (openModal) openModal(true, message);
-            }
-        } else if (authAction === 'register') {
-            if (isExist) {
-                const message = "Gmail này đã tồn tại. Vui lòng đăng nhập.";
-                if (openModal) openModal(false, message);
-            } else {
-
-                localStorage.setItem('accessToken', access_token);
-                console.log("DEBUG 3: Chuẩn bị gọi fetchAndDisplayUserProfile cho REGISTER."); // BƯỚC 3
-                await fetchAndDisplayUserProfile();
-                alert('Đăng ký thành công!');
-                if(closeModalBtn) closeModalBtn.click();
-            }
-        }
-    } catch (error) {
-        console.error('Lỗi xử lý callback OAuth:', error);
-        alert('Đã có lỗi xảy ra trong quá trình xác thực.');
     }
 }
 
 async function fetchAndDisplayUserProfile() {
     try {
         const response = await apiRequest('/users/me/profile');
-        console.log("DEBUG 4: Đã nhận phản hồi từ API:", response); // BƯỚC 4
-
         if (!response || !response.data) {
             console.error("Lỗi: Phản hồi API không hợp lệ hoặc không có 'data'.");
             return;
         }
-
         currentUser = response.data;
-        console.log("DEBUG 5: Chuẩn bị cập nhật UI với dữ liệu:", currentUser); // BƯỚC 5
         showLoggedInState(currentUser);
     } catch (error) {
         console.error("Lỗi khi gọi API /users/me/profile:", error);
         handleLogout();
     }
 }
+
 async function checkLoginStatus() {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
+    try {
+        // Thay vì kiểm tra token, chúng ta sẽ gọi thẳng API
+        // Nếu có cookie hợp lệ, API sẽ trả về thông tin user
         await fetchAndDisplayUserProfile();
-    } else {
+    } catch (error) {
+        // Nếu API trả về lỗi (ví dụ 401), có nghĩa là chưa đăng nhập
+        console.log("Chưa đăng nhập hoặc session đã hết hạn.");
         showLoggedOutState();
     }
 }
 
+
 function handleLogout() {
-    localStorage.removeItem('accessToken');
-    currentUser = null;
-    showLoggedOutState();
+    // Thay vì xóa token, ta sẽ gọi API logout để backend xóa cookie
+    apiRequest('/auth/logout', 'POST').finally(() => {
+        currentUser = null;
+        showLoggedOutState();
+        // Có thể reload lại trang để đảm bảo trạng thái sạch
+        window.location.reload();
+    });
+}
+
+/**
+ * Gửi yêu cầu cập nhật thông tin người dùng.
+ */
+async function handleProfileUpdate() {
+    const fullName = document.getElementById('profile-name').value;
+    const gender = document.querySelector('input[name="gender"]:checked')?.value;
+    const day = document.getElementById('dob-day').value;
+    const month = document.getElementById('dob-month').value;
+    const year = document.getElementById('dob-year').value;
+
+    const dataToUpdate = {
+        full_name: fullName,
+        gender: gender,
+    };
+    
+    if (day && month && year) {
+        // Format birthday to ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ)
+        dataToUpdate.birthday = new Date(year, month - 1, day).toISOString();
+    }
+
+    try {
+        const response = await apiRequest('/users/me/profile', 'PATCH', dataToUpdate);
+        console.log('Cập nhật thành công:', response);
+        alert('Cập nhật thông tin thành công!');
+        // Cập nhật lại thông tin currentUser và UI
+        currentUser = { ...currentUser, ...response.data };
+        populateProfilePanel(currentUser);
+        showLoggedInState(currentUser);
+    } catch (error) {
+        console.error('Lỗi khi cập nhật profile:', error);
+        alert('Có lỗi xảy ra, không thể cập nhật thông tin.');
+    }
 }
 
 
@@ -273,7 +292,7 @@ function showLoggedOutState() {
     }
 }
 
-
+// ... (Các hàm render và cập nhật UI khác giữ nguyên không đổi) ...
 function updateContactLogo(theme) {
     const contactLogo = document.querySelector('.contact-info-card .contact-logo img');
     if (contactLogo) {
@@ -662,9 +681,9 @@ function renderCommissionView() {
     }
 }
 
-
 // --- HÀM KHỞI TẠO CHÍNH ---
 function initializeHeader() {
+    // ... (Các event listener cho nav, theme giữ nguyên) ...
     const navToggle = document.querySelector('.nav-toggle');
     const siteNav = document.querySelector('.site-nav');
     if (navToggle && siteNav) {
@@ -760,19 +779,8 @@ function initializeHeader() {
             openLoginButtons.forEach(btn => btn.addEventListener('click', (e) => { e.preventDefault(); openModal(false); }));
             openRegisterButtons.forEach(btn => btn.addEventListener('click', (e) => { e.preventDefault(); openModal(true); }));
             
-            if (goSignUpLink) {
-                goSignUpLink.addEventListener('click', (e) => { 
-                    e.preventDefault(); 
-                    authContainer.classList.add('right-panel-active');
-                    resetRegisterForm();
-                });
-            }
-            if (goSignInLink) {
-                goSignInLink.addEventListener('click', (e) => { 
-                    e.preventDefault(); 
-                    authContainer.classList.remove('right-panel-active'); 
-                });
-            }
+            if (goSignUpLink) goSignUpLink.addEventListener('click', (e) => { e.preventDefault(); authContainer.classList.add('right-panel-active'); resetRegisterForm(); });
+            if (goSignInLink) goSignInLink.addEventListener('click', (e) => { e.preventDefault(); authContainer.classList.remove('right-panel-active'); });
             if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
             authModalOverlay.addEventListener('click', (e) => { if (e.target === authModalOverlay) closeModal(); });
 
@@ -787,22 +795,13 @@ function initializeHeader() {
             }
 
             const googleLoginBtn = document.querySelector('.sign-in-container .google-btn');
-            if(googleLoginBtn) {
-                googleLoginBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    handleGoogleRedirect('login');
-                });
-            }
-            if(googleRegisterBtn) {
-                googleRegisterBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    handleGoogleRedirect('register');
-                });
-            }
+            if(googleLoginBtn) googleLoginBtn.addEventListener('click', (e) => { e.preventDefault(); handleGoogleRedirect('login'); });
+            if(googleRegisterBtn) googleRegisterBtn.addEventListener('click', (e) => { e.preventDefault(); handleGoogleRedirect('register'); });
         }
     }
 
-    const profileContainer = document.querySelector('.profile-container');
+    // ... (Các event listener cho profile, notification giữ nguyên) ...
+     const profileContainer = document.querySelector('.profile-container');
     if (profileContainer) {
         const profileButton = profileContainer.querySelector('.user-profile-button');
         const profileDropdown = profileContainer.querySelector('.profile-dropdown');
@@ -841,9 +840,10 @@ function initializeHeader() {
             }
         });
     }
-    
+
     const userPanelModal = document.getElementById('user-panel-modal');
     if (userPanelModal) {
+        // ... (khai báo các biến cho panel)
         const profileInfoBtn = document.getElementById('profile-info-btn');
         const profileOrdersBtn = document.getElementById('profile-orders-btn');
         const profilePaymentsBtn = document.getElementById('profile-payments-btn');
@@ -851,18 +851,9 @@ function initializeHeader() {
         const panelSidebarNav = userPanelModal.querySelector('.user-panel-nav');
         const collapsibleCategory = userPanelModal.querySelector('.nav-category.is-collapsible');
     
-        const collapseAll = () => {
-            if (collapsibleCategory) {
-                collapsibleCategory.classList.remove('active');
-            }
-        };
-    
-        const expandInfo = () => {
-            if (collapsibleCategory) {
-                collapsibleCategory.classList.add('active');
-            }
-        };
-    
+        // ... (các hàm show/hide panel)
+        const collapseAll = () => { if (collapsibleCategory) collapsibleCategory.classList.remove('active'); };
+        const expandInfo = () => { if (collapsibleCategory) collapsibleCategory.classList.add('active'); };
         const showPanel = (targetId) => {
             userPanelModal.querySelectorAll('.panel-content-item').forEach(p => p.classList.remove('active'));
             userPanelModal.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
@@ -870,30 +861,16 @@ function initializeHeader() {
             const targetPanel = document.getElementById(targetId);
             const targetLink = userPanelModal.querySelector(`.nav-link[data-target="${targetId}"]`);
             
-            if (targetPanel) {
-                targetPanel.classList.add('active');
-            }
+            if (targetPanel) targetPanel.classList.add('active');
             if (targetLink) {
                 targetLink.classList.add('active');
-                if (targetLink.closest('.submenu')) {
-                    expandInfo();
-                } else {
-                    collapseAll();
-                }
+                if (targetLink.closest('.submenu')) expandInfo();
+                else collapseAll();
             }
-            if (targetId === 'panel-profile') {
-                populateProfilePanel(currentUser);
-            }
-            if (targetId === 'panel-orders') {
-                renderOrders();
-            }
-            if (targetId === 'panel-payments') {
-                populateMonthFilter();
-                renderTransactions();
-            }
-            if (targetId === 'panel-marketing') {
-                renderMarketingStats();
-            }
+            if (targetId === 'panel-profile') populateProfilePanel(currentUser);
+            if (targetId === 'panel-orders') renderOrders();
+            if (targetId === 'panel-payments') { populateMonthFilter(); renderTransactions(); }
+            if (targetId === 'panel-marketing') renderMarketingStats();
         };
     
         const openPanelModal = (initialPanelId) => {
@@ -905,114 +882,75 @@ function initializeHeader() {
             userPanelModal.classList.remove('visible');
             collapseAll();
         };
-    
-        if (profileInfoBtn) {
-            profileInfoBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                openPanelModal('panel-profile');
-            });
-        }
-    
-        if (profileOrdersBtn) {
-            profileOrdersBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                openPanelModal('panel-orders');
-            });
-        }
-        
-        if (profilePaymentsBtn) {
-            profilePaymentsBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                openPanelModal('panel-payments');
-            });
-        }
-    
+
+        // ... (các event listener cho panel)
+        if (profileInfoBtn) profileInfoBtn.addEventListener('click', (e) => { e.preventDefault(); openPanelModal('panel-profile'); });
+        if (profileOrdersBtn) profileOrdersBtn.addEventListener('click', (e) => { e.preventDefault(); openPanelModal('panel-orders'); });
+        if (profilePaymentsBtn) profilePaymentsBtn.addEventListener('click', (e) => { e.preventDefault(); openPanelModal('panel-payments'); });
         if (panelSidebarNav) {
             panelSidebarNav.addEventListener('click', (e) => {
                 const link = e.target.closest('a');
                 if (!link) return;
-    
                 e.preventDefault();
-                
-                if (link.classList.contains('nav-category-toggle')) {
-                    collapsibleCategory.classList.toggle('active');
-                } 
-                else if (link.dataset.target) {
-                    const targetId = link.dataset.target;
-                    showPanel(targetId);
-                }
+                if (link.classList.contains('nav-category-toggle')) collapsibleCategory.classList.toggle('active'); 
+                else if (link.dataset.target) showPanel(link.dataset.target);
             });
         }
-    
         closePanelBtn.addEventListener('click', closePanelModal);
-        userPanelModal.addEventListener('click', (e) => {
-            if (e.target === userPanelModal) {
-                closePanelModal();
-            }
-        });
+        userPanelModal.addEventListener('click', (e) => { if (e.target === userPanelModal) closePanelModal(); });
+        
+        // Gắn event listener cho nút lưu thông tin profile
+        const saveProfileBtn = document.getElementById('save-profile-btn');
+        if (saveProfileBtn) {
+            saveProfileBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                handleProfileUpdate();
+            });
+        }
 
+        // ... (các event listener khác cho copy code, filter, chat) ...
         const copyReferralBtn = document.getElementById('copy-referral-btn');
         const referralCodeInput = document.getElementById('profile-referral-code');
-
-        copyReferralBtn.addEventListener('click', () => {
+        if(copyReferralBtn) copyReferralBtn.addEventListener('click', () => {
             navigator.clipboard.writeText(referralCodeInput.value).then(() => {
                 const originalIcon = copyReferralBtn.innerHTML;
                 copyReferralBtn.innerHTML = '<i class="fas fa-check"></i>';
-                setTimeout(() => {
-                    copyReferralBtn.innerHTML = originalIcon;
-                }, 1500);
-            }).catch(err => {
-                console.error('Không thể sao chép: ', err);
-            });
+                setTimeout(() => { copyReferralBtn.innerHTML = originalIcon; }, 1500);
+            }).catch(err => { console.error('Không thể sao chép: ', err); });
         });
         
         const orderFilters = document.querySelector('.order-filters');
         const searchInput = document.getElementById('order-search-input');
-
-        if (orderFilters) {
-            orderFilters.addEventListener('click', (e) => {
-                if (e.target.classList.contains('filter-btn')) {
-                    orderFilters.querySelector('.active').classList.remove('active');
-                    e.target.classList.add('active');
-                    renderOrders();
-                }
-            });
-        }
-        if (searchInput) {
-            searchInput.addEventListener('input', renderOrders);
-        }
+        if (orderFilters) orderFilters.addEventListener('click', (e) => {
+            if (e.target.classList.contains('filter-btn')) {
+                orderFilters.querySelector('.active').classList.remove('active');
+                e.target.classList.add('active');
+                renderOrders();
+            }
+        });
+        if (searchInput) searchInput.addEventListener('input', renderOrders);
 
         const paymentFilters = document.querySelector('.payment-filters');
         const monthFilter = document.getElementById('month-filter');
-
-        if(paymentFilters) {
-            paymentFilters.addEventListener('click', e => {
-                if (e.target.classList.contains('filter-btn')) {
-                    paymentFilters.querySelector('.active').classList.remove('active');
-                    e.target.classList.add('active');
-                    renderTransactions();
-                }
-            });
-        }
-        if(monthFilter) {
-            monthFilter.addEventListener('change', renderTransactions);
-        }
+        if(paymentFilters) paymentFilters.addEventListener('click', e => {
+            if (e.target.classList.contains('filter-btn')) {
+                paymentFilters.querySelector('.active').classList.remove('active');
+                e.target.classList.add('active');
+                renderTransactions();
+            }
+        });
+        if(monthFilter) monthFilter.addEventListener('change', renderTransactions);
         
         const marketingFilters = document.querySelector('.marketing-filters');
         const commissionMonthFilter = document.getElementById('commission-month-filter');
-
-        if (marketingFilters) {
-            marketingFilters.addEventListener('click', (e) => {
-                if (e.target.classList.contains('filter-btn')) {
-                    marketingFilters.querySelector('.active').classList.remove('active');
-                    e.target.classList.add('active');
-                    renderMarketingStats();
-                }
-            });
-        }
-        if (commissionMonthFilter) {
-            commissionMonthFilter.addEventListener('change', renderCommissionView);
-        }
+        if (marketingFilters) marketingFilters.addEventListener('click', (e) => {
+            if (e.target.classList.contains('filter-btn')) {
+                marketingFilters.querySelector('.active').classList.remove('active');
+                e.target.classList.add('active');
+                renderMarketingStats();
+            }
+        });
+        if (commissionMonthFilter) commissionMonthFilter.addEventListener('change', renderCommissionView);
         
         const chatIcon = document.getElementById('chat-icon');
         const chatBox = document.getElementById('chat-box');
@@ -1048,14 +986,14 @@ function initializeHeader() {
                 chatBody.scrollTop = chatBody.scrollHeight;
             }, 1000);
         }
-        if(chatSendBtn) {
-            chatSendBtn.addEventListener('click', sendMessage);
-        }
-        if(chatInput){
-            chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
-        }
+        if(chatSendBtn) chatSendBtn.addEventListener('click', sendMessage);
+        if(chatInput) chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
     }
     
+    // Luôn kiểm tra callback và trạng thái đăng nhập khi tải trang
     handleOAuthCallback();
     checkLoginStatus();
 }
+
+// Chạy hàm khởi tạo khi DOM đã sẵn sàng
+document.addEventListener('DOMContentLoaded', initializeHeader);
