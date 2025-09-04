@@ -79,7 +79,7 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
     const config = {
         method,
         headers,
-        credentials: 'include' 
+        credentials: 'include'
     };
 
     if (body && method !== 'GET') {
@@ -90,10 +90,6 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
         const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
 
         if (!response.ok) {
-            if (response.status === 401) {
-                 console.error("Xác thực thất bại (lỗi 401). Cookie có thể không hợp lệ.");
-                 handleLogout(); 
-            }
             const errorData = await response.json().catch(() => ({ message: response.statusText }));
             throw new Error(errorData.message || `Lỗi HTTP: ${response.status}`);
         }
@@ -128,7 +124,6 @@ function handleGoogleRedirect(action) {
         };
         
         const encodedState = btoa(JSON.stringify(state));
-
         redirectUrl += `?state=${encodeURIComponent(encodedState)}`;
     }
 
@@ -136,48 +131,63 @@ function handleGoogleRedirect(action) {
     window.location.href = redirectUrl;
 }
 
+
+/**
+ * Lấy thông tin người dùng và kiểm tra xem họ đã đăng ký hoàn chỉnh chưa.
+ */
 async function fetchAndDisplayUserProfile() {
     try {
         const response = await apiRequest('/users/me/profile');
+
         if (!response || !response.data) {
-            console.error("Lỗi: Phản hồi API không hợp lệ hoặc không có 'data'.");
+            throw new Error("Phản hồi API không hợp lệ hoặc không có dữ liệu.");
+        }
+
+        const user = response.data;
+
+        if (!user.full_name || !user.phone_number) {
+            console.warn("Người dùng đã xác thực nhưng chưa hoàn tất đăng ký. Yêu cầu cập nhật thông tin.");
+            showLoggedOutState();
+            if (openModal) {
+                openModal(true, "Vui lòng hoàn tất thông tin đăng ký của bạn để tiếp tục.");
+            }
             return;
         }
-        currentUser = response.data;
-        showLoggedInState(currentUser);
-    } catch (error) {
-        console.error("Lỗi khi gọi API /users/me/profile:", error);
-        handleLogout();
-    }
-}
 
-async function checkLoginStatus() {
-    try {
-        await fetchAndDisplayUserProfile();
+        currentUser = user;
+        showLoggedInState(currentUser);
+
     } catch (error) {
-        console.log("Chưa đăng nhập hoặc session đã hết hạn.");
+        console.log("Không thể lấy thông tin người dùng. Coi như chưa đăng nhập.", error.message);
         showLoggedOutState();
     }
 }
 
 /**
- * Xử lý đăng xuất: gọi API, xóa dữ liệu phía client và cập nhật UI.
+ * Kiểm tra trạng thái đăng nhập khi tải trang.
+ */
+function checkLoginStatus() {
+    fetchAndDisplayUserProfile();
+}
+
+
+/**
+ * **ĐÃ SỬA LỖI**: Xử lý đăng xuất. Chỉ gọi reload MỘT LẦN.
  */
 function handleLogout() {
     console.log("Bắt đầu quá trình đăng xuất...");
     apiRequest('/auth/logout', 'POST')
         .catch(error => {
-            // Ngay cả khi API logout lỗi (ví dụ do mất mạng), vẫn nên xử lý logout ở client
             console.error("API Logout có lỗi, nhưng vẫn tiến hành logout ở client:", error);
         })
         .finally(() => {
             currentUser = null;
+            // Chỉ cần cập nhật UI và tải lại trang.
+            // Không gọi lại hàm nào khác có thể gây ra vòng lặp.
             showLoggedOutState();
-            // Tải lại trang để đảm bảo trạng thái được làm mới hoàn toàn
             window.location.reload();
         });
 }
-
 
 /**
  * Gửi yêu cầu cập nhật thông tin người dùng.
@@ -251,7 +261,6 @@ function showLoggedOutState() {
     }
 }
 
-// ... (Các hàm render và cập nhật UI khác giữ nguyên không đổi) ...
 function updateContactLogo(theme) {
     const contactLogo = document.querySelector('.contact-info-card .contact-logo img');
     if (contactLogo) {
@@ -802,11 +811,10 @@ function initializeHeader() {
             }
         });
         
-        // **Đây là phần quan trọng cho chức năng đăng xuất**
         if (logoutButton) {
             logoutButton.addEventListener('click', (e) => {
-                e.preventDefault(); // Ngăn hành vi mặc định của thẻ <a>
-                handleLogout();     // Gọi hàm xử lý đăng xuất
+                e.preventDefault();
+                handleLogout();
             });
         }
     }
@@ -1052,12 +1060,16 @@ function initializeHeader() {
     // **LOGIC ĐỂ XỬ LÝ REDIRECT**
     const shouldShowRegister = sessionStorage.getItem('showRegisterModal');
     if (shouldShowRegister === 'true') {
+        sessionStorage.removeItem('showRegisterModal');
         const message = "Gmail này chưa được đăng ký. Vui lòng điền thông tin để hoàn tất đăng ký.";
         if (openModal) {
             openModal(true, message);
         }
-        sessionStorage.removeItem('showRegisterModal');
     } else {
         checkLoginStatus();
     }
 }
+
+
+// Chạy hàm khởi tạo khi DOM đã sẵn sàng
+document.addEventListener('DOMContentLoaded', initializeHeader);
