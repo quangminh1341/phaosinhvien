@@ -31,5 +31,7 @@ jobs:
             # Clone lại toàn bộ repository từ đầu vào đúng thư mục đó
             git clone git@github.com:${{ github.repository }}.git /var/www/psv
 
+            cd /var/www/psv
+            
             node webhook.js
           "
