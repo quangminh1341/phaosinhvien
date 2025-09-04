@@ -122,16 +122,13 @@ function handleGoogleRedirect(action) {
             return;
         }
         
-        // Tạo object state theo yêu cầu của backend
         const state = {
             fullname: fullName,
             sdt: phoneNumber,
         };
         
-        // Chuyển object thành chuỗi JSON, sau đó mã hóa Base64
         const encodedState = btoa(JSON.stringify(state));
 
-        // Gắn state đã mã hóa vào URL
         redirectUrl += `?state=${encodeURIComponent(encodedState)}`;
     }
 
@@ -156,25 +153,31 @@ async function fetchAndDisplayUserProfile() {
 
 async function checkLoginStatus() {
     try {
-        // Thay vì kiểm tra token, chúng ta sẽ gọi thẳng API
-        // Nếu có cookie hợp lệ, API sẽ trả về thông tin user
         await fetchAndDisplayUserProfile();
     } catch (error) {
-        // Nếu API trả về lỗi (ví dụ 401), có nghĩa là chưa đăng nhập
         console.log("Chưa đăng nhập hoặc session đã hết hạn.");
         showLoggedOutState();
     }
 }
 
+/**
+ * Xử lý đăng xuất: gọi API, xóa dữ liệu phía client và cập nhật UI.
+ */
 function handleLogout() {
-    // Thay vì xóa token, ta sẽ gọi API logout để backend xóa cookie
-    apiRequest('/auth/logout', 'POST').finally(() => {
-        currentUser = null;
-        showLoggedOutState();
-        // Có thể reload lại trang để đảm bảo trạng thái sạch
-        window.location.reload();
-    });
+    console.log("Bắt đầu quá trình đăng xuất...");
+    apiRequest('/auth/logout', 'POST')
+        .catch(error => {
+            // Ngay cả khi API logout lỗi (ví dụ do mất mạng), vẫn nên xử lý logout ở client
+            console.error("API Logout có lỗi, nhưng vẫn tiến hành logout ở client:", error);
+        })
+        .finally(() => {
+            currentUser = null;
+            showLoggedOutState();
+            // Tải lại trang để đảm bảo trạng thái được làm mới hoàn toàn
+            window.location.reload();
+        });
 }
+
 
 /**
  * Gửi yêu cầu cập nhật thông tin người dùng.
@@ -192,7 +195,6 @@ async function handleProfileUpdate() {
     };
     
     if (day && month && year) {
-        // Format birthday to ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ)
         dataToUpdate.birthday = new Date(year, month - 1, day).toISOString();
     }
 
@@ -200,7 +202,6 @@ async function handleProfileUpdate() {
         const response = await apiRequest('/users/me/profile', 'PATCH', dataToUpdate);
         console.log('Cập nhật thành công:', response);
         alert('Cập nhật thông tin thành công!');
-        // Cập nhật lại thông tin currentUser và UI
         currentUser = { ...currentUser, ...response.data };
         populateProfilePanel(currentUser);
         showLoggedInState(currentUser);
@@ -695,7 +696,7 @@ function initializeHeader() {
         };
 
         if (authContainer) {
-            const animatedText = new SplitType('.auth-container h1, .auth-container p', { types: 'lines, chars' });
+            const animatedText = new SplitType('.auth-container h1, .auth-container p:not(.form-switcher-text)', { types: 'lines, chars' });
             modalAnimation = gsap.timeline({
                 paused: true,
                 onReverseComplete: () => {
@@ -720,7 +721,6 @@ function initializeHeader() {
                 modalAnimation.timeScale(2).play();
 
                 if (message) {
-                    // Hiển thị thông báo ở cả hai form để đảm bảo nó luôn sichtbar khi modal mở
                     const notifSignup = document.querySelector('#auth-notification-signup');
                     const notifSignin = document.querySelector('#auth-notification-signin');
                     if (notifSignup) {
@@ -801,11 +801,14 @@ function initializeHeader() {
                 profileDropdown.classList.remove('active');
             }
         });
-
-        logoutButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            handleLogout();
-        });
+        
+        // **Đây là phần quan trọng cho chức năng đăng xuất**
+        if (logoutButton) {
+            logoutButton.addEventListener('click', (e) => {
+                e.preventDefault(); // Ngăn hành vi mặc định của thẻ <a>
+                handleLogout();     // Gọi hàm xử lý đăng xuất
+            });
+        }
     }
 
     const notificationContainer = document.querySelector('.notification-container');
@@ -1046,17 +1049,15 @@ function initializeHeader() {
         }
     }
     
-    // **LOGIC MỚI ĐỂ XỬ LÝ REDIRECT**
+    // **LOGIC ĐỂ XỬ LÝ REDIRECT**
     const shouldShowRegister = sessionStorage.getItem('showRegisterModal');
     if (shouldShowRegister === 'true') {
         const message = "Gmail này chưa được đăng ký. Vui lòng điền thông tin để hoàn tất đăng ký.";
         if (openModal) {
             openModal(true, message);
         }
-        // Xóa cờ để không hiển thị lại ở lần tải trang sau
         sessionStorage.removeItem('showRegisterModal');
     } else {
-        // Nếu không có cờ, kiểm tra trạng thái đăng nhập như bình thường
         checkLoginStatus();
     }
 }
