@@ -69,7 +69,7 @@ const mockCommissionHistory = [
 let authModalOverlay, authContainer, modalAnimation, openModal;
 
 // --- CẤU HÌNH API ---
-const API_BASE_URL = '/api';
+// const API_BASE_URL = '/api';
 let currentUser = null;
 
 // --- HÀM TRỢ GIÚP API ---
@@ -122,7 +122,7 @@ function handleGoogleRedirect(action) {
         }
         localStorage.setItem('pendingRegistrationData', JSON.stringify({ fullName, phoneNumber }));
     }
-    window.location.href = `${API_BASE_URL}/auth/google`;
+    window.location.href = `api/auth/google`;
 }
 
 async function handleOAuthCallback() {
