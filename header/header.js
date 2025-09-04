@@ -69,7 +69,7 @@ const mockCommissionHistory = [
 let authModalOverlay, authContainer, modalAnimation, openModal;
 
 // --- CẤU HÌNH API ---
-const API_BASE_URL = 'api';
+const API_BASE_URL = '/api';
 let currentUser = null;
 
 // --- HÀM TRỢ GIÚP API ---
@@ -112,17 +112,26 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
 // --- HÀM XÁC THỰC ---
 
 function handleGoogleRedirect(action) {
-    localStorage.setItem('authAction', action);
+    let redirectUrl = '/api/auth/google';
+
     if (action === 'register') {
         const fullName = document.getElementById('register-username').value;
         const phoneNumber = document.getElementById('register-phone').value;
+
         if (!fullName || !phoneNumber) {
             alert('Vui lòng nhập đầy đủ Tên và Số điện thoại.');
             return;
         }
-        localStorage.setItem('pendingRegistrationData', JSON.stringify({ fullName, phoneNumber }));
+
+        const params = new URLSearchParams();
+        params.append('full_name', fullName);
+        params.append('phone_number', phoneNumber);
+
+        redirectUrl += `?${params.toString()}`;
     }
-    window.location.href = `${API_BASE_URL}/auth/google`;
+
+    console.log('Redirecting to:', redirectUrl);
+    window.location.href = redirectUrl;
 }
 
 async function handleOAuthCallback() {
