@@ -26,12 +26,23 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
             # Xóa thư mục cũ để đảm bảo trạng thái sạch sẽ
+            echo '🧹 Cleaning up old directory...'
             rm -rf /var/www/psv
             
-            # Clone lại toàn bộ repository từ đầu vào đúng thư mục đó
+            # Clone lại toàn bộ repository
+            echo '🚚 Cloning repository...'
             git clone git@github.com:${{ github.repository }}.git /var/www/psv
-
+            
+            # Di chuyển vào thư mục dự án
             cd /var/www/psv
             
-            node webhook.js
+            # BƯỚC QUAN TRỌNG BỊ THIẾU
+            echo '📦 Installing dependencies...'
+            npm install
+            
+            # Chạy ứng dụng bằng PM2 để nó tồn tại trong nền
+            echo '🚀 Starting webhook with PM2...'
+            pm2 start webhook.js --name psv-webhook
+            
+            echo '✅ Deployment successful!'
           "
