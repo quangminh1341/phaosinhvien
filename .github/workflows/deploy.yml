@@ -25,24 +25,24 @@ jobs:
       - name: Deploy to VPS
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
-            # Xóa thư mục cũ để đảm bảo trạng thái sạch sẽ
-            echo '🧹 Cleaning up old directory...'
-            rm -rf /var/www/psv
-            
-            # Clone lại toàn bộ repository
-            echo '🚚 Cloning repository...'
-            git clone git@github.com:${{ github.repository }}.git /var/www/psv
-            
-            # Di chuyển vào thư mục dự án
-            cd /var/www/psv
-            
-            # BƯỚC QUAN TRỌNG BỊ THIẾU
-            echo '📦 Installing dependencies...'
-            npm install
-            
-            # Chạy ứng dụng bằng PM2 để nó tồn tại trong nền
-            echo '🚀 Starting webhook with PM2...'
-            pm2 start webhook.js --name psv-webhook
-            
-            echo '✅ Deployment successful!'
-          "
+          # Xóa thư mục cũ
+          echo '🧹 Cleaning up old directory...'
+          rm -rf /var/www/psv
+          
+          # Clone repository
+          echo '🚚 Cloning repository...'
+          git clone git@github.com:${{ github.repository }}.git /var/www/psv
+          
+          # Di chuyển vào thư mục và thực hiện các bước tiếp theo
+          cd /var/www/psv && \
+          
+          # Cài đặt dependencies (vẫn cần thiết cho webhook.js)
+          echo '📦 Installing dependencies...' && \
+          npm install && \
+          
+          # Chạy script thông báo một lần
+          echo '🔔 Sending deployment notification...' && \
+          node webhook.js && \
+          
+          echo '✅ Deployment script finished!'
+        "
