@@ -1,4 +1,3 @@
-
 // Dữ liệu thông báo giả định
 const mockNotifications = [
     { id: 1, message: "Chào mừng bạn đến với Phao Sinh Viên! Hãy khám phá các dịch vụ của chúng tôi.", timestamp: "5 phút trước", read: false },
@@ -66,22 +65,24 @@ const mockCommissionHistory = [
     { usedBy: mockReferralUsages[1], productName: 'Fullstack - Blog cá nhân', amount: 6000, date: '2025-08-20T15:30:00' },
 ];
 
+// --- BIẾN TOÀN CỤC CHO MODAL ---
+let authModalOverlay, authContainer, modalAnimation, openModal;
 
 // --- CẤU HÌNH API ---
-const API_BASE_URL = 'https://phaosinhvien-backend.onrender.com/api';
+const API_BASE_URL = '/api';
 let currentUser = null;
 
 // --- HÀM TRỢ GIÚP API ---
-async function apiRequest(endpoint, method = 'GET', body = null, token = null) {
+async function apiRequest(endpoint, method = 'GET', body = null) {
     const headers = { 'Content-Type': 'application/json' };
-    const authToken = token || localStorage.getItem('accessToken');
-    if (authToken) {
-        headers['Authorization'] = `Bearer ${authToken}`;
-    }
+
+    // Không cần xử lý token ở đây nữa. Trình duyệt sẽ lo việc đó.
 
     const config = {
         method,
         headers,
+        // Dòng này yêu cầu trình duyệt tự động gửi cookie đi kèm yêu cầu
+        credentials: 'include'
     };
 
     if (body && method !== 'GET') {
@@ -89,8 +90,15 @@ async function apiRequest(endpoint, method = 'GET', body = null, token = null) {
     }
     
     try {
+        // Vẫn dùng /api/ để yêu cầu đi qua Nginx proxy của bạn
         const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+
         if (!response.ok) {
+            if (response.status === 401) {
+                 // Lỗi 401 có nghĩa là cookie không hợp lệ hoặc đã hết hạn
+                 console.error("Xác thực thất bại (lỗi 401). Cookie có thể không hợp lệ.");
+                 handleLogout(); 
+            }
             const errorData = await response.json().catch(() => ({ message: response.statusText }));
             throw new Error(errorData.message || `Lỗi HTTP: ${response.status}`);
         }
@@ -118,18 +126,22 @@ function handleGoogleRedirect(action) {
 }
 
 async function handleOAuthCallback() {
+    console.log("DEBUG 1: handleOAuthCallback đã bắt đầu."); // BƯỚC 1
+
     const urlParams = new URLSearchParams(window.location.search);
     const dataParam = urlParams.get('data');
+    const isExistParam = urlParams.get('isExist');
 
-    if (!dataParam) return;
+    console.log("DEBUG 2: Dữ liệu từ URL:", { dataParam, isExistParam }); // BƯỚC 2
 
-    // Xóa query param khỏi URL để tránh xử lý lại
+    if (!dataParam || isExistParam === null) return;
+
     window.history.replaceState({}, document.title, window.location.pathname);
 
     try {
         const authData = JSON.parse(dataParam);
         const { access_token, user } = authData;
-        const { isExsit } = user;
+        const isExist = isExistParam === 'true';
         
         const authAction = localStorage.getItem('authAction');
         localStorage.removeItem('authAction');
@@ -138,37 +150,26 @@ async function handleOAuthCallback() {
         const closeModalBtn = authModalOverlay.querySelector('.auth-close-btn');
 
         if (authAction === 'login') {
-            if (isExsit) {
+            if (isExist) {
                 localStorage.setItem('accessToken', access_token);
+                console.log("DEBUG 3: Chuẩn bị gọi fetchAndDisplayUserProfile cho LOGIN."); // BƯỚC 3
                 await fetchAndDisplayUserProfile();
-                if(closeModalBtn) closeModalBtn.click(); // Đóng modal
+                if(closeModalBtn) closeModalBtn.click();
             } else {
-                alert("Tài khoản của bạn chưa được Đăng ký, hãy Đăng ký để có thể Đăng nhập");
+                const message = "Gmail này chưa được đăng ký. Vui lòng điền thông tin để hoàn tất đăng ký.";
+                if (openModal) openModal(true, message);
             }
         } else if (authAction === 'register') {
-            if (isExsit) {
-                alert("Gmail này đã được đăng ký trước đó rồi");
+            if (isExist) {
+                const message = "Gmail này đã tồn tại. Vui lòng đăng nhập.";
+                if (openModal) openModal(false, message);
             } else {
-                // Đăng ký thành công, tiến hành cập nhật profile
-                const pendingData = JSON.parse(localStorage.getItem('pendingRegistrationData'));
-                localStorage.removeItem('pendingRegistrationData');
-
-                if (pendingData) {
-                    const profileUpdate = {
-                        user: {
-                            full_name: pendingData.fullName,
-                            phone_number: pendingData.phoneNumber,
-                        }
-                    };
-                    // Cập nhật profile với access_token vừa nhận được
-                    await apiRequest('/users/me/profile', 'PATCH', profileUpdate, access_token);
-                }
-                
-                // Lưu token và tải thông tin người dùng
+                // ... (logic đăng ký cũ)
                 localStorage.setItem('accessToken', access_token);
+                console.log("DEBUG 3: Chuẩn bị gọi fetchAndDisplayUserProfile cho REGISTER."); // BƯỚC 3
                 await fetchAndDisplayUserProfile();
                 alert('Đăng ký thành công!');
-                if(closeModalBtn) closeModalBtn.click(); // Đóng modal
+                if(closeModalBtn) closeModalBtn.click();
             }
         }
     } catch (error) {
@@ -180,14 +181,21 @@ async function handleOAuthCallback() {
 async function fetchAndDisplayUserProfile() {
     try {
         const response = await apiRequest('/users/me/profile');
+        console.log("DEBUG 4: Đã nhận phản hồi từ API:", response); // BƯỚC 4
+
+        if (!response || !response.data) {
+            console.error("Lỗi: Phản hồi API không hợp lệ hoặc không có 'data'.");
+            return;
+        }
+
         currentUser = response.data;
+        console.log("DEBUG 5: Chuẩn bị cập nhật UI với dữ liệu:", currentUser); // BƯỚC 5
         showLoggedInState(currentUser);
     } catch (error) {
-        console.error("Phiên đăng nhập không hợp lệ hoặc đã hết hạn.", error);
+        console.error("Lỗi khi gọi API /users/me/profile:", error);
         handleLogout();
     }
 }
-
 async function checkLoginStatus() {
     const token = localStorage.getItem('accessToken');
     if (token) {
@@ -298,7 +306,6 @@ function updateNotificationUI(notifications) {
     }
 }
 
-// Các hàm render dữ liệu giả định khác giữ nguyên
 function renderOrders() {
     const orderListContainer = document.querySelector('.order-list');
     const searchInput = document.getElementById('order-search-input');
@@ -426,10 +433,10 @@ function populateProfilePanel(user) {
     const yearSelect = document.getElementById('dob-year');
     
     if (daySelect.innerHTML === "") {
-        daySelect.innerHTML = [...Array(31).keys()].map(i => `<option value="${i + 1}">${i + 1}</option>`).join('');
-        monthSelect.innerHTML = [...Array(12).keys()].map(i => `<option value="${i + 1}">${i + 1}</option>`).join('');
+        daySelect.innerHTML = '<option value="">Ngày</option>' + [...Array(31).keys()].map(i => `<option value="${i + 1}">${i + 1}</option>`).join('');
+        monthSelect.innerHTML = '<option value="">Tháng</option>' + [...Array(12).keys()].map(i => `<option value="${i + 1}">${i + 1}</option>`).join('');
         const currentYear = new Date().getFullYear();
-        yearSelect.innerHTML = [...Array(100).keys()].map(i => `<option value="${currentYear - i}">${currentYear - i}</option>`).join('');
+        yearSelect.innerHTML = '<option value="">Năm</option>' + [...Array(100).keys()].map(i => `<option value="${currentYear - i}">${currentYear - i}</option>`).join('');
     }
 
     if (user.birthday) {
@@ -581,7 +588,6 @@ function renderCommissionView() {
     const monthlyCommissionCard = document.getElementById('stat-monthly-commission');
     const commissionListContainer = view.querySelector('.commission-list');
 
-    // Populate month filter if empty
     if (monthFilter.options.length === 0) {
         const months = [];
         const startDate = new Date('2025-07-01');
@@ -596,11 +602,9 @@ function renderCommissionView() {
         ).join('');
     }
 
-    // Calculate total commission
     const totalCommission = mockCommissionHistory.reduce((sum, item) => sum + item.amount, 0);
     totalCommissionCard.textContent = totalCommission.toLocaleString('vi-VN') + ' VNĐ';
 
-    // Filter by selected month
     const [selectedYear, selectedMonth] = monthFilter.value.split('-').map(Number);
     const startDate = new Date(selectedYear, selectedMonth - 1, 1);
     const endDate = new Date(selectedYear, selectedMonth, 0, 23, 59, 59);
@@ -610,11 +614,9 @@ function renderCommissionView() {
         return commissionDate >= startDate && commissionDate <= endDate;
     });
 
-    // Calculate and display monthly total
     const monthlyTotal = monthlyCommissions.reduce((sum, item) => sum + item.amount, 0);
     monthlyCommissionCard.textContent = monthlyTotal.toLocaleString('vi-VN') + ' VNĐ';
 
-    // Render list
     if (monthlyCommissions.length > 0) {
         commissionListContainer.innerHTML = monthlyCommissions.map(c => `
             <div class="commission-item">
@@ -642,7 +644,6 @@ function renderCommissionView() {
 
 // --- HÀM KHỞI TẠO CHÍNH ---
 function initializeHeader() {
-    // Xử lý chung cho Giao diện
     const navToggle = document.querySelector('.nav-toggle');
     const siteNav = document.querySelector('.site-nav');
     if (navToggle && siteNav) {
@@ -673,10 +674,10 @@ function initializeHeader() {
         });
     }
 
-    // Logic cho Modal Xác thực
-    const authModalOverlay = document.getElementById('auth-modal-overlay');
+    authModalOverlay = document.getElementById('auth-modal-overlay');
     if (authModalOverlay) {
-        const authContainer = document.getElementById('auth-container');
+        authContainer = document.getElementById('auth-container');
+        
         const openLoginButtons = document.querySelectorAll('.login-btn, .auth-link-mobile:nth-child(5)');
         const openRegisterButtons = document.querySelectorAll('.register-btn, .auth-link-mobile:nth-child(6)');
         const closeModalBtn = authModalOverlay.querySelector('.auth-close-btn');
@@ -686,8 +687,7 @@ function initializeHeader() {
         const registerForm = document.getElementById('register-form');
         const registerStep1 = document.getElementById('register-step-1');
         const googleRegisterBtn = document.getElementById('google-register-btn');
-        let modalAnimation;
-
+        
         const resetRegisterForm = () => {
             if (registerStep1 && googleRegisterBtn) {
                 registerStep1.style.display = 'flex';
@@ -711,11 +711,26 @@ function initializeHeader() {
                 .from(animatedText.chars, { yPercent: 115, stagger: 0.02, duration: 0.6, ease: "power2.out" }, "-=0.3")
                 .from('.form-container input, .auth-button', { opacity: 0, y: 20, stagger: 0.02, duration: 0.4, ease: "power2.out" }, "-=0.5");
             
-            const openModal = (showRegister) => {
+            openModal = (showRegister, message = '') => {
+                document.querySelectorAll('.auth-notification').forEach(el => {
+                    el.textContent = '';
+                    el.style.visibility = 'hidden';
+                });
+
                 authContainer.classList.toggle('right-panel-active', showRegister);
                 authModalOverlay.classList.add('visible');
                 modalAnimation.timeScale(2).play();
+
+                if (message) {
+                    const targetId = showRegister ? '#auth-notification-signup' : '#auth-notification-signin';
+                    const notifEl = document.querySelector(targetId);
+                    if (notifEl) {
+                        notifEl.textContent = message;
+                        notifEl.style.visibility = 'visible';
+                    }
+                }
             };
+
             const closeModal = () => {
                 modalAnimation.timeScale(3.5).reverse();
                 setTimeout(resetRegisterForm, 600);
@@ -750,7 +765,6 @@ function initializeHeader() {
                 });
             }
 
-            // Gắn event listener cho các nút Google
             const googleLoginBtn = document.querySelector('.sign-in-container .google-btn');
             if(googleLoginBtn) {
                 googleLoginBtn.addEventListener('click', (e) => {
@@ -767,7 +781,6 @@ function initializeHeader() {
         }
     }
 
-    // Logic Profile Dropdown
     const profileContainer = document.querySelector('.profile-container');
     if (profileContainer) {
         const profileButton = profileContainer.querySelector('.user-profile-button');
@@ -792,7 +805,6 @@ function initializeHeader() {
         });
     }
 
-    // Logic chuông thông báo
     const notificationContainer = document.querySelector('.notification-container');
     if (notificationContainer) {
         const bellButton = notificationContainer.querySelector('.notification-bell-btn');
@@ -809,7 +821,6 @@ function initializeHeader() {
         });
     }
     
-    // Logic User Panel Modal (Modal thông tin người dùng)
     const userPanelModal = document.getElementById('user-panel-modal');
     if (userPanelModal) {
         const profileInfoBtn = document.getElementById('profile-info-btn');
@@ -919,7 +930,6 @@ function initializeHeader() {
             }
         });
 
-        // Các event listener khác trong User Panel...
         const copyReferralBtn = document.getElementById('copy-referral-btn');
         const referralCodeInput = document.getElementById('profile-referral-code');
 
@@ -983,7 +993,6 @@ function initializeHeader() {
             commissionMonthFilter.addEventListener('change', renderCommissionView);
         }
         
-        // Logic chat box
         const chatIcon = document.getElementById('chat-icon');
         const chatBox = document.getElementById('chat-box');
         const chatCloseBtn = document.getElementById('chat-close');
@@ -1018,11 +1027,14 @@ function initializeHeader() {
                 chatBody.scrollTop = chatBody.scrollHeight;
             }, 1000);
         }
-        chatSendBtn.addEventListener('click', sendMessage);
-        chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+        if(chatSendBtn) {
+            chatSendBtn.addEventListener('click', sendMessage);
+        }
+        if(chatInput){
+            chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+        }
     }
     
-    // --- KHỞI CHẠY KIỂM TRA XÁC THỰC ---
     handleOAuthCallback();
     checkLoginStatus();
 }

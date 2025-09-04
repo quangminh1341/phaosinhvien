@@ -253,7 +253,9 @@
             
             <div class="form-container sign-up-container">
                 <form action="#" id="register-form">
+                    <p class="auth-notification" id="auth-notification-signup"></p>
                     <h1>Đăng ký</h1>
+                    
                     <div id="register-step-1">
                         <input type="text" id="register-username" placeholder="Tên người dùng" required />
                         <input type="tel" id="register-phone" placeholder="Số điện thoại" required pattern="0[0-9]{9}" maxlength="10" title="Số điện thoại phải bắt đầu bằng số 0 và có đúng 10 chữ số." />
@@ -263,10 +265,12 @@
                     <p class="form-switcher-text">Hoặc đã có tài khoản - <a href="#" id="goSignIn">Đăng nhập</a></p>
                 </form>
             </div>
-            
+
             <div class="form-container sign-in-container">
                 <form action="#">
+                    <p class="auth-notification" id="auth-notification-signin"></p>
                     <h1>Đăng nhập</h1>
+                    
                     <button class="auth-button google-btn"><i class="fab fa-google"></i>Đăng nhập bằng Google</button>
                     <p class="form-switcher-text">Hoặc có thể - <a href="#" id="goSignUp">Đăng ký</a></p>
                 </form>

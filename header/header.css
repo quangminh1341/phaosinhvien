@@ -1117,3 +1117,16 @@ body:not(.light-mode) .auth-button:not(.google-btn):hover {
     line-height: 1.4;
     color: var(--system-message-text);
 }
+
+/* --- CSS for Auth Notification --- */
+.auth-notification {
+    color: #e53935; /* Màu đỏ cho lỗi */
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-top: 0; /* Bỏ margin-top âm */
+    margin-bottom: 15px; /* Tạo khoảng cách với tiêu đề bên dưới */
+    min-height: 20px; /* Giữ không gian để tránh layout bị giật */
+    max-width: 90%;
+    line-height: 1.4;
+    visibility: hidden; /* Ẩn mặc định */
+}
