@@ -95,7 +95,6 @@ async function apiRequest(endpoint, method = 'GET', body = null, token = null) {
             const errorData = await response.json().catch(() => ({ message: response.statusText }));
             throw new Error(errorData.message || `Lỗi HTTP: ${response.status}`);
         }
-        // For POST logout which might not return JSON
         if (response.status === 200 && response.headers.get('content-length') === '0') {
             return null;
         }
@@ -117,10 +116,8 @@ function handleGoogleRedirect(action) {
             alert('Vui lòng nhập đầy đủ Tên và Số điện thoại.');
             return;
         }
-        // Store registration details for after the callback
         localStorage.setItem('pendingRegistrationData', JSON.stringify({ fullName, phoneNumber }));
     }
-    // Redirect to the backend Google auth endpoint
     window.location.href = `${API_BASE_URL}/auth/google`;
 }
 
@@ -129,10 +126,8 @@ async function handleOAuthCallback() {
     const isExistParam = urlParams.get('isExist');
     const accessToken = urlParams.get('access_token');
 
-    // If no relevant parameters, do nothing.
     if (isExistParam === null && !accessToken) return;
 
-    // Clean the URL to remove query parameters
     window.history.replaceState({}, document.title, window.location.pathname);
 
     try {
@@ -152,21 +147,18 @@ async function handleOAuthCallback() {
                 await fetchAndDisplayUserProfile();
                 if(closeModalBtn) closeModalBtn.click();
             } else {
-                // This case happens if they try to log in with an unregistered Google account
                 const message = "Tài khoản Google này chưa được đăng ký. Vui lòng đăng ký trước.";
                 if (openModal) {
-                    openModal(true, message); // Open register modal with a message
+                    openModal(true, message);
                 }
             }
         } else if (authAction === 'register') {
             if (isExist) {
-                // This case happens if they try to register with an existing Google account
                 const message = "Tài khoản Google này đã tồn tại. Vui lòng đăng nhập.";
                 if (openModal) {
-                    openModal(false, message); // Open login modal with a message
+                    openModal(false, message);
                 }
             } else {
-                // This is a successful new registration
                 const pendingData = JSON.parse(localStorage.getItem('pendingRegistrationData'));
                 localStorage.removeItem('pendingRegistrationData');
 
@@ -175,7 +167,6 @@ async function handleOAuthCallback() {
                         full_name: pendingData.fullName,
                         phone_number: pendingData.phoneNumber,
                     };
-                    // Update the newly created user's profile with the details entered before redirect
                     await apiRequest('/users/me/profile', 'PATCH', profileUpdate, accessToken);
                 }
                 
@@ -194,11 +185,11 @@ async function handleOAuthCallback() {
 async function fetchAndDisplayUserProfile() {
     try {
         const response = await apiRequest('/users/me/profile');
-        currentUser = response.data; // Assuming profile data is in response.data
+        currentUser = response.data;
         showLoggedInState(currentUser);
     } catch (error) {
         console.error("Phiên đăng nhập không hợp lệ hoặc đã hết hạn.", error);
-        handleLogout(); // Clear local state if token is invalid
+        handleLogout();
     }
 }
 
@@ -210,7 +201,6 @@ async function checkLoginStatus() {
         showLoggedOutState();
     }
 
-    // Check sessionStorage flag to show register modal after redirect
     if (sessionStorage.getItem('showRegisterModal') === 'true') {
         sessionStorage.removeItem('showRegisterModal');
         if (openModal) {
@@ -222,12 +212,10 @@ async function checkLoginStatus() {
 
 async function handleLogout() {
     try {
-        // Call the backend logout endpoint
         await apiRequest('/auth/logout', 'POST');
     } catch (error) {
         console.error("Lỗi khi đăng xuất trên server:", error);
     } finally {
-        // Always clear local data regardless of server response
         localStorage.removeItem('accessToken');
         currentUser = null;
         showLoggedOutState();
@@ -700,8 +688,10 @@ function initializeHeader() {
     if (authModalOverlay) {
         authContainer = document.getElementById('auth-container');
         
-        const openLoginButtons = document.querySelectorAll('.login-btn, .auth-link-mobile:nth-child(5)');
-        const openRegisterButtons = document.querySelectorAll('.register-btn, .auth-link-mobile:nth-child(6)');
+        // **FIX**: Using more robust selectors
+        const openLoginButtons = document.querySelectorAll('.login-btn, .login-btn-mobile');
+        const openRegisterButtons = document.querySelectorAll('.register-btn, .register-btn-mobile');
+
         const closeModalBtn = authModalOverlay.querySelector('.auth-close-btn');
         const goSignUpLink = document.getElementById('goSignUp');
         const goSignInLink = document.getElementById('goSignIn');
@@ -1057,8 +1047,6 @@ function initializeHeader() {
         }
     }
     
-    // Process OAuth callback if parameters are present in URL.
     handleOAuthCallback();
-    // Check login status on every page load.
     checkLoginStatus();
 }
