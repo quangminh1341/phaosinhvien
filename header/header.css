@@ -1123,10 +1123,12 @@ body:not(.light-mode) .auth-button:not(.google-btn):hover {
     color: #e53935; /* Màu đỏ cho lỗi */
     font-size: 0.9rem;
     font-weight: 500;
-    margin-top: 0; /* Bỏ margin-top âm */
-    margin-bottom: 15px; /* Tạo khoảng cách với tiêu đề bên dưới */
-    min-height: 20px; /* Giữ không gian để tránh layout bị giật */
+    margin-bottom: 15px; /* Giữ khoảng cách với tiêu đề bên dưới */
+    min-height: 40px; /* <<<< THAY ĐỔI Ở ĐÂY: Tăng chiều cao tối thiểu để chứa 2 dòng text */
     max-width: 90%;
     line-height: 1.4;
     visibility: hidden; /* Ẩn mặc định */
+    display: flex; /* <<<< THÊM VÀO: Căn giữa nội dung trong không gian đã đặt trước */
+    align-items: center;
+    justify-content: center;
 }

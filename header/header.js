@@ -69,20 +69,22 @@ const mockCommissionHistory = [
 let authModalOverlay, authContainer, modalAnimation, openModal;
 
 // --- CẤU HÌNH API ---
-const API_BASE_URL = '/api';
+// ***** LƯU Ý: Đổi lại API_BASE_URL thành endpoint server của bạn khi deploy *****
+const API_BASE_URL = 'https://phaosinhvien.com/api'; 
 let currentUser = null;
 
 // --- HÀM TRỢ GIÚP API ---
 async function apiRequest(endpoint, method = 'GET', body = null, token = null) {
     const headers = { 'Content-Type': 'application/json' };
-    const authToken = token || localStorage.getItem('accessToken');
-    if (authToken) {
-        headers['Authorization'] = `Bearer ${authToken}`;
-    }
+    // const authToken = token || localStorage.getItem('accessToken');
+    // if (authToken) {
+    //     headers['Authorization'] = `Bearer ${authToken}`;
+    // }
 
     const config = {
         method,
         headers,
+        credentials: 'include',
     };
 
     if (body && method !== 'GET') {
@@ -91,6 +93,12 @@ async function apiRequest(endpoint, method = 'GET', body = null, token = null) {
     
     try {
         const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+        // Lưu token nếu có trong header phản hồi
+        const newAccessToken = response.headers.get('X-Access-Token');
+        if (newAccessToken) {
+            localStorage.setItem('accessToken', newAccessToken);
+        }
+
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({ message: response.statusText }));
             throw new Error(errorData.message || `Lỗi HTTP: ${response.status}`);
@@ -107,8 +115,14 @@ async function apiRequest(endpoint, method = 'GET', body = null, token = null) {
 
 // --- HÀM XÁC THỰC ---
 
+/**
+ * @description Điều hướng người dùng đến trang xác thực Google.
+ * @param {'login' | 'register'} action - Hành động là 'login' hoặc 'register'.
+ */
 function handleGoogleRedirect(action) {
     localStorage.setItem('authAction', action);
+    let googleAuthUrl = `${API_BASE_URL}/auth/google`;
+
     if (action === 'register') {
         const fullName = document.getElementById('register-username').value;
         const phoneNumber = document.getElementById('register-phone').value;
@@ -116,9 +130,15 @@ function handleGoogleRedirect(action) {
             alert('Vui lòng nhập đầy đủ Tên và Số điện thoại.');
             return;
         }
-        localStorage.setItem('pendingRegistrationData', JSON.stringify({ fullName, phoneNumber }));
+        // [MODIFIED] Gửi kèm full_name và phone_number làm query params
+        const params = new URLSearchParams({
+            full_name: fullName,
+            phone_number: phoneNumber
+        });
+        googleAuthUrl += `?${params.toString()}`;
     }
-    window.location.href = `${API_BASE_URL}/auth/google`;
+    
+    window.location.href = googleAuthUrl;
 }
 
 async function handleOAuthCallback() {
@@ -126,61 +146,53 @@ async function handleOAuthCallback() {
     const isExistParam = urlParams.get('isExist');
     const accessToken = urlParams.get('access_token');
 
+    // Nếu không có param isExist và accessToken, không làm gì cả.
     if (isExistParam === null && !accessToken) return;
 
+    // Xóa các query params khỏi URL để làm sạch
     window.history.replaceState({}, document.title, window.location.pathname);
 
     try {
         const isExist = isExistParam === 'true';
         const authAction = localStorage.getItem('authAction');
-        localStorage.removeItem('authAction');
-        
-        const authModalOverlay = document.getElementById('auth-modal-overlay');
-        const closeModalBtn = authModalOverlay.querySelector('.auth-close-btn');
+        const closeModalBtn = document.querySelector('#auth-modal-overlay .auth-close-btn');
 
+        // Nếu có accessToken từ server, lưu nó vào localStorage
         if (accessToken) {
             localStorage.setItem('accessToken', accessToken);
         }
 
         if (authAction === 'login') {
             if (isExist) {
+                // Tài khoản tồn tại, đăng nhập thành công
                 await fetchAndDisplayUserProfile();
-                if(closeModalBtn) closeModalBtn.click();
+                if (closeModalBtn) closeModalBtn.click();
             } else {
-                const message = "Tài khoản Google này chưa được đăng ký. Vui lòng đăng ký trước.";
-                if (openModal) {
-                    openModal(true, message);
-                }
+                // [MODIFIED] Tài khoản không tồn tại, mở lại form ĐĂNG NHẬP và hiển thị thông báo.
+                const message = "Tài khoản Google này chưa tồn tại. Vui lòng đăng ký.";
+                if (openModal) openModal(false, message); // Mở form ĐĂNG NHẬP
             }
         } else if (authAction === 'register') {
             if (isExist) {
+                // [MODIFIED] Tài khoản đã tồn tại khi cố gắng đăng ký, mở form ĐĂNG NHẬP và thông báo.
                 const message = "Tài khoản Google này đã tồn tại. Vui lòng đăng nhập.";
-                if (openModal) {
-                    openModal(false, message);
-                }
+                if (openModal) openModal(false, message); // Mở form ĐĂNG NHẬP
             } else {
-                const pendingData = JSON.parse(localStorage.getItem('pendingRegistrationData'));
-                localStorage.removeItem('pendingRegistrationData');
-
-                if (pendingData && accessToken) {
-                    const profileUpdate = {
-                        full_name: pendingData.fullName,
-                        phone_number: pendingData.phoneNumber,
-                    };
-                    await apiRequest('/users/me/profile', 'PATCH', profileUpdate, accessToken);
-                }
-                
+                // [MODIFIED] Đăng ký thành công, server đã lưu tên và SĐT.
+                // Chỉ cần fetch profile và đóng modal.
                 await fetchAndDisplayUserProfile();
-                alert('Đăng ký thành công!');
-                if(closeModalBtn) closeModalBtn.click();
+                // alert('Đăng ký thành công!');
+                // if (closeModalBtn) closeModalBtn.click();
             }
         }
     } catch (error) {
         console.error('Lỗi xử lý callback OAuth:', error);
         alert('Đã có lỗi xảy ra trong quá trình xác thực.');
+    } finally {
+        // Dọn dẹp localStorage
+        localStorage.removeItem('authAction');
     }
 }
-
 
 async function fetchAndDisplayUserProfile() {
     try {
@@ -200,14 +212,6 @@ async function checkLoginStatus() {
     } else {
         showLoggedOutState();
     }
-
-    if (sessionStorage.getItem('showRegisterModal') === 'true') {
-        sessionStorage.removeItem('showRegisterModal');
-        if (openModal) {
-            const message = "Tài khoản Google này chưa tồn tại. Vui lòng điền thông tin để hoàn tất đăng ký.";
-            openModal(false, message);
-        }
-    }
 }
 
 async function handleLogout() {
@@ -216,12 +220,11 @@ async function handleLogout() {
     } catch (error) {
         console.error("Lỗi khi đăng xuất trên server:", error);
     } finally {
-        // Xóa cache và token
         localStorage.clear();
         sessionStorage.clear();
         currentUser = null;
         showLoggedOutState();
-        // Cân nhắc reload lại trang để đảm bảo trạng thái hoàn toàn mới
+        // Cân nhắc reload lại trang để đảm bảo trạng thái được reset hoàn toàn
         // window.location.reload(); 
     }
 }
@@ -735,7 +738,11 @@ function initializeHeader() {
 
                 authContainer.classList.toggle('right-panel-active', showRegister);
                 authModalOverlay.classList.add('visible');
-                modalAnimation.timeScale(2).play();
+
+                // modalAnimation.invalidate();
+                modalAnimation.restart();
+
+                // modalAnimation.timeScale(2).play();
 
                 if (message) {
                     const targetId = showRegister ? '#auth-notification-signup' : '#auth-notification-signin';
@@ -1058,6 +1065,8 @@ function initializeHeader() {
         }
     }
     
+    // Xử lý callback OAuth sau khi tất cả các listener đã được thiết lập
     handleOAuthCallback();
+    // Kiểm tra trạng thái đăng nhập khi tải trang
     checkLoginStatus();
 }
