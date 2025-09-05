@@ -145,18 +145,18 @@ async function handleOAuthCallback() {
         if (authAction === 'login') {
             if (isExist) {
                 await fetchAndDisplayUserProfile();
-                if (closeModalBtn) closeModalBtn.click();
+                if(closeModalBtn) closeModalBtn.click();
             } else {
-                const message = "Tài khoản Google này chưa tồn tại. Vui lòng điền thông tin để hoàn tất đăng ký.";
+                const message = "Tài khoản Google này chưa được đăng ký. Vui lòng đăng ký trước.";
                 if (openModal) {
-                    openModal(true, message); // Mở form ĐĂNG KÝ với thông báo
+                    openModal(true, message);
                 }
             }
         } else if (authAction === 'register') {
             if (isExist) {
                 const message = "Tài khoản Google này đã tồn tại. Vui lòng đăng nhập.";
                 if (openModal) {
-                    openModal(false, message); // Mở form ĐĂNG NHẬP với thông báo
+                    openModal(false, message);
                 }
             } else {
                 const pendingData = JSON.parse(localStorage.getItem('pendingRegistrationData'));
@@ -205,7 +205,7 @@ async function checkLoginStatus() {
         sessionStorage.removeItem('showRegisterModal');
         if (openModal) {
             const message = "Tài khoản Google này chưa tồn tại. Vui lòng điền thông tin để hoàn tất đăng ký.";
-            openModal(true, message);
+            openModal(false, message);
         }
     }
 }
@@ -216,11 +216,16 @@ async function handleLogout() {
     } catch (error) {
         console.error("Lỗi khi đăng xuất trên server:", error);
     } finally {
-        localStorage.removeItem('accessToken');
+        // Xóa cache và token
+        localStorage.clear();
+        sessionStorage.clear();
         currentUser = null;
         showLoggedOutState();
+        // Cân nhắc reload lại trang để đảm bảo trạng thái hoàn toàn mới
+        // window.location.reload(); 
     }
 }
+
 
 // --- CÁC HÀM CẬP NHẬT GIAO DIỆN ---
 
@@ -690,6 +695,7 @@ function initializeHeader() {
         
         const openLoginButtons = document.querySelectorAll('.login-btn, .login-btn-mobile');
         const openRegisterButtons = document.querySelectorAll('.register-btn, .register-btn-mobile');
+
         const closeModalBtn = authModalOverlay.querySelector('.auth-close-btn');
         const goSignUpLink = document.getElementById('goSignUp');
         const goSignInLink = document.getElementById('goSignIn');
@@ -704,13 +710,6 @@ function initializeHeader() {
                 googleRegisterBtn.style.display = 'none';
                 if(registerForm) registerForm.reset();
             }
-        };
-
-        const clearNotifications = () => {
-            document.querySelectorAll('.auth-notification').forEach(el => {
-                el.textContent = '';
-                el.style.visibility = 'hidden';
-            });
         };
 
         if (authContainer) {
@@ -729,7 +728,11 @@ function initializeHeader() {
                 .from('.form-container input, .auth-button', { opacity: 0, y: 20, stagger: 0.02, duration: 0.4, ease: "power2.out" }, "-=0.5");
             
             openModal = (showRegister, message = '') => {
-                clearNotifications();
+                document.querySelectorAll('.auth-notification').forEach(el => {
+                    el.textContent = '';
+                    el.style.visibility = 'hidden';
+                });
+
                 authContainer.classList.toggle('right-panel-active', showRegister);
                 authModalOverlay.classList.add('visible');
                 modalAnimation.timeScale(2).play();
@@ -755,15 +758,20 @@ function initializeHeader() {
             if (goSignUpLink) {
                 goSignUpLink.addEventListener('click', (e) => { 
                     e.preventDefault(); 
-                    clearNotifications();
+                    
+                    const notifEl = document.getElementById('auth-notification-signup');
+                    if (notifEl) {
+                        notifEl.textContent = '';
+                        notifEl.style.visibility = 'hidden';
+                    }
+
                     authContainer.classList.add('right-panel-active');
                     resetRegisterForm();
                 });
             }
             if (goSignInLink) {
                 goSignInLink.addEventListener('click', (e) => { 
-                    e.preventDefault();
-                    clearNotifications();
+                    e.preventDefault(); 
                     authContainer.classList.remove('right-panel-active'); 
                 });
             }
