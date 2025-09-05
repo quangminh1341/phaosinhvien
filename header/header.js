@@ -70,7 +70,7 @@ let authModalOverlay, authContainer, modalAnimation, openModal;
 
 // --- CẤU HÌNH API ---
 // ***** LƯU Ý: Đổi lại API_BASE_URL thành endpoint server của bạn khi deploy *****
-const API_BASE_URL = 'https://phaosinhvien.com/api'; 
+const API_BASE_URL = '/api'; 
 let currentUser = null;
 
 // --- HÀM TRỢ GIÚP API ---
