@@ -309,6 +309,8 @@
                             <li><a href="#" class="nav-link" data-target="panel-marketing">Thống kê tiếp thị</a></li>
                             <li><a href="#" class="nav-link" data-target="panel-partners">Đối tác</a></li>
                             <li><a href="#" class="nav-link" data-target="panel-deposit">Nạp tiền</a></li>
+                            <li><a href="#" class="nav-link" data-target="panel-withdrawal">Rút tiền</a></li>
+                            <li><a href="#" class="nav-link" data-target="panel-payment-links">Liên kết thanh toán</a></li>
                         </ul>
                     </div>
                     <div class="nav-category">
@@ -460,11 +462,41 @@
                 </div>
                 <div id="panel-partners" class="panel-content-item">
                     <h1>Đối tác</h1>
-                    <p>Nội dung đối tác...</p>
+                    <div class="update-notification">
+                        <p>Hệ thống đang được update, dự tính hoạt động vào 12/09/2025</p>
+                    </div>
                 </div>
                 <div id="panel-deposit" class="panel-content-item">
                     <h1>Nạp tiền</h1>
-                    <p>Nội dung nạp tiền...</p>
+                    <div class="update-notification">
+                        <p>Hệ thống đang được update, dự tính hoạt động vào 12/09/2025</p>
+                    </div>
+                </div>
+                <div id="panel-withdrawal" class="panel-content-item">
+                    <h1>Rút tiền</h1>
+                    <div class="update-notification">
+                        <p>Hệ thống đang được update, dự tính hoạt động vào 12/09/2025</p>
+                    </div>
+                </div>
+                <div id="panel-payment-links" class="panel-content-item">
+                    <h1>Liên kết thanh toán</h1>
+                    <div class="update-notification">
+                        <p>Hệ thống đang được update, dự tính hoạt động vào 12/09/2025</p>
+                    </div>
+                    <!-- <div class="payment-links-container">
+                        <button class="payment-link-btn" id="open-bank-link-modal-btn">
+                            <i class="fas fa-university"></i>
+                            <span>Liên kết Ngân hàng</span>
+                        </button>
+                        <button class="payment-link-btn" id="open-momo-link-modal-btn">
+                            <i class="fas fa-mobile-alt"></i>
+                            <span>Liên kết Momo</span>
+                        </button>
+                        <button class="payment-link-btn" id="open-zalopay-link-modal-btn">
+                            <i class="fas fa-wallet"></i>
+                            <span>Liên kết ZaloPay</span>
+                        </button>
+                    </div> -->
                 </div>
                 <div id="panel-orders" class="panel-content-item">
                     <h1>Lịch sử đơn hàng</h1>
@@ -501,5 +533,64 @@
             </div>
         </div>
     </div>
+
+    <div id="bank-link-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="close-modal-btn">&times;</button>
+            <h2>LIÊN KẾT NGÂN HÀNG</h2>
+            <form id="bank-link-form">
+                <div class="form-group">
+                    <label for="bank-select">Ngân hàng:</label>
+                    <select id="bank-select" name="bankName" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="bank-account-name">Tên chủ thẻ:</label>
+                    <input type="text" id="bank-account-name" name="accountName" required>
+                </div>
+                <div class="form-group">
+                    <label for="bank-account-number">Số tài khoản:</label>
+                    <input type="text" id="bank-account-number" name="accountNumber" required>
+                </div>
+                <button type="submit" class="sp-button form-submit-btn">Liên kết</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="momo-link-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="close-modal-btn">&times;</button>
+            <h2>LIÊN KẾT MOMO</h2>
+            <form id="momo-link-form">
+                <div class="form-group">
+                    <label for="momo-account-name">Tên chủ khoản:</label>
+                    <input type="text" id="momo-account-name" name="accountName" required>
+                </div>
+                <div class="form-group">
+                    <label for="momo-phone-number">Số điện thoại:</label>
+                    <input type="tel" id="momo-phone-number" name="phoneNumber" required>
+                </div>
+                <button type="submit" class="sp-button form-submit-btn">Liên kết</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="zalopay-link-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="close-modal-btn">&times;</button>
+            <h2>LIÊN KẾT ZALOPAY</h2>
+            <form id="zalopay-link-form">
+                <div class="form-group">
+                    <label for="zalopay-account-name">Tên chủ khoản:</label>
+                    <input type="text" id="zalopay-account-name" name="accountName" required>
+                </div>
+                <div class="form-group">
+                    <label for="zalopay-phone-number">Số điện thoại:</label>
+                    <input type="tel" id="zalopay-phone-number" name="phoneNumber" required>
+                </div>
+                <button type="submit" class="sp-button form-submit-btn">Liên kết</button>
+            </form>
+        </div>
+    </div>
+
 </body>
 </html>

@@ -170,7 +170,17 @@ function initializeServicePanel() {
     gallery.addEventListener('click', handleThumbnailClick);
     backButton.addEventListener('click', handleBackClick);
     closeServiceListBtn.addEventListener('click', handleCloseListClick);
-    orderButton.addEventListener('click', openOrderModal);
+    orderButton.addEventListener('click', () => {
+        if (currentUser) {
+                    openOrderModal();
+                } else {
+                    if (typeof openModal === 'function') {
+                        openModal(false, 'Vui lòng đăng nhập để đặt hàng.');
+                    } else {
+                        alert('Vui lòng đăng nhập để đặt hàng.');
+                    }
+                }
+            });
     closeModalBtn.addEventListener('click', closeOrderModal);
     orderModal.addEventListener('click', (e) => { if (e.target === orderModal) closeOrderModal(); });
     orderForm.addEventListener('submit', handleOrderSubmit);
