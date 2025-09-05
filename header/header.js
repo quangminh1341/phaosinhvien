@@ -73,13 +73,16 @@ const API_BASE_URL = '/api';
 let currentUser = null;
 
 // --- HÀM TRỢ GIÚP API ---
-async function apiRequest(endpoint, method = 'GET', body = null) {
+async function apiRequest(endpoint, method = 'GET', body = null, token = null) {
     const headers = { 'Content-Type': 'application/json' };
+    const authToken = token || localStorage.getItem('accessToken');
+    if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+    }
 
     const config = {
         method,
         headers,
-        credentials: 'include'
     };
 
     if (body && method !== 'GET') {
@@ -88,10 +91,13 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
     
     try {
         const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({ message: response.statusText }));
             throw new Error(errorData.message || `Lỗi HTTP: ${response.status}`);
+        }
+        // For POST logout which might not return JSON
+        if (response.status === 200 && response.headers.get('content-length') === '0') {
+            return null;
         }
         return response.json();
     } catch (error) {
@@ -102,127 +108,134 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
 
 // --- HÀM XÁC THỰC ---
 
-/**
- * Chuyển hướng người dùng đến trang xác thực Google.
- * @param {string} action - Hành động là 'login' hoặc 'register'.
- */
 function handleGoogleRedirect(action) {
-    let redirectUrl = '/api/auth/google';
-
+    localStorage.setItem('authAction', action);
     if (action === 'register') {
         const fullName = document.getElementById('register-username').value;
         const phoneNumber = document.getElementById('register-phone').value;
-
         if (!fullName || !phoneNumber) {
             alert('Vui lòng nhập đầy đủ Tên và Số điện thoại.');
             return;
         }
-        
-        const state = {
-            fullname: fullName,
-            sdt: phoneNumber,
-        };
-        
-        const encodedState = btoa(JSON.stringify(state));
-        redirectUrl += `?state=${encodeURIComponent(encodedState)}`;
+        // Store registration details for after the callback
+        localStorage.setItem('pendingRegistrationData', JSON.stringify({ fullName, phoneNumber }));
     }
+    // Redirect to the backend Google auth endpoint
+    window.location.href = `${API_BASE_URL}/auth/google`;
+}
 
-    console.log('Chuyển hướng đến:', redirectUrl);
-    window.location.href = redirectUrl;
+async function handleOAuthCallback() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const isExistParam = urlParams.get('isExist');
+    const accessToken = urlParams.get('access_token');
+
+    // If no relevant parameters, do nothing.
+    if (isExistParam === null && !accessToken) return;
+
+    // Clean the URL to remove query parameters
+    window.history.replaceState({}, document.title, window.location.pathname);
+
+    try {
+        const isExist = isExistParam === 'true';
+        const authAction = localStorage.getItem('authAction');
+        localStorage.removeItem('authAction');
+        
+        const authModalOverlay = document.getElementById('auth-modal-overlay');
+        const closeModalBtn = authModalOverlay.querySelector('.auth-close-btn');
+
+        if (accessToken) {
+            localStorage.setItem('accessToken', accessToken);
+        }
+
+        if (authAction === 'login') {
+            if (isExist) {
+                await fetchAndDisplayUserProfile();
+                if(closeModalBtn) closeModalBtn.click();
+            } else {
+                // This case happens if they try to log in with an unregistered Google account
+                const message = "Tài khoản Google này chưa được đăng ký. Vui lòng đăng ký trước.";
+                if (openModal) {
+                    openModal(true, message); // Open register modal with a message
+                }
+            }
+        } else if (authAction === 'register') {
+            if (isExist) {
+                // This case happens if they try to register with an existing Google account
+                const message = "Tài khoản Google này đã tồn tại. Vui lòng đăng nhập.";
+                if (openModal) {
+                    openModal(false, message); // Open login modal with a message
+                }
+            } else {
+                // This is a successful new registration
+                const pendingData = JSON.parse(localStorage.getItem('pendingRegistrationData'));
+                localStorage.removeItem('pendingRegistrationData');
+
+                if (pendingData && accessToken) {
+                    const profileUpdate = {
+                        full_name: pendingData.fullName,
+                        phone_number: pendingData.phoneNumber,
+                    };
+                    // Update the newly created user's profile with the details entered before redirect
+                    await apiRequest('/users/me/profile', 'PATCH', profileUpdate, accessToken);
+                }
+                
+                await fetchAndDisplayUserProfile();
+                alert('Đăng ký thành công!');
+                if(closeModalBtn) closeModalBtn.click();
+            }
+        }
+    } catch (error) {
+        console.error('Lỗi xử lý callback OAuth:', error);
+        alert('Đã có lỗi xảy ra trong quá trình xác thực.');
+    }
 }
 
 
-/**
- * Lấy thông tin người dùng và kiểm tra xem họ đã đăng ký hoàn chỉnh chưa.
- */
 async function fetchAndDisplayUserProfile() {
     try {
         const response = await apiRequest('/users/me/profile');
-
-        if (!response || !response.data) {
-            throw new Error("Phản hồi API không hợp lệ hoặc không có dữ liệu.");
-        }
-
-        const user = response.data;
-
-        if (!user.full_name || !user.phone_number) {
-            console.warn("Người dùng đã xác thực nhưng chưa hoàn tất đăng ký. Yêu cầu cập nhật thông tin.");
-            showLoggedOutState();
-            if (openModal) {
-                openModal(true, "Vui lòng hoàn tất thông tin đăng ký của bạn để tiếp tục.");
-            }
-            return;
-        }
-
-        currentUser = user;
+        currentUser = response.data; // Assuming profile data is in response.data
         showLoggedInState(currentUser);
-
     } catch (error) {
-        console.log("Không thể lấy thông tin người dùng. Coi như chưa đăng nhập.", error.message);
+        console.error("Phiên đăng nhập không hợp lệ hoặc đã hết hạn.", error);
+        handleLogout(); // Clear local state if token is invalid
+    }
+}
+
+async function checkLoginStatus() {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+        await fetchAndDisplayUserProfile();
+    } else {
+        showLoggedOutState();
+    }
+
+    // Check sessionStorage flag to show register modal after redirect
+    if (sessionStorage.getItem('showRegisterModal') === 'true') {
+        sessionStorage.removeItem('showRegisterModal');
+        if (openModal) {
+            const message = "Tài khoản Google này chưa tồn tại. Vui lòng điền thông tin để hoàn tất đăng ký.";
+            openModal(true, message);
+        }
+    }
+}
+
+async function handleLogout() {
+    try {
+        // Call the backend logout endpoint
+        await apiRequest('/auth/logout', 'POST');
+    } catch (error) {
+        console.error("Lỗi khi đăng xuất trên server:", error);
+    } finally {
+        // Always clear local data regardless of server response
+        localStorage.removeItem('accessToken');
+        currentUser = null;
         showLoggedOutState();
     }
 }
 
-/**
- * Kiểm tra trạng thái đăng nhập khi tải trang.
- */
-function checkLoginStatus() {
-    fetchAndDisplayUserProfile();
-}
-
-
-/**
- * **ĐÃ SỬA LỖI**: Xử lý đăng xuất. Chỉ gọi reload MỘT LẦN.
- */
-function handleLogout() {
-    console.log("Bắt đầu quá trình đăng xuất...");
-    apiRequest('/auth/logout', 'POST')
-        .catch(error => {
-            console.error("API Logout có lỗi, nhưng vẫn tiến hành logout ở client:", error);
-        })
-        .finally(() => {
-            currentUser = null;
-            // Chỉ cần cập nhật UI và tải lại trang.
-            // Không gọi lại hàm nào khác có thể gây ra vòng lặp.
-            showLoggedOutState();
-            window.location.reload();
-        });
-}
-
-/**
- * Gửi yêu cầu cập nhật thông tin người dùng.
- */
-async function handleProfileUpdate() {
-    const fullName = document.getElementById('profile-name').value;
-    const gender = document.querySelector('input[name="gender"]:checked')?.value;
-    const day = document.getElementById('dob-day').value;
-    const month = document.getElementById('dob-month').value;
-    const year = document.getElementById('dob-year').value;
-
-    const dataToUpdate = {
-        full_name: fullName,
-        gender: gender,
-    };
-    
-    if (day && month && year) {
-        dataToUpdate.birthday = new Date(year, month - 1, day).toISOString();
-    }
-
-    try {
-        const response = await apiRequest('/users/me/profile', 'PATCH', dataToUpdate);
-        console.log('Cập nhật thành công:', response);
-        alert('Cập nhật thông tin thành công!');
-        currentUser = { ...currentUser, ...response.data };
-        populateProfilePanel(currentUser);
-        showLoggedInState(currentUser);
-    } catch (error) {
-        console.error('Lỗi khi cập nhật profile:', error);
-        alert('Có lỗi xảy ra, không thể cập nhật thông tin.');
-    }
-}
-
-
 // --- CÁC HÀM CẬP NHẬT GIAO DIỆN ---
+
 function showLoggedInState(user) {
     const headerAuth = document.querySelector('.header-auth');
     const profileContainer = document.querySelector('.profile-container');
@@ -260,6 +273,7 @@ function showLoggedOutState() {
         notificationContainer.style.display = 'none';
     }
 }
+
 
 function updateContactLogo(theme) {
     const contactLogo = document.querySelector('.contact-info-card .contact-logo img');
@@ -705,7 +719,7 @@ function initializeHeader() {
         };
 
         if (authContainer) {
-            const animatedText = new SplitType('.auth-container h1, .auth-container p:not(.form-switcher-text)', { types: 'lines, chars' });
+            const animatedText = new SplitType('.auth-container h1, .auth-container p', { types: 'lines, chars' });
             modalAnimation = gsap.timeline({
                 paused: true,
                 onReverseComplete: () => {
@@ -730,15 +744,11 @@ function initializeHeader() {
                 modalAnimation.timeScale(2).play();
 
                 if (message) {
-                    const notifSignup = document.querySelector('#auth-notification-signup');
-                    const notifSignin = document.querySelector('#auth-notification-signin');
-                    if (notifSignup) {
-                         notifSignup.textContent = message;
-                         notifSignup.style.visibility = 'visible';
-                    }
-                    if (notifSignin) {
-                         notifSignin.textContent = message;
-                         notifSignin.style.visibility = 'visible';
+                    const targetId = showRegister ? '#auth-notification-signup' : '#auth-notification-signin';
+                    const notifEl = document.querySelector(targetId);
+                    if (notifEl) {
+                        notifEl.textContent = message;
+                        notifEl.style.visibility = 'visible';
                     }
                 }
             };
@@ -810,13 +820,11 @@ function initializeHeader() {
                 profileDropdown.classList.remove('active');
             }
         });
-        
-        if (logoutButton) {
-            logoutButton.addEventListener('click', (e) => {
-                e.preventDefault();
-                handleLogout();
-            });
-        }
+
+        logoutButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            handleLogout();
+        });
     }
 
     const notificationContainer = document.querySelector('.notification-container');
@@ -843,7 +851,6 @@ function initializeHeader() {
         const closePanelBtn = userPanelModal.querySelector('.user-panel-close-btn');
         const panelSidebarNav = userPanelModal.querySelector('.user-panel-nav');
         const collapsibleCategory = userPanelModal.querySelector('.nav-category.is-collapsible');
-        const saveProfileBtn = document.getElementById('save-profile-btn');
     
         const collapseAll = () => {
             if (collapsibleCategory) {
@@ -944,13 +951,6 @@ function initializeHeader() {
                 closePanelModal();
             }
         });
-        
-        if (saveProfileBtn) {
-            saveProfileBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                handleProfileUpdate();
-            });
-        }
 
         const copyReferralBtn = document.getElementById('copy-referral-btn');
         const referralCodeInput = document.getElementById('profile-referral-code');
@@ -1057,19 +1057,8 @@ function initializeHeader() {
         }
     }
     
-    // **LOGIC ĐỂ XỬ LÝ REDIRECT**
-    const shouldShowRegister = sessionStorage.getItem('showRegisterModal');
-    if (shouldShowRegister === 'true') {
-        sessionStorage.removeItem('showRegisterModal');
-        const message = "Gmail này chưa được đăng ký. Vui lòng điền thông tin để hoàn tất đăng ký.";
-        if (openModal) {
-            openModal(true, message);
-        }
-    } else {
-        checkLoginStatus();
-    }
+    // Process OAuth callback if parameters are present in URL.
+    handleOAuthCallback();
+    // Check login status on every page load.
+    checkLoginStatus();
 }
-
-
-// Chạy hàm khởi tạo khi DOM đã sẵn sàng
-document.addEventListener('DOMContentLoaded', initializeHeader);
