@@ -70,12 +70,12 @@ let authModalOverlay, authContainer, modalAnimation, openModal;
 
 // --- CẤU HÌNH API ---
 // ***** LƯU Ý: Đổi lại API_BASE_URL thành endpoint server của bạn khi deploy *****
-const API_BASE_URL = '/api'; 
+const API_BASE_URL = 'https://phaosinhvien.com/api'; 
 let currentUser = null;
 
 // --- HÀM TRỢ GIÚP API ---
 async function apiRequest(endpoint, method = 'GET', body = null, token = null) {
-    const headers = {}; // Bắt đầu với headers trống
+    const headers = {};
     const authToken = token || localStorage.getItem('accessToken');
     if (authToken) {
         headers['Authorization'] = `Bearer ${authToken}`;
@@ -87,20 +87,31 @@ async function apiRequest(endpoint, method = 'GET', body = null, token = null) {
         credentials: 'include',
     };
 
-    if (body && method !== 'GET') {
-        if (body instanceof FormData) {
-            // Không set 'Content-Type', trình duyệt sẽ tự động làm điều đó cho FormData
-            config.body = body;
-        } else {
-            // Mặc định là JSON cho các object khác
-            headers['Content-Type'] = 'application/json';
-            config.body = JSON.stringify(body);
+    let url = `${API_BASE_URL}${endpoint}`;
+
+    if (body) {
+        // *** SỬA LỖI: Xử lý đúng cách cho phương thức GET ***
+        // Nếu phương thức là GET, chuyển đổi body thành query string
+        if (method.toUpperCase() === 'GET') {
+            const params = new URLSearchParams(body);
+            url += `?${params.toString()}`;
+            // QUAN TRỌNG: Không thêm body vào config cho GET
+        } 
+        // Giữ nguyên logic cũ cho các phương thức khác (POST, PATCH, v.v.)
+        else {
+            if (body instanceof FormData) {
+                config.body = body;
+            } else {
+                headers['Content-Type'] = 'application/json';
+                config.body = JSON.stringify(body);
+            }
         }
     }
     
     try {
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-        // Lưu token nếu có trong header phản hồi
+        // Sử dụng biến 'url' đã được cập nhật
+        const response = await fetch(url, config);
+        
         const newAccessToken = response.headers.get('X-Access-Token');
         if (newAccessToken) {
             localStorage.setItem('accessToken', newAccessToken);
@@ -114,7 +125,7 @@ async function apiRequest(endpoint, method = 'GET', body = null, token = null) {
             return null;
         }
         const responseData = await response.json();
-        // Giả sử backend trả về data trong một object lồng nhau
+        
         return responseData.data ? { ...responseData.data, message: responseData.message } : { ...responseData, message: responseData.message };
 
     } catch (error) {
@@ -216,10 +227,7 @@ async function fetchAndDisplayUserProfile() {
 }
 
 async function checkLoginStatus() {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
        await fetchAndDisplayUserProfile();
-    }
 }
 
 async function handleLogout() {
@@ -420,7 +428,6 @@ function populateProfilePanel(user) {
     if (referralInput) referralInput.value = user.referral_code || '';
 
     const emailInput = document.getElementById('profile-email');
-    // **ĐÃ THAY ĐỔI**: Hiển thị trực tiếp email từ backend
     if (emailInput) {
         emailInput.value = user.email || '';
     }
@@ -436,7 +443,6 @@ function populateProfilePanel(user) {
     phoneEditWrapper.style.display = 'none';
     phoneInput.style.display = 'none';
 
-    // **ĐÃ THAY ĐỔI**: Hiển thị trực tiếp SĐT (đã được che) từ backend
     if (user.phone_number) {
         phoneDisplayWrapper.style.display = 'flex';
         maskedPhoneInput.value = user.phone_number;
@@ -460,9 +466,9 @@ function populateProfilePanel(user) {
 
     if (user.birthday) {
         const dob = new Date(user.birthday);
-        daySelect.value = dob.getDate();
-        monthSelect.value = dob.getMonth() + 1;
-        yearSelect.value = dob.getFullYear();
+        daySelect.value = dob.getUTCDate();
+        monthSelect.value = dob.getUTCMonth() + 1;
+        yearSelect.value = dob.getUTCFullYear();
     }
 }
 
@@ -564,16 +570,45 @@ function renderTransactions() {
     }
 }
 
-function renderMarketingStats() {
-    const activeFilter = document.querySelector('.marketing-filters .filter-btn.active').dataset.type;
+async function renderMarketingStats() {
+    const activeFilterBtn = document.querySelector('.marketing-filters .filter-btn.active');
+    if (!activeFilterBtn) return;
+    const activeFilter = activeFilterBtn.dataset.type;
 
     document.getElementById('marketing-codes-used-view').style.display = 'none';
     document.getElementById('marketing-commission-view').style.display = 'none';
 
+    // *** THAY ĐỔI BẮT ĐẦU TỪ ĐÂY ***
+    try {
+        // Gọi API mà không có tham số tháng/năm để lấy dữ liệu tổng quan
+        const summaryData = await apiRequest('/users/me/marketing/commission', 'GET');
+
+        // Cập nhật các thẻ thống kê tổng quan (chỉ chạy một lần khi mở panel)
+        const totalCommissionCard = document.getElementById('stat-total-commission');
+        if (totalCommissionCard) {
+            totalCommissionCard.textContent = (summaryData.total_moneys_commission || 0).toLocaleString('vi-VN') + ' VNĐ';
+        }
+
+        const levelEl = document.getElementById('stat-level');
+        if (levelEl) levelEl.textContent = summaryData.level_name || '--';
+
+        const codesUsedEl = document.getElementById('stat-codes-used');
+        if (codesUsedEl) codesUsedEl.textContent = summaryData.referrals || 0;
+
+    } catch (error) {
+        console.error("Lỗi khi tải dữ liệu tóm tắt tiếp thị:", error);
+        // Xử lý lỗi cho các thẻ tổng quan nếu cần
+        document.getElementById('stat-total-commission').textContent = 'Lỗi';
+        document.getElementById('stat-level').textContent = 'Lỗi';
+        document.getElementById('stat-codes-used').textContent = 'Lỗi';
+    }
+    // *** THAY ĐỔI KẾT THÚC TẠI ĐÂY ***
+
     if (activeFilter === 'codes-used') {
         renderCodesUsedView();
     } else if (activeFilter === 'commission') {
-        renderCommissionView();
+        // Gọi hàm render view của tháng, hàm này giờ chỉ cập nhật dữ liệu của tháng
+        await renderCommissionView();
     }
 }
 
@@ -599,14 +634,14 @@ function renderCodesUsedView() {
     }
 }
 
-function renderCommissionView() {
+async function renderCommissionView() {
     const view = document.getElementById('marketing-commission-view');
     view.style.display = 'block';
 
     const monthFilter = document.getElementById('commission-month-filter');
-    const totalCommissionCard = document.getElementById('stat-total-commission');
     const monthlyCommissionCard = document.getElementById('stat-monthly-commission');
     const commissionListContainer = view.querySelector('.commission-list');
+    const monthlyLabel = document.getElementById('stat-monthly-label');
 
     if (monthFilter.options.length === 0) {
         const months = [];
@@ -621,43 +656,63 @@ function renderCommissionView() {
             `<option value="${item.year}-${item.month}">${item.month}/${item.year}</option>`
         ).join('');
     }
-
-    const totalCommission = mockCommissionHistory.reduce((sum, item) => sum + item.amount, 0);
-    totalCommissionCard.textContent = totalCommission.toLocaleString('vi-VN') + ' VNĐ';
+    
+    if (!monthFilter.value) {
+        commissionListContainer.innerHTML = '<p class="no-orders">Vui lòng chọn một tháng để xem.</p>';
+        return;
+    }
 
     const [selectedYear, selectedMonth] = monthFilter.value.split('-').map(Number);
-    const startDate = new Date(selectedYear, selectedMonth - 1, 1);
-    const endDate = new Date(selectedYear, selectedMonth, 0, 23, 59, 59);
+    if (monthlyLabel) {
+        monthlyLabel.textContent = `Đã nhận trong tháng ${selectedMonth}`;
+    }
+    
+    try {
+        const payload = {
+            year: selectedYear,
+            month: selectedMonth,
+            page: 1,
+            limit: 50
+        };
+        // Gọi API để lấy dữ liệu LỊCH SỬ CỦA THÁNG đã chọn
+        const monthlyData = await apiRequest('/users/me/marketing/commission', 'GET', payload);
 
-    const monthlyCommissions = mockCommissionHistory.filter(c => {
-        const commissionDate = new Date(c.date);
-        return commissionDate >= startDate && commissionDate <= endDate;
-    });
+        // *** THAY ĐỔI: Đã XÓA đoạn mã cập nhật "Tổng số tiền đã nhận" ở đây ***
+        
+        const history = monthlyData.history || [];
+        
+        const monthlyTotal = history.reduce((sum, item) => sum + item.money_commission, 0);
+        if (monthlyCommissionCard) {
+            monthlyCommissionCard.textContent = monthlyTotal.toLocaleString('vi-VN') + ' VNĐ';
+        }
 
-    const monthlyTotal = monthlyCommissions.reduce((sum, item) => sum + item.amount, 0);
-    monthlyCommissionCard.textContent = monthlyTotal.toLocaleString('vi-VN') + ' VNĐ';
-
-    if (monthlyCommissions.length > 0) {
-        commissionListContainer.innerHTML = monthlyCommissions.map(c => `
-            <div class="commission-item">
-                <div class="commission-user-product">
-                    <div class="commission-user">
-                        <span class="commission-name">${c.usedBy.usedByFullName}</span>
-                        <span class="commission-gmail">${c.usedBy.usedByGmail}</span>
+        if (history.length > 0) {
+            commissionListContainer.innerHTML = history.map(c => `
+                <div class="commission-item">
+                    <div class="commission-user-product">
+                        <div class="commission-user">
+                            <span class="commission-name">${c.full_name}</span>
+                            <span class="commission-gmail">${c.email}</span>
+                        </div>
+                        <div class="commission-product">
+                            <i class="fas fa-box-open"></i>
+                            <span>${c.product_title}</span>
+                        </div>
                     </div>
-                    <div class="commission-product">
-                        <i class="fas fa-box-open"></i>
-                        <span>${c.productName}</span>
+                    <div class="commission-details">
+                        <span class="commission-amount">+${c.money_commission.toLocaleString('vi-VN')} VNĐ</span>
+                        <span class="commission-date">${new Date(c.created_at).toLocaleString('vi-VN')}</span>
                     </div>
                 </div>
-                <div class="commission-details">
-                    <span class="commission-amount">+${c.amount.toLocaleString('vi-VN')} VNĐ</span>
-                    <span class="commission-date">${new Date(c.date).toLocaleString('vi-VN')}</span>
-                </div>
-            </div>
-        `).join('');
-    } else {
-        commissionListContainer.innerHTML = '<p class="no-orders">Không có hoa hồng nào trong tháng này.</p>';
+            `).join('');
+        } else {
+            commissionListContainer.innerHTML = '<p class="no-orders">Không có hoa hồng nào trong tháng này.</p>';
+        }
+
+    } catch (error) {
+        console.error("Lỗi khi tải lịch sử hoa hồng:", error);
+        commissionListContainer.innerHTML = '<p class="no-orders">Đã xảy ra lỗi khi tải dữ liệu.</p>';
+        if (monthlyCommissionCard) monthlyCommissionCard.textContent = '0 VNĐ';
     }
 }
 
@@ -874,7 +929,7 @@ function initializeHeader() {
             }
         };
     
-        const showPanel = (targetId) => {
+        const showPanel = async (targetId) => {
             userPanelModal.querySelectorAll('.panel-content-item').forEach(p => p.classList.remove('active'));
             userPanelModal.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
             
@@ -903,12 +958,30 @@ function initializeHeader() {
                 renderTransactions();
             }
             if (targetId === 'panel-marketing') {
-                renderMarketingStats();
+                try {
+                    // Fetch summary data without query params first
+                    const marketingData = await apiRequest('/users/me/marketing/commission');
+                    
+                    const levelEl = document.getElementById('stat-level');
+                    const codesUsedEl = document.getElementById('stat-codes-used');
+                    
+                    if (levelEl) levelEl.textContent = marketingData.level_name || '--';
+                    if (codesUsedEl) codesUsedEl.textContent = marketingData.referrals || 0;
+                    
+                } catch (error) {
+                    console.error("Lỗi khi tải dữ liệu tóm tắt tiếp thị:", error);
+                    const levelEl = document.getElementById('stat-level');
+                    const codesUsedEl = document.getElementById('stat-codes-used');
+                    if (levelEl) levelEl.textContent = 'Lỗi';
+                    if (codesUsedEl) codesUsedEl.textContent = 'N/A';
+                }
+                
+                await renderMarketingStats();
             }
         };
     
-        const openPanelModal = (initialPanelId) => {
-            showPanel(initialPanelId);
+        const openPanelModal = async (initialPanelId) => {
+            await showPanel(initialPanelId);
             userPanelModal.classList.add('visible');
         };
         
@@ -918,28 +991,28 @@ function initializeHeader() {
         };
     
         if (profileInfoBtn) {
-            profileInfoBtn.addEventListener('click', (e) => {
+            profileInfoBtn.addEventListener('click', async (e) => {
                 e.preventDefault();
-                openPanelModal('panel-profile');
+                await openPanelModal('panel-profile');
             });
         }
     
         if (profileOrdersBtn) {
-            profileOrdersBtn.addEventListener('click', (e) => {
+            profileOrdersBtn.addEventListener('click', async (e) => {
                 e.preventDefault();
-                openPanelModal('panel-orders');
+                await openPanelModal('panel-orders');
             });
         }
         
         if (profilePaymentsBtn) {
-            profilePaymentsBtn.addEventListener('click', (e) => {
+            profilePaymentsBtn.addEventListener('click', async (e) => {
                 e.preventDefault();
-                openPanelModal('panel-payments');
+                await openPanelModal('panel-payments');
             });
         }
     
         if (panelSidebarNav) {
-            panelSidebarNav.addEventListener('click', (e) => {
+            panelSidebarNav.addEventListener('click', async (e) => {
                 const link = e.target.closest('a');
                 if (!link) return;
     
@@ -950,7 +1023,7 @@ function initializeHeader() {
                 } 
                 else if (link.dataset.target) {
                     const targetId = link.dataset.target;
-                    showPanel(targetId);
+                    await showPanel(targetId);
                 }
             });
         }
@@ -1013,16 +1086,18 @@ function initializeHeader() {
         const commissionMonthFilter = document.getElementById('commission-month-filter');
 
         if (marketingFilters) {
-            marketingFilters.addEventListener('click', (e) => {
+            marketingFilters.addEventListener('click', async (e) => {
                 if (e.target.classList.contains('filter-btn')) {
                     marketingFilters.querySelector('.active').classList.remove('active');
                     e.target.classList.add('active');
-                    renderMarketingStats();
+                    await renderMarketingStats();
                 }
             });
         }
         if (commissionMonthFilter) {
-            commissionMonthFilter.addEventListener('change', renderCommissionView);
+            commissionMonthFilter.addEventListener('change', async () => {
+                await renderCommissionView();
+            });
         }
         
         const chatIcon = document.getElementById('chat-icon');
@@ -1138,6 +1213,7 @@ function initializeHeader() {
         const phoneEditWrapper = document.getElementById('phone-edit-wrapper');
         const avatarUploadInput = document.getElementById('avatar-upload');
         const avatarPreview = document.getElementById('profile-avatar-preview');
+        const mainPhoneLabel = document.getElementById('main-phone-label'); // **THÊM MỚI**
 
         // Xem trước ảnh đại diện mới
         if (avatarUploadInput && avatarPreview) {
@@ -1164,7 +1240,7 @@ function initializeHeader() {
                 // 1. Kiểm tra Tên đầy đủ
                 const newFullName = document.getElementById('profile-name').value;
                 if (newFullName !== currentUser.full_name) {
-                    formData.append('user[full_name]', newFullName);
+                    formData.append('full_name', newFullName); // **ĐÃ SỬA**
                     hasChanges = true;
                 }
 
@@ -1172,7 +1248,7 @@ function initializeHeader() {
                 const selectedGender = document.querySelector('input[name="gender"]:checked');
                 const newGender = selectedGender ? selectedGender.value : null;
                 if (newGender && newGender !== currentUser.gender) {
-                    formData.append('user[gender]', newGender);
+                    formData.append('gender', newGender); // **ĐÃ SỬA**
                     hasChanges = true;
                 }
 
@@ -1184,7 +1260,7 @@ function initializeHeader() {
                     const newBirthday = new Date(Date.UTC(year, month - 1, day));
                     const currentBirthday = currentUser.birthday ? new Date(currentUser.birthday) : null;
                     if (!currentBirthday || newBirthday.getTime() !== currentBirthday.getTime()) {
-                         formData.append('user[birthday]', newBirthday.toISOString());
+                         formData.append('birthday', newBirthday.toISOString()); // **ĐÃ SỬA**
                          hasChanges = true;
                     }
                 }
@@ -1192,7 +1268,7 @@ function initializeHeader() {
                 // 4. Kiểm tra Ảnh đại diện
                 const avatarFile = document.getElementById('avatar-upload').files[0];
                 if (avatarFile) {
-                    formData.append('user[avatar_url]', avatarFile);
+                    formData.append('avatar_url', avatarFile); // **ĐÃ SỬA**
                     hasChanges = true;
                 }
 
@@ -1216,6 +1292,7 @@ function initializeHeader() {
         // Xử lý nút "Thay đổi" SĐT
         if (changePhoneBtn) {
             changePhoneBtn.addEventListener('click', () => {
+                if(mainPhoneLabel) mainPhoneLabel.style.display = 'none'; // **THÊM MỚI**
                 phoneDisplayWrapper.style.display = 'none';
                 phoneEditWrapper.style.display = 'block';
             });
@@ -1239,29 +1316,24 @@ function initializeHeader() {
                 }
 
                 try {
-                    const payload = {
-                        user: {
-                            phone_number_old: oldPhone,
-                            phone_number_new: newPhone
-                        }
+                    const payload = { // **ĐÃ SỬA**
+                        phone_number_old: oldPhone,
+                        phone_number_new: newPhone
                     };
                     const response = await apiRequest('/users/me/profile', 'PATCH', payload);
 
                     if (response.message === "Updated successfully") {
                         alert('Cập nhật số điện thoại thành công!');
                         
-                        currentUser.phone_number = newPhone;
-                        const maskedPhoneInput = document.getElementById('profile-phone-masked');
-                        // Cập nhật SĐT mới (đã được backend che)
-                        await fetchAndDisplayUserProfile();
+                        await fetchAndDisplayUserProfile(); // Làm mới để lấy SĐT đã che từ backend
                         
                         document.getElementById('profile-phone-old').value = '';
                         document.getElementById('profile-phone-new').value = '';
                         phoneEditWrapper.style.display = 'none';
                         phoneDisplayWrapper.style.display = 'flex';
+                        if(mainPhoneLabel) mainPhoneLabel.style.display = 'block'; // **THÊM MỚI**
                     }
                 } catch (error) {
-                    // Giả sử backend trả về lỗi khớp SĐT trong message
                     if (error.message && error.message.toLowerCase().includes('old phone number does not match')) {
                         alert('Số điện thoại cũ không khớp.');
                     } else {

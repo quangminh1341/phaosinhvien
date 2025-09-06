@@ -388,9 +388,9 @@
                                 <div class="profile-form-group">
                                     <label>Giới tính:</label>
                                     <div class="gender-options">
-                                        <input type="radio" id="gender-male" name="gender" value="Nam"><label for="gender-male">Nam</label>
-                                        <input type="radio" id="gender-female" name="gender" value="Nữ"><label for="gender-female">Nữ</label>
-                                        <input type="radio" id="gender-other" name="gender" value="Khác"><label for="gender-other">Khác</label>
+                                        <input type="radio" id="gender-male" name="gender" value="male"><label for="gender-male">Nam</label>
+                                        <input type="radio" id="gender-female" name="gender" value="female"><label for="gender-female">Nữ</label>
+                                        <input type="radio" id="gender-other" name="gender" value="other"><label for="gender-other">Khác</label>
                                     </div>
                                 </div>
                                 <div class="profile-form-group">
@@ -420,14 +420,14 @@
                             <span class="stat-label">Mã đã được dùng</span>
                             <h3 id="stat-codes-used" class="stat-value">0</h3>
                         </div>
-                        <div class="stat-card">
+                        <!-- <div class="stat-card">
                             <span class="stat-label">Hoa hồng cấp hiện tại</span>
                             <h3 id="stat-current-commission" class="stat-value">0%</h3>
                         </div>
                         <div class="stat-card">
                             <span class="stat-label">Hoa hồng cấp tiếp theo</span>
                             <h3 id="stat-next-commission" class="stat-value">0%</h3>
-                        </div>
+                        </div> -->
                     </div>
 
                     <div class="marketing-controls">
@@ -444,7 +444,7 @@
                                 <h3 id="stat-total-commission" class="stat-value">0 VNĐ</h3>
                             </div>
                             <div class="stat-card">
-                                <span class="stat-label">Đã nhận trong tháng</span>
+                                <span class="stat-label" id="stat-monthly-label">Đã nhận trong tháng</span>
                                 <h3 id="stat-monthly-commission" class="stat-value">0 VNĐ</h3>
                             </div>
                         </div>
