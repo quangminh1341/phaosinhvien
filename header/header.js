@@ -70,7 +70,7 @@ let authModalOverlay, authContainer, modalAnimation, openModal;
 
 // --- CẤU HÌNH API ---
 // ***** LƯU Ý: Đổi lại API_BASE_URL thành endpoint server của bạn khi deploy *****
-const API_BASE_URL = '/api'; 
+const API_BASE_URL = 'https://phaosinhvien.com/api'; 
 let currentUser = null;
 
 // --- HÀM TRỢ GIÚP API ---
@@ -1444,8 +1444,8 @@ function initializeHeader() {
                     title: document.getElementById('add-title').value,
                     cost: parseInt(document.getElementById('add-cost').value, 10),
                     about: document.getElementById('add-about').value,
-                    feature: document.getElementById('add-feature').value,
-                    parameter: document.getElementById('add-parameter').value,
+                    // feature: document.getElementById('add-feature').value,
+                    // parameter: document.getElementById('add-parameter').value,
                     demo_link: document.getElementById('add-demo-link').value,
                 };
 
@@ -1470,20 +1470,24 @@ function initializeHeader() {
                 formData.append('file', coverFile);
                 
                 try {
-                    console.log('Đang gửi POST tới /products...');
-                    const productResponse = await apiRequest('/products', 'POST', formData);
+                    console.log('Đang gửi POST tới /products với dữ liệu JSON...');
+                    const productResponse = await apiRequest('/products', 'POST', productData);
+                    
                     const productId = productResponse.id;
                     console.log('Tạo sản phẩm thành công, ID:', productId);
-                    
-                    if (otherImages.length > 0 && productId) {
+
+                    if (imageFiles.length > 0 && productId) {
                         const imageFormData = new FormData();
-                        otherImages.forEach((file) => {
-                             imageFormData.append('images', file);
-                        });
                         
-                        console.log(`Đang gửi POST tới /products/${productId}/images với ${otherImages.length} ảnh phụ...`);
+                        // Thêm TẤT CẢ các file vào FormData với tên trường là "images"
+                        for (const file of imageFiles) {
+                            imageFormData.append('images', file);
+                        }
+                        
+                        //  Gọi API để tải lên các ảnh
+                        console.log(`Đang gửi POST tới /products/${productId}/images với ${imageFiles.length} ảnh...`);
                         await apiRequest(`/products/${productId}/images`, 'POST', imageFormData);
-                        console.log('Tải ảnh phụ thành công!');
+                        console.log('Tải ảnh lên thành công!');
                     }
 
                     alert('Đăng bài thành công!');
@@ -1571,7 +1575,7 @@ function initializeHeader() {
         }
     }
     
-    
+
     
     handleOAuthCallback();
     checkLoginStatus();
