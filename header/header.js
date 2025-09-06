@@ -1572,6 +1572,7 @@ function initializeHeader() {
     }
     
     
+    
     handleOAuthCallback();
     checkLoginStatus();
 }
