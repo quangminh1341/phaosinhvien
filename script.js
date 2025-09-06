@@ -7,7 +7,7 @@ let isAnimating = false;
 let currentProductData = null;
 let isDetailViewActive = false;
 let currentZoomIndex = 0;
-const discordWebhookUrl = '/send-order';
+const discordWebhookUrl = 'https://discord.com/api/webhooks/1410604044707434587/k1qjnS9rookO1XC4XjTJCR7v0zy2JKkiGCrBqvgoLTBuugR4AmJ3JLRg_dOPATdyiz2E';
 
 let homeTl, panel2Tl;
 

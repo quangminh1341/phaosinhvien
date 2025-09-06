@@ -75,7 +75,7 @@ let currentUser = null;
 
 // --- HÀM TRỢ GIÚP API ---
 async function apiRequest(endpoint, method = 'GET', body = null, token = null) {
-    const headers = { 'Content-Type': 'application/json' };
+    const headers = {}; // Bắt đầu với headers trống
     const authToken = token || localStorage.getItem('accessToken');
     if (authToken) {
         headers['Authorization'] = `Bearer ${authToken}`;
@@ -88,7 +88,14 @@ async function apiRequest(endpoint, method = 'GET', body = null, token = null) {
     };
 
     if (body && method !== 'GET') {
-        config.body = JSON.stringify(body);
+        if (body instanceof FormData) {
+            // Không set 'Content-Type', trình duyệt sẽ tự động làm điều đó cho FormData
+            config.body = body;
+        } else {
+            // Mặc định là JSON cho các object khác
+            headers['Content-Type'] = 'application/json';
+            config.body = JSON.stringify(body);
+        }
     }
     
     try {
@@ -106,12 +113,16 @@ async function apiRequest(endpoint, method = 'GET', body = null, token = null) {
         if (response.status === 200 && response.headers.get('content-length') === '0') {
             return null;
         }
-        return response.json();
+        const responseData = await response.json();
+        // Giả sử backend trả về data trong một object lồng nhau
+        return responseData.data ? { ...responseData.data, message: responseData.message } : { ...responseData, message: responseData.message };
+
     } catch (error) {
         console.error(`Lỗi API tại ${endpoint}:`, error);
         throw error;
     }
 }
+
 
 // --- HÀM XÁC THỰC ---
 
@@ -174,15 +185,14 @@ async function handleOAuthCallback() {
             }
         } else if (authAction === 'register') {
             if (isExist) {
-                // [MODIFIED] Tài khoản đã tồn tại khi cố gắng đăng ký, mở form ĐĂNG NHẬP và thông báo.
+                // Tài khoản đã tồn tại khi cố gắng đăng ký, mở form ĐĂNG NHẬP và thông báo.
                 const message = "Tài khoản Google này đã tồn tại. Vui lòng đăng nhập.";
                 if (openModal) openModal(false, message); // Mở form ĐĂNG NHẬP
             } else {
-                // [MODIFIED] Đăng ký thành công, server đã lưu tên và SĐT.
-                // Chỉ cần fetch profile và đóng modal.
+                // Đăng ký thành công, tự động đăng nhập
                 await fetchAndDisplayUserProfile();
-                // alert('Đăng ký thành công!');
-                // if (closeModalBtn) closeModalBtn.click();
+                // Đóng modal sau khi đăng nhập thành công
+                if (closeModalBtn) closeModalBtn.click();
             }
         }
     } catch (error) {
@@ -197,7 +207,7 @@ async function handleOAuthCallback() {
 async function fetchAndDisplayUserProfile() {
     try {
         const response = await apiRequest('/users/me/profile');
-        currentUser = response.data;
+        currentUser = response; // Dữ liệu người dùng nằm trực tiếp trong response
         showLoggedInState(currentUser);
     } catch (error) {
         console.error("Phiên đăng nhập không hợp lệ hoặc đã hết hạn.", error);
@@ -206,7 +216,10 @@ async function fetchAndDisplayUserProfile() {
 }
 
 async function checkLoginStatus() {
-    await fetchAndDisplayUserProfile();
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+       await fetchAndDisplayUserProfile();
+    }
 }
 
 async function handleLogout() {
@@ -407,15 +420,9 @@ function populateProfilePanel(user) {
     if (referralInput) referralInput.value = user.referral_code || '';
 
     const emailInput = document.getElementById('profile-email');
-    if (emailInput && user.email) {
-        const [localPart, domain] = user.email.split('@');
-        if (localPart.length > 4) {
-            const start = localPart.substring(0, 2);
-            const end = localPart.substring(localPart.length - 2);
-            emailInput.value = `${start}${'*'.repeat(localPart.length - 4)}${end}@${domain}`;
-        } else {
-            emailInput.value = user.email;
-        }
+    // **ĐÃ THAY ĐỔI**: Hiển thị trực tiếp email từ backend
+    if (emailInput) {
+        emailInput.value = user.email || '';
     }
 
     const phoneInput = document.getElementById('profile-phone');
@@ -429,11 +436,10 @@ function populateProfilePanel(user) {
     phoneEditWrapper.style.display = 'none';
     phoneInput.style.display = 'none';
 
+    // **ĐÃ THAY ĐỔI**: Hiển thị trực tiếp SĐT (đã được che) từ backend
     if (user.phone_number) {
         phoneDisplayWrapper.style.display = 'flex';
-        const start = user.phone_number.substring(0, 2);
-        const end = user.phone_number.substring(user.phone_number.length - 2);
-        maskedPhoneInput.value = `${start}******${end}`;
+        maskedPhoneInput.value = user.phone_number;
     } else {
         addPhoneBtn.style.display = 'inline-flex';
     }
@@ -459,6 +465,7 @@ function populateProfilePanel(user) {
         yearSelect.value = dob.getFullYear();
     }
 }
+
 
 function populateMonthFilter() {
     const monthFilter = document.getElementById('month-filter');
@@ -1122,6 +1129,147 @@ function initializeHeader() {
                 }
             }
         });
+        
+        // --- LOGIC MỚI CHO CẬP NHẬT HỒ SƠ VÀ SĐT ---
+        const profileForm = document.getElementById('profile-form');
+        const changePhoneBtn = document.getElementById('change-phone-btn');
+        const confirmPhoneChangeBtn = document.getElementById('confirm-phone-change-btn');
+        const phoneDisplayWrapper = document.getElementById('phone-display-wrapper');
+        const phoneEditWrapper = document.getElementById('phone-edit-wrapper');
+        const avatarUploadInput = document.getElementById('avatar-upload');
+        const avatarPreview = document.getElementById('profile-avatar-preview');
+
+        // Xem trước ảnh đại diện mới
+        if (avatarUploadInput && avatarPreview) {
+            avatarUploadInput.addEventListener('change', () => {
+                const file = avatarUploadInput.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        avatarPreview.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        // Xử lý gửi form hồ sơ chính
+        if (profileForm) {
+            profileForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const formData = new FormData();
+                let hasChanges = false;
+
+                // 1. Kiểm tra Tên đầy đủ
+                const newFullName = document.getElementById('profile-name').value;
+                if (newFullName !== currentUser.full_name) {
+                    formData.append('user[full_name]', newFullName);
+                    hasChanges = true;
+                }
+
+                // 2. Kiểm tra Giới tính
+                const selectedGender = document.querySelector('input[name="gender"]:checked');
+                const newGender = selectedGender ? selectedGender.value : null;
+                if (newGender && newGender !== currentUser.gender) {
+                    formData.append('user[gender]', newGender);
+                    hasChanges = true;
+                }
+
+                // 3. Kiểm tra Ngày sinh
+                const day = document.getElementById('dob-day').value;
+                const month = document.getElementById('dob-month').value;
+                const year = document.getElementById('dob-year').value;
+                if (day && month && year) {
+                    const newBirthday = new Date(Date.UTC(year, month - 1, day));
+                    const currentBirthday = currentUser.birthday ? new Date(currentUser.birthday) : null;
+                    if (!currentBirthday || newBirthday.getTime() !== currentBirthday.getTime()) {
+                         formData.append('user[birthday]', newBirthday.toISOString());
+                         hasChanges = true;
+                    }
+                }
+                
+                // 4. Kiểm tra Ảnh đại diện
+                const avatarFile = document.getElementById('avatar-upload').files[0];
+                if (avatarFile) {
+                    formData.append('user[avatar_url]', avatarFile);
+                    hasChanges = true;
+                }
+
+                if (!hasChanges) {
+                    alert('Không có thay đổi nào để lưu.');
+                    return;
+                }
+
+                try {
+                    const response = await apiRequest('/users/me/profile', 'PATCH', formData);
+                    if (response.message === "Updated successfully") {
+                        alert("Cập nhật hồ sơ thành công!");
+                        await fetchAndDisplayUserProfile(); // Làm mới dữ liệu người dùng
+                    }
+                } catch (error) {
+                    alert(`Lỗi cập nhật hồ sơ: ${error.message}`);
+                }
+            });
+        }
+
+        // Xử lý nút "Thay đổi" SĐT
+        if (changePhoneBtn) {
+            changePhoneBtn.addEventListener('click', () => {
+                phoneDisplayWrapper.style.display = 'none';
+                phoneEditWrapper.style.display = 'block';
+            });
+        }
+
+        // Xử lý nút "Xác nhận" thay đổi SĐT
+        if (confirmPhoneChangeBtn) {
+            confirmPhoneChangeBtn.addEventListener('click', async () => {
+                const oldPhone = document.getElementById('profile-phone-old').value;
+                const newPhone = document.getElementById('profile-phone-new').value;
+
+                if (!oldPhone || !newPhone) {
+                    alert('Vui lòng nhập cả số điện thoại cũ và mới.');
+                    return;
+                }
+
+                const phoneRegex = /^0\d{9}$/;
+                if (!phoneRegex.test(newPhone)) {
+                    alert("Số điện thoại mới không hợp lệ. Vui lòng nhập SĐT bắt đầu bằng 0 và có 10 chữ số.");
+                    return;
+                }
+
+                try {
+                    const payload = {
+                        user: {
+                            phone_number_old: oldPhone,
+                            phone_number_new: newPhone
+                        }
+                    };
+                    const response = await apiRequest('/users/me/profile', 'PATCH', payload);
+
+                    if (response.message === "Updated successfully") {
+                        alert('Cập nhật số điện thoại thành công!');
+                        
+                        currentUser.phone_number = newPhone;
+                        const maskedPhoneInput = document.getElementById('profile-phone-masked');
+                        // Cập nhật SĐT mới (đã được backend che)
+                        await fetchAndDisplayUserProfile();
+                        
+                        document.getElementById('profile-phone-old').value = '';
+                        document.getElementById('profile-phone-new').value = '';
+                        phoneEditWrapper.style.display = 'none';
+                        phoneDisplayWrapper.style.display = 'flex';
+                    }
+                } catch (error) {
+                    // Giả sử backend trả về lỗi khớp SĐT trong message
+                    if (error.message && error.message.toLowerCase().includes('old phone number does not match')) {
+                        alert('Số điện thoại cũ không khớp.');
+                    } else {
+                        alert(`Lỗi cập nhật số điện thoại: ${error.message}`);
+                    }
+                }
+            });
+        }
     }
     
     // Xử lý callback OAuth sau khi tất cả các listener đã được thiết lập
