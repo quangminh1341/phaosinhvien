@@ -319,6 +319,9 @@
                     <div class="nav-category">
                         <a href="#" class="nav-link top-level" data-target="panel-payments">Thanh toán</a>
                     </div>
+                    <div class="nav-category admin-only" style="display: none;">
+                        <a href="#" class="nav-link top-level" data-target="panel-dashboard">Dashboard</a>
+                    </div>
                 </nav>
             </div>
             <div class="user-panel-content">
@@ -444,7 +447,7 @@
                                 <h3 id="stat-total-commission" class="stat-value">0 VNĐ</h3>
                             </div>
                             <div class="stat-card">
-                                <span class="stat-label" id="stat-monthly-label">Đã nhận trong tháng</span>
+                                <span class="stat-label">Đã nhận trong tháng</span>
                                 <h3 id="stat-monthly-commission" class="stat-value">0 VNĐ</h3>
                             </div>
                         </div>
@@ -529,6 +532,127 @@
                     </div>
                     <div class="transaction-list">
                         </div>
+                </div>
+                <div id="panel-dashboard" class="panel-content-item">
+                    <h1>Dashboard</h1>
+                    <div class="dashboard-controls">
+                        <div class="dashboard-filters">
+                            <button class="filter-btn active" data-target="website-html-panel">Website HTML</button>
+                            <button class="filter-btn" data-target="fullstack-panel">Fullstack</button>
+                            <button class="filter-btn" data-target="do-an-panel">Đồ Án</button>
+                        </div>
+                    </div>
+                
+                    <div class="dashboard-content">
+                        <!-- Bảng điều khiển cho Website HTML -->
+                        <div id="website-html-panel" class="dashboard-tab-content active">
+                            <div class="mode-toggle-container">
+                                <span class="toggle-label">Sửa</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="mode-toggle-html" checked>
+                                    <span class="slider round"></span>
+                                </label>
+                                <span class="toggle-label active">Thêm</span>
+                            </div>
+                
+                            <!-- Form Thêm Sản Phẩm -->
+                            <div id="add-product-container" class="form-mode-container active">
+                                <form id="add-product-form">
+                                    <div class="form-grid">
+                                        <div class="form-group">
+                                            <label for="add-title">Tên sản phẩm:</label>
+                                            <input type="text" id="add-title" name="title" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="add-cost">Giá (chỉ nhập số, đơn vị nghìn đồng):</label>
+                                            <input type="number" id="add-cost" name="cost" required>
+                                        </div>
+                                        <div class="form-group full-width">
+                                            <label for="add-about">Về sản phẩm (Giới thiệu):</label>
+                                            <textarea id="add-about" name="about" rows="4"></textarea>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="add-feature">Tính năng (cách nhau bởi dấu phẩy):</label>
+                                            <input type="text" id="add-feature" name="feature">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="add-parameter">Thông số (cách nhau bởi dấu phẩy):</label>
+                                            <input type="text" id="add-parameter" name="parameter">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="add-demo-link">Link Demo:</label>
+                                            <input type="url" id="add-demo-link" name="demo_link">
+                                        </div>
+                                        <div class="form-group">
+                                             <label for="add-images">Ảnh (chọn folder, ảnh "1" là ảnh chính):</label>
+                                             <input type="file" id="add-images" name="images" webkitdirectory directory multiple>
+                                        </div>
+                                    </div>
+                                     <div class="image-previews" id="add-image-previews"></div>
+                                    <button type="submit" class="sp-button form-submit-btn">Đăng bài</button>
+                                </form>
+                            </div>
+                
+                            <!-- Form Sửa Sản Phẩm -->
+                            <div id="edit-product-container" class="form-mode-container">
+                                <div class="form-group">
+                                    <label for="search-product">Tìm kiếm (theo tên hoặc ID sản phẩm):</label>
+                                    <div class="search-wrapper">
+                                        <input type="text" id="search-product" placeholder="Nhập để tìm kiếm...">
+                                        <button id="search-btn" class="sp-button">Tìm</button>
+                                    </div>
+                                </div>
+                                <div id="edit-form-wrapper" style="display: none;">
+                                    <form id="edit-product-form">
+                                         <div class="form-grid">
+                                            <div class="form-group">
+                                                <label for="edit-title">Tên sản phẩm:</label>
+                                                <input type="text" id="edit-title" name="title" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="edit-cost">Giá (chỉ nhập số, đơn vị nghìn đồng):</label>
+                                                <input type="number" id="edit-cost" name="cost" required>
+                                            </div>
+                                            <div class="form-group full-width">
+                                                <label for="edit-about">Về sản phẩm (Giới thiệu):</label>
+                                                <textarea id="edit-about" name="about" rows="4"></textarea>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="edit-feature">Tính năng (cách nhau bởi dấu phẩy):</label>
+                                                <input type="text" id="edit-feature" name="feature">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="edit-parameter">Thông số (cách nhau bởi dấu phẩy):</label>
+                                                <input type="text" id="edit-parameter" name="parameter">
+                                            </div>
+                                             <div class="form-group">
+                                                <label for="edit-support">Hỗ trợ (cách nhau bởi dấu phẩy):</label>
+                                                <input type="text" id="edit-support" name="support">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="edit-demo-link">Link Demo:</label>
+                                                <input type="url" id="edit-demo-link" name="demo_link">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="edit-images">Ảnh (chọn folder, ảnh "1" là ảnh chính):</label>
+                                                <input type="file" id="edit-images" name="images" webkitdirectory directory multiple>
+                                            </div>
+                                        </div>
+                                        <div class="image-previews" id="edit-image-previews"></div>
+                                        <button type="submit" class="sp-button form-submit-btn">Cập nhật</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Các panel cho Fullstack và Đồ Án (tạm thời) -->
+                        <div id="fullstack-panel" class="dashboard-tab-content">
+                             <div class="update-notification"><p>Nội dung cho Fullstack đang được cập nhật.</p></div>
+                        </div>
+                        <div id="do-an-panel" class="dashboard-tab-content">
+                            <div class="update-notification"><p>Nội dung cho Đồ Án đang được cập nhật.</p></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

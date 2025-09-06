@@ -70,7 +70,7 @@ let authModalOverlay, authContainer, modalAnimation, openModal;
 
 // --- CẤU HÌNH API ---
 // ***** LƯU Ý: Đổi lại API_BASE_URL thành endpoint server của bạn khi deploy *****
-const API_BASE_URL = 'https://phaosinhvien.com/api'; 
+const API_BASE_URL = '/api'; 
 let currentUser = null;
 
 // --- HÀM TRỢ GIÚP API ---
@@ -90,14 +90,10 @@ async function apiRequest(endpoint, method = 'GET', body = null, token = null) {
     let url = `${API_BASE_URL}${endpoint}`;
 
     if (body) {
-        // *** SỬA LỖI: Xử lý đúng cách cho phương thức GET ***
-        // Nếu phương thức là GET, chuyển đổi body thành query string
         if (method.toUpperCase() === 'GET') {
             const params = new URLSearchParams(body);
             url += `?${params.toString()}`;
-            // QUAN TRỌNG: Không thêm body vào config cho GET
         } 
-        // Giữ nguyên logic cũ cho các phương thức khác (POST, PATCH, v.v.)
         else {
             if (body instanceof FormData) {
                 config.body = body;
@@ -109,7 +105,6 @@ async function apiRequest(endpoint, method = 'GET', body = null, token = null) {
     }
     
     try {
-        // Sử dụng biến 'url' đã được cập nhật
         const response = await fetch(url, config);
         
         const newAccessToken = response.headers.get('X-Access-Token');
@@ -152,7 +147,6 @@ function handleGoogleRedirect(action) {
             alert('Vui lòng nhập đầy đủ Tên và Số điện thoại.');
             return;
         }
-        // [MODIFIED] Gửi kèm full_name và phone_number làm query params
         const params = new URLSearchParams({
             full_name: fullName,
             phone_number: phoneNumber
@@ -168,10 +162,8 @@ async function handleOAuthCallback() {
     const isExistParam = urlParams.get('isExist');
     const accessToken = urlParams.get('access_token');
 
-    // Nếu không có param isExist và accessToken, không làm gì cả.
     if (isExistParam === null && !accessToken) return;
 
-    // Xóa các query params khỏi URL để làm sạch
     window.history.replaceState({}, document.title, window.location.pathname);
 
     try {
@@ -179,30 +171,24 @@ async function handleOAuthCallback() {
         const authAction = localStorage.getItem('authAction');
         const closeModalBtn = document.querySelector('#auth-modal-overlay .auth-close-btn');
 
-        // Nếu có accessToken từ server, lưu nó vào localStorage
         if (accessToken) {
             localStorage.setItem('accessToken', accessToken);
         }
 
         if (authAction === 'login') {
             if (isExist) {
-                // Tài khoản tồn tại, đăng nhập thành công
                 await fetchAndDisplayUserProfile();
                 if (closeModalBtn) closeModalBtn.click();
             } else {
-                // [MODIFIED] Tài khoản không tồn tại, mở lại form ĐĂNG NHẬP và hiển thị thông báo.
                 const message = "Tài khoản Google này chưa tồn tại. Vui lòng đăng ký.";
-                if (openModal) openModal(false, message); // Mở form ĐĂNG NHẬP
+                if (openModal) openModal(false, message);
             }
         } else if (authAction === 'register') {
             if (isExist) {
-                // Tài khoản đã tồn tại khi cố gắng đăng ký, mở form ĐĂNG NHẬP và thông báo.
                 const message = "Tài khoản Google này đã tồn tại. Vui lòng đăng nhập.";
-                if (openModal) openModal(false, message); // Mở form ĐĂNG NHẬP
+                if (openModal) openModal(false, message);
             } else {
-                // Đăng ký thành công, tự động đăng nhập
                 await fetchAndDisplayUserProfile();
-                // Đóng modal sau khi đăng nhập thành công
                 if (closeModalBtn) closeModalBtn.click();
             }
         }
@@ -210,7 +196,6 @@ async function handleOAuthCallback() {
         console.error('Lỗi xử lý callback OAuth:', error);
         alert('Đã có lỗi xảy ra trong quá trình xác thực.');
     } finally {
-        // Dọn dẹp localStorage
         localStorage.removeItem('authAction');
     }
 }
@@ -218,7 +203,7 @@ async function handleOAuthCallback() {
 async function fetchAndDisplayUserProfile() {
     try {
         const response = await apiRequest('/users/me/profile');
-        currentUser = response; // Dữ liệu người dùng nằm trực tiếp trong response
+        currentUser = response;
         showLoggedInState(currentUser);
     } catch (error) {
         console.error("Phiên đăng nhập không hợp lệ hoặc đã hết hạn.", error);
@@ -240,8 +225,6 @@ async function handleLogout() {
         sessionStorage.clear();
         currentUser = null;
         showLoggedOutState();
-        // Cân nhắc reload lại trang để đảm bảo trạng thái được reset hoàn toàn
-        // window.location.reload(); 
     }
 }
 
@@ -271,6 +254,12 @@ function showLoggedInState(user) {
         if (panelUsername) panelUsername.textContent = user.full_name || user.email;
         if (panelAvatar) panelAvatar.src = user.avatar_url || 'images/logo.png';
         
+        const adminOnlyElements = document.querySelectorAll('.admin-only');
+        const displayStyle = (user.role === 'admin') ? 'block' : 'none';
+        adminOnlyElements.forEach(el => {
+            el.style.display = displayStyle;
+        });
+        
         populateProfilePanel(user);
     }
 }
@@ -284,6 +273,9 @@ function showLoggedOutState() {
         profileContainer.style.display = 'none';
         notificationContainer.style.display = 'none';
     }
+    document.querySelectorAll('.admin-only').forEach(el => {
+        el.style.display = 'none';
+    });
 }
 
 
@@ -340,74 +332,96 @@ function updateNotificationUI(notifications) {
     }
 }
 
-function renderOrders() {
+async function renderOrders() {
     const orderListContainer = document.querySelector('.order-list');
     const searchInput = document.getElementById('order-search-input');
     const activeFilter = document.querySelector('.order-filters .filter-btn.active');
 
     if (!orderListContainer || !searchInput || !activeFilter) return;
 
-    const searchTerm = searchInput.value.toLowerCase().trim();
+    orderListContainer.innerHTML = '<p class="no-orders">Đang tải đơn hàng...</p>';
+
+    const searchTerm = searchInput.value.trim().toLowerCase();
     const filterStatus = activeFilter.dataset.status;
 
-    let processedOrders;
+    try {
+        const params = {};
+        if (searchTerm) {
+            params.search = searchTerm;
+        }
 
-    if (filterStatus === 'Hết bảo hành') {
-        const now = new Date();
-        const thirtyDaysInMillis = 30 * 24 * 60 * 60 * 1000;
-        processedOrders = mockOrders.filter(order => {
-            const orderDate = new Date(order.date);
-            const isExpired = (now - orderDate) > thirtyDaysInMillis;
-            return isExpired && order.status === 'Hoàn thành';
-        });
-    } else if (filterStatus === 'Đã hủy') {
-        processedOrders = mockOrders.filter(order => ['Đã hủy', 'Từ Chối'].includes(order.status));
-    } else if (filterStatus !== 'Tất cả') {
-        processedOrders = mockOrders.filter(order => order.status === filterStatus);
-    } else {
-        processedOrders = [...mockOrders];
-    }
+        const response = await apiRequest('/users/me/order-history', 'GET', params);
+        const allOrders = response.data || [];
+        let processedOrders = [];
 
-    if (searchTerm) {
-        processedOrders = processedOrders.filter(order => 
-            order.id.toLowerCase().includes(searchTerm) || 
-            order.productName.toLowerCase().includes(searchTerm)
-        );
-    }
+        const statusMap = {
+            'Chờ xác nhận': 'pending',
+            'Tiến hành': 'inprogress',
+            'Hoàn thành': 'completed',
+        };
 
-    if (processedOrders.length > 0) {
-        orderListContainer.innerHTML = processedOrders.map(order => {
-            let statusClass = '';
-            switch(order.status) {
-                case 'Hoàn thành': statusClass = 'status-completed'; break;
-                case 'Đã hủy':
-                case 'Từ Chối':
-                    statusClass = 'status-canceled'; 
-                    break;
-                case 'Tiến hành': statusClass = 'status-inprogress'; break;
-                case 'Chờ xác nhận': statusClass = 'status-pending'; break;
-            }
-            return `
-                <div class="order-item">
-                    <div class="order-info">
-                        <span class="order-id">#${order.id}</span>
-                        <p class="order-product">${order.productName}</p>
-                        ${order.status === 'Từ Chối' && order.rejectionReason 
-                            ? `<p class="order-rejection-reason">Lý do từ chối: ${order.rejectionReason}</p>` 
-                            : ''
-                        }
-                        <span class="order-date">${new Date(order.date).toLocaleString('vi-VN')}</span>
+        if (filterStatus === 'Tất cả') {
+            processedOrders = allOrders;
+        } else if (filterStatus === 'Hết bảo hành') {
+            const now = new Date();
+            const thirtyDaysInMillis = 30 * 24 * 60 * 60 * 1000;
+            processedOrders = allOrders.filter(order => {
+                if (order.status.toLowerCase() !== 'completed') return false;
+                const orderDate = new Date(order.created_at);
+                return (now - orderDate) > thirtyDaysInMillis;
+            });
+        } else if (filterStatus === 'Đã hủy') {
+            processedOrders = allOrders.filter(order =>
+                ['canceled', 'rejected'].includes(order.status.toLowerCase())
+            );
+        } else {
+            const apiStatusToFilter = statusMap[filterStatus];
+            processedOrders = allOrders.filter(order => order.status.toLowerCase() === apiStatusToFilter);
+        }
+
+        if (processedOrders.length > 0) {
+            orderListContainer.innerHTML = processedOrders.map(order => {
+                let statusClass = '';
+                const statusDisplayMap = {
+                    'completed': 'Hoàn thành',
+                    'canceled': 'Đã hủy',
+                    'rejected': 'Từ Chối',
+                    'inprogress': 'Tiến hành',
+                    'pending': 'Chờ xác nhận'
+                };
+                const displayStatus = statusDisplayMap[order.status.toLowerCase()] || order.status;
+
+                switch (order.status.toLowerCase()) {
+                    case 'completed': statusClass = 'status-completed'; break;
+                    case 'canceled':
+                    case 'rejected':
+                        statusClass = 'status-canceled';
+                        break;
+                    case 'inprogress': statusClass = 'status-inprogress'; break;
+                    case 'pending': statusClass = 'status-pending'; break;
+                }
+
+                return `
+                    <div class="order-item">
+                        <div class="order-info">
+                            <span class="order-id">#${order.order_code}</span>
+                            <p class="order-product">${order.title}</p>
+                            <span class="order-date">${new Date(order.created_at).toLocaleString('vi-VN')}</span>
+                        </div>
+                        <div class="order-details">
+                            <span class="order-price">${Number(order.money_pay).toLocaleString('vi-VN')} VNĐ</span>
+                            <span class="order-revisions">Sửa: ${order.edit_count}</span>
+                            <span class="order-status ${statusClass}">${displayStatus}</span>
+                        </div>
                     </div>
-                    <div class="order-details">
-                        <span class="order-price">${order.price.toLocaleString('vi-VN')} VNĐ</span>
-                        <span class="order-revisions">Sửa: ${order.revisions}</span>
-                        <span class="order-status ${statusClass}">${order.status}</span>
-                    </div>
-                </div>
-            `;
-        }).join('');
-    } else {
-        orderListContainer.innerHTML = '<p class="no-orders">Không tìm thấy đơn hàng nào.</p>';
+                `;
+            }).join('');
+        } else {
+            orderListContainer.innerHTML = '<p class="no-orders">Không tìm thấy đơn hàng nào.</p>';
+        }
+    } catch (error) {
+        console.error("Lỗi khi tải lịch sử đơn hàng:", error);
+        orderListContainer.innerHTML = '<p class="no-orders">Đã xảy ra lỗi khi tải dữ liệu đơn hàng.</p>';
     }
 }
 
@@ -578,12 +592,9 @@ async function renderMarketingStats() {
     document.getElementById('marketing-codes-used-view').style.display = 'none';
     document.getElementById('marketing-commission-view').style.display = 'none';
 
-    // *** THAY ĐỔI BẮT ĐẦU TỪ ĐÂY ***
     try {
-        // Gọi API mà không có tham số tháng/năm để lấy dữ liệu tổng quan
         const summaryData = await apiRequest('/users/me/marketing/commission', 'GET');
 
-        // Cập nhật các thẻ thống kê tổng quan (chỉ chạy một lần khi mở panel)
         const totalCommissionCard = document.getElementById('stat-total-commission');
         if (totalCommissionCard) {
             totalCommissionCard.textContent = (summaryData.total_moneys_commission || 0).toLocaleString('vi-VN') + ' VNĐ';
@@ -597,17 +608,14 @@ async function renderMarketingStats() {
 
     } catch (error) {
         console.error("Lỗi khi tải dữ liệu tóm tắt tiếp thị:", error);
-        // Xử lý lỗi cho các thẻ tổng quan nếu cần
         document.getElementById('stat-total-commission').textContent = 'Lỗi';
         document.getElementById('stat-level').textContent = 'Lỗi';
         document.getElementById('stat-codes-used').textContent = 'Lỗi';
     }
-    // *** THAY ĐỔI KẾT THÚC TẠI ĐÂY ***
 
     if (activeFilter === 'codes-used') {
         renderCodesUsedView();
     } else if (activeFilter === 'commission') {
-        // Gọi hàm render view của tháng, hàm này giờ chỉ cập nhật dữ liệu của tháng
         await renderCommissionView();
     }
 }
@@ -674,11 +682,8 @@ async function renderCommissionView() {
             page: 1,
             limit: 50
         };
-        // Gọi API để lấy dữ liệu LỊCH SỬ CỦA THÁNG đã chọn
         const monthlyData = await apiRequest('/users/me/marketing/commission', 'GET', payload);
 
-        // *** THAY ĐỔI: Đã XÓA đoạn mã cập nhật "Tổng số tiền đã nhận" ở đây ***
-        
         const history = monthlyData.history || [];
         
         const monthlyTotal = history.reduce((sum, item) => sum + item.money_commission, 0);
@@ -796,10 +801,7 @@ function initializeHeader() {
                 authContainer.classList.toggle('right-panel-active', showRegister);
                 authModalOverlay.classList.add('visible');
 
-                // modalAnimation.invalidate();
                 modalAnimation.restart();
-
-                // modalAnimation.timeScale(2).play();
 
                 if (message) {
                     const targetId = showRegister ? '#auth-notification-signup' : '#auth-notification-signin';
@@ -913,6 +915,7 @@ function initializeHeader() {
         const profileInfoBtn = document.getElementById('profile-info-btn');
         const profileOrdersBtn = document.getElementById('profile-orders-btn');
         const profilePaymentsBtn = document.getElementById('profile-payments-btn');
+        const profileDashboardBtn = document.getElementById('profile-dashboard-btn');
         const closePanelBtn = userPanelModal.querySelector('.user-panel-close-btn');
         const panelSidebarNav = userPanelModal.querySelector('.user-panel-nav');
         const collapsibleCategory = userPanelModal.querySelector('.nav-category.is-collapsible');
@@ -959,7 +962,6 @@ function initializeHeader() {
             }
             if (targetId === 'panel-marketing') {
                 try {
-                    // Fetch summary data without query params first
                     const marketingData = await apiRequest('/users/me/marketing/commission');
                     
                     const levelEl = document.getElementById('stat-level');
@@ -977,6 +979,9 @@ function initializeHeader() {
                 }
                 
                 await renderMarketingStats();
+            }
+            if (targetId === 'panel-dashboard') {
+                console.log("Hiển thị Admin Dashboard");
             }
         };
     
@@ -1008,6 +1013,13 @@ function initializeHeader() {
             profilePaymentsBtn.addEventListener('click', async (e) => {
                 e.preventDefault();
                 await openPanelModal('panel-payments');
+            });
+        }
+        
+        if (profileDashboardBtn) {
+            profileDashboardBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                await openPanelModal('panel-dashboard');
             });
         }
     
@@ -1141,7 +1153,6 @@ function initializeHeader() {
             chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
         }
 
-        // --- NEW CODE FOR PAYMENT LINK MODALS ---
         const bankList = [
             "Agribank", "GPBank", "Oceanbank", "CB Bank", "Vietcombank", "BIDV", "VietinBank",
             "Techcombank", "MBBank", "VPBank", "ACB", "SHB", "HDBank", "VIB", "SeABank",
@@ -1205,7 +1216,6 @@ function initializeHeader() {
             }
         });
         
-        // --- LOGIC MỚI CHO CẬP NHẬT HỒ SƠ VÀ SĐT ---
         const profileForm = document.getElementById('profile-form');
         const changePhoneBtn = document.getElementById('change-phone-btn');
         const confirmPhoneChangeBtn = document.getElementById('confirm-phone-change-btn');
@@ -1213,9 +1223,8 @@ function initializeHeader() {
         const phoneEditWrapper = document.getElementById('phone-edit-wrapper');
         const avatarUploadInput = document.getElementById('avatar-upload');
         const avatarPreview = document.getElementById('profile-avatar-preview');
-        const mainPhoneLabel = document.getElementById('main-phone-label'); // **THÊM MỚI**
+        const mainPhoneLabel = document.getElementById('main-phone-label');
 
-        // Xem trước ảnh đại diện mới
         if (avatarUploadInput && avatarPreview) {
             avatarUploadInput.addEventListener('change', () => {
                 const file = avatarUploadInput.files[0];
@@ -1229,7 +1238,6 @@ function initializeHeader() {
             });
         }
 
-        // Xử lý gửi form hồ sơ chính
         if (profileForm) {
             profileForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -1237,22 +1245,19 @@ function initializeHeader() {
                 const formData = new FormData();
                 let hasChanges = false;
 
-                // 1. Kiểm tra Tên đầy đủ
                 const newFullName = document.getElementById('profile-name').value;
                 if (newFullName !== currentUser.full_name) {
-                    formData.append('full_name', newFullName); // **ĐÃ SỬA**
+                    formData.append('full_name', newFullName);
                     hasChanges = true;
                 }
 
-                // 2. Kiểm tra Giới tính
                 const selectedGender = document.querySelector('input[name="gender"]:checked');
                 const newGender = selectedGender ? selectedGender.value : null;
                 if (newGender && newGender !== currentUser.gender) {
-                    formData.append('gender', newGender); // **ĐÃ SỬA**
+                    formData.append('gender', newGender);
                     hasChanges = true;
                 }
 
-                // 3. Kiểm tra Ngày sinh
                 const day = document.getElementById('dob-day').value;
                 const month = document.getElementById('dob-month').value;
                 const year = document.getElementById('dob-year').value;
@@ -1260,15 +1265,14 @@ function initializeHeader() {
                     const newBirthday = new Date(Date.UTC(year, month - 1, day));
                     const currentBirthday = currentUser.birthday ? new Date(currentUser.birthday) : null;
                     if (!currentBirthday || newBirthday.getTime() !== currentBirthday.getTime()) {
-                         formData.append('birthday', newBirthday.toISOString()); // **ĐÃ SỬA**
+                         formData.append('birthday', newBirthday.toISOString());
                          hasChanges = true;
                     }
                 }
                 
-                // 4. Kiểm tra Ảnh đại diện
                 const avatarFile = document.getElementById('avatar-upload').files[0];
                 if (avatarFile) {
-                    formData.append('avatar_url', avatarFile); // **ĐÃ SỬA**
+                    formData.append('avatar', avatarFile);
                     hasChanges = true;
                 }
 
@@ -1281,7 +1285,7 @@ function initializeHeader() {
                     const response = await apiRequest('/users/me/profile', 'PATCH', formData);
                     if (response.message === "Updated successfully") {
                         alert("Cập nhật hồ sơ thành công!");
-                        await fetchAndDisplayUserProfile(); // Làm mới dữ liệu người dùng
+                        await fetchAndDisplayUserProfile();
                     }
                 } catch (error) {
                     alert(`Lỗi cập nhật hồ sơ: ${error.message}`);
@@ -1289,16 +1293,14 @@ function initializeHeader() {
             });
         }
 
-        // Xử lý nút "Thay đổi" SĐT
         if (changePhoneBtn) {
             changePhoneBtn.addEventListener('click', () => {
-                if(mainPhoneLabel) mainPhoneLabel.style.display = 'none'; // **THÊM MỚI**
+                if(mainPhoneLabel) mainPhoneLabel.style.display = 'none';
                 phoneDisplayWrapper.style.display = 'none';
                 phoneEditWrapper.style.display = 'block';
             });
         }
 
-        // Xử lý nút "Xác nhận" thay đổi SĐT
         if (confirmPhoneChangeBtn) {
             confirmPhoneChangeBtn.addEventListener('click', async () => {
                 const oldPhone = document.getElementById('profile-phone-old').value;
@@ -1316,7 +1318,7 @@ function initializeHeader() {
                 }
 
                 try {
-                    const payload = { // **ĐÃ SỬA**
+                    const payload = {
                         phone_number_old: oldPhone,
                         phone_number_new: newPhone
                     };
@@ -1325,13 +1327,13 @@ function initializeHeader() {
                     if (response.message === "Updated successfully") {
                         alert('Cập nhật số điện thoại thành công!');
                         
-                        await fetchAndDisplayUserProfile(); // Làm mới để lấy SĐT đã che từ backend
+                        await fetchAndDisplayUserProfile();
                         
                         document.getElementById('profile-phone-old').value = '';
                         document.getElementById('profile-phone-new').value = '';
                         phoneEditWrapper.style.display = 'none';
                         phoneDisplayWrapper.style.display = 'flex';
-                        if(mainPhoneLabel) mainPhoneLabel.style.display = 'block'; // **THÊM MỚI**
+                        if(mainPhoneLabel) mainPhoneLabel.style.display = 'block';
                     }
                 } catch (error) {
                     if (error.message && error.message.toLowerCase().includes('old phone number does not match')) {
@@ -1342,10 +1344,235 @@ function initializeHeader() {
                 }
             });
         }
+        
+        // --- LOGIC CHO DASHBOARD ---
+        const dashboardFilters = document.querySelector('.dashboard-filters');
+        const dashboardTabs = document.querySelectorAll('.dashboard-tab-content');
+
+        if (dashboardFilters) {
+            dashboardFilters.addEventListener('click', (e) => {
+                if (e.target.classList.contains('filter-btn')) {
+                    dashboardFilters.querySelector('.active').classList.remove('active');
+                    e.target.classList.add('active');
+                    const targetId = e.target.dataset.target;
+                    dashboardTabs.forEach(tab => {
+                        tab.classList.remove('active');
+                        if (tab.id === targetId) {
+                            tab.classList.add('active');
+                        }
+                    });
+                }
+            });
+        }
+        
+        const modeToggle = document.getElementById('mode-toggle-html');
+        if(modeToggle) {
+            modeToggle.addEventListener('change', (e) => {
+                const addContainer = document.getElementById('add-product-container');
+                const editContainer = document.getElementById('edit-product-container');
+                const toggleLabels = document.querySelectorAll('.mode-toggle-container .toggle-label');
+
+                if (e.target.checked) {
+                    addContainer.classList.add('active');
+                    editContainer.classList.remove('active');
+                    toggleLabels[0].classList.remove('active');
+                    toggleLabels[1].classList.add('active');
+                } else {
+                    addContainer.classList.remove('active');
+                    editContainer.classList.add('active');
+                    toggleLabels[0].classList.add('active');
+                    toggleLabels[1].classList.remove('active');
+                }
+            });
+        }
+
+        const setupImagePreviews = (inputId, previewContainerId) => {
+            const imageInput = document.getElementById(inputId);
+            const previewContainer = document.getElementById(previewContainerId);
+
+            if (imageInput && previewContainer) {
+                imageInput.addEventListener('change', (event) => {
+                    previewContainer.innerHTML = '';
+                    const files = Array.from(event.target.files);
+                    
+                    if(files.length === 0) return;
+
+                    files.sort((a, b) => {
+                        const nameA = a.name.split('.')[0];
+                        const nameB = b.name.split('.')[0];
+                        if (nameA === '1') return -1;
+                        if (nameB === '1') return 1;
+                        return a.name.localeCompare(b.name);
+                    });
+
+                    files.forEach(file => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const isMain = file.name.split('.')[0] === '1';
+                            const previewItem = document.createElement('div');
+                            previewItem.classList.add('preview-item');
+                            if (isMain) {
+                                previewItem.classList.add('main-image');
+                            }
+                            
+                            const img = document.createElement('img');
+                            img.src = e.target.result;
+
+                            const caption = document.createElement('div');
+                            caption.classList.add('caption');
+                            caption.textContent = isMain ? 'Ảnh chính' : 'Ảnh phụ';
+
+                            previewItem.appendChild(img);
+                            previewItem.appendChild(caption);
+                            previewContainer.appendChild(previewItem);
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                });
+            }
+        };
+
+        setupImagePreviews('add-images', 'add-image-previews');
+        setupImagePreviews('edit-images', 'edit-image-previews');
+
+        const addProductForm = document.getElementById('add-product-form');
+        if (addProductForm) {
+            addProductForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData();
+                const productData = {
+                    title: document.getElementById('add-title').value,
+                    cost: parseInt(document.getElementById('add-cost').value, 10),
+                    about: document.getElementById('add-about').value,
+                    feature: document.getElementById('add-feature').value,
+                    parameter: document.getElementById('add-parameter').value,
+                    demo_link: document.getElementById('add-demo-link').value,
+                };
+
+                const imageFiles = document.getElementById('add-images').files;
+                let coverFile = null;
+                const otherImages = [];
+                
+                for (const file of imageFiles) {
+                    if (file.name.split('.')[0] === '1') {
+                        coverFile = file;
+                    } else {
+                        otherImages.push(file);
+                    }
+                }
+                
+                if (!coverFile) {
+                    alert('Vui lòng chọn ảnh và đảm bảo có một ảnh tên là "1" làm ảnh chính.');
+                    return;
+                }
+                
+                formData.append('product', JSON.stringify(productData));
+                formData.append('file', coverFile);
+                
+                try {
+                    console.log('Đang gửi POST tới /products...');
+                    const productResponse = await apiRequest('/products', 'POST', formData);
+                    const productId = productResponse.id;
+                    console.log('Tạo sản phẩm thành công, ID:', productId);
+                    
+                    if (otherImages.length > 0 && productId) {
+                        const imageFormData = new FormData();
+                        otherImages.forEach((file) => {
+                             imageFormData.append('images', file);
+                        });
+                        
+                        console.log(`Đang gửi POST tới /products/${productId}/images với ${otherImages.length} ảnh phụ...`);
+                        await apiRequest(`/products/${productId}/images`, 'POST', imageFormData);
+                        console.log('Tải ảnh phụ thành công!');
+                    }
+
+                    alert('Đăng bài thành công!');
+                    addProductForm.reset();
+                    document.getElementById('add-image-previews').innerHTML = '';
+
+                } catch (error) {
+                    alert(`Đã xảy ra lỗi: ${error.message}`);
+                    console.error('Lỗi khi đăng bài:', error);
+                }
+            });
+        }
+        
+        const editProductForm = document.getElementById('edit-product-form');
+        const editFormWrapper = document.getElementById('edit-form-wrapper');
+        let currentEditingProductId = null;
+
+         const searchBtn = document.getElementById('search-btn');
+         if(searchBtn){
+             searchBtn.addEventListener('click', () => {
+                const query = document.getElementById('search-product').value;
+                if (!query) return;
+
+                console.log(`Đang tìm sản phẩm với query: ${query}`);
+                alert('Chức năng tìm kiếm đang được phát triển. Dữ liệu mẫu sẽ được hiển thị.');
+
+                currentEditingProductId = 'demo-product-123';
+                document.getElementById('edit-title').value = 'Website Tĩnh Mẫu';
+                document.getElementById('edit-cost').value = '150';
+                document.getElementById('edit-about').value = 'Đây là mô tả mẫu cho sản phẩm website tĩnh.';
+                document.getElementById('edit-feature').value = 'Responsive, Tối ưu SEO';
+                document.getElementById('edit-parameter').value = 'HTML, CSS, JS';
+                document.getElementById('edit-support').value = 'Bảo hành 1 tháng, Hỗ trợ cài đặt';
+                document.getElementById('edit-demo-link').value = 'https://example.com';
+                editFormWrapper.style.display = 'block';
+             });
+         }
+
+
+        if (editProductForm) {
+            editProductForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (!currentEditingProductId) {
+                    alert('Vui lòng tìm kiếm một sản phẩm trước khi cập nhật.');
+                    return;
+                }
+
+                const productUpdateData = {
+                     title: document.getElementById('edit-title').value,
+                    cost: parseInt(document.getElementById('edit-cost').value, 10),
+                    about: document.getElementById('edit-about').value,
+                    feature: document.getElementById('edit-feature').value,
+                    parameter: document.getElementById('edit-parameter').value,
+                    support: document.getElementById('edit-support').value,
+                    demo_link: document.getElementById('edit-demo-link').value,
+                };
+                
+                const formData = new FormData();
+                formData.append('product', JSON.stringify(productUpdateData));
+                
+                const imageFiles = document.getElementById('edit-images').files;
+                if (imageFiles.length > 0) {
+                    let coverFile = null;
+                    for (const file of imageFiles) {
+                         if (file.name.split('.')[0] === '1') {
+                            coverFile = file;
+                            break;
+                        }
+                    }
+                    if(coverFile) {
+                        formData.append('file', coverFile);
+                    }
+                }
+
+                try {
+                    console.log(`Đang gửi PATCH tới /products/${currentEditingProductId}...`);
+                    await apiRequest(`/products/${currentEditingProductId}`, 'PATCH', formData);
+                    alert('Cập nhật sản phẩm thành công!');
+
+                } catch (error) {
+                    alert(`Lỗi khi cập nhật: ${error.message}`);
+                    console.error('Lỗi khi cập nhật sản phẩm:', error);
+                }
+            });
+        }
     }
     
-    // Xử lý callback OAuth sau khi tất cả các listener đã được thiết lập
+    
     handleOAuthCallback();
-    // Kiểm tra trạng thái đăng nhập khi tải trang
     checkLoginStatus();
 }
+
