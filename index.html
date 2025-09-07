@@ -12,8 +12,8 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
-    <link rel="stylesheet" href="style.css?v=2.4.0.3">
-    <link rel="stylesheet" href="header/header.css?v=2.4.0.3">
+    <link rel="stylesheet" href="style.css?v=2.4.0.4">
+    <link rel="stylesheet" href="header/header.css?v=2.4.0.4">
 </head>
 <body>
 
@@ -257,8 +257,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollToPlugin.min.js"></script>
     
-    <script src="header/header.js?v=2.4.0.3"></script>
-    <script src="script.js?v=2.4.0.3"></script>
+    <script src="header/header.js?v=2.4.0.4"></script>
+    <script src="script.js?v=2.4.0.4"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -684,7 +684,101 @@
                         
                         <!-- Các panel cho Fullstack và Đồ Án (tạm thời) -->
                         <div id="fullstack-panel" class="dashboard-tab-content">
-                             <div class="update-notification"><p>Nội dung cho Fullstack đang được cập nhật.</p></div>
+                            <div class="mode-toggle-container">
+                                <span class="toggle-label">Sửa</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="mode-toggle-fullstack" checked>
+                                    <span class="slider round"></span>
+                                </label>
+                                <span class="toggle-label active">Thêm</span>
+                            </div>
+
+                            <div id="add-product-container-fullstack" class="form-mode-container active">
+                                <form id="add-product-form-fullstack">
+                                    <div class="form-grid">
+                                        <div class="form-group">
+                                            <label for="add-title-fullstack">Tên sản phẩm:</label>
+                                            <input type="text" id="add-title-fullstack" name="title" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="add-cost-fullstack">Giá (chỉ nhập số, đơn vị nghìn đồng):</label>
+                                            <input type="number" id="add-cost-fullstack" name="cost" required>
+                                        </div>
+                                        <div class="form-group full-width">
+                                            <label for="add-about-fullstack">Về sản phẩm (Giới thiệu):</label>
+                                            <textarea id="add-about-fullstack" name="about" rows="4"></textarea>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="add-feature-fullstack">Tính năng (cách nhau bởi dấu phẩy):</label>
+                                            <input type="text" id="add-feature-fullstack" name="feature">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="add-parameter-fullstack">Thông số (cách nhau bởi dấu phẩy):</label>
+                                            <input type="text" id="add-parameter-fullstack" name="parameter">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="add-demo-link-fullstack">Link Demo:</label>
+                                            <input type="url" id="add-demo-link-fullstack" name="demo_link">
+                                        </div>
+                                        <div class="form-group">
+                                                <label for="add-images-fullstack">Ảnh (chọn folder, ảnh "1" là ảnh chính):</label>
+                                                <input type="file" id="add-images-fullstack" name="images" webkitdirectory directory multiple>
+                                        </div>
+                                    </div>
+                                        <div class="image-previews" id="add-image-previews-fullstack"></div>
+                                    <button type="submit" class="sp-button form-submit-btn">Đăng bài</button>
+                                </form>
+                            </div>
+
+                            <div id="edit-product-container-fullstack" class="form-mode-container">
+                                <div class="form-group">
+                                    <label for="search-product-fullstack">Tìm kiếm (theo tên hoặc ID sản phẩm):</label>
+                                    <div class="search-wrapper">
+                                        <input type="text" id="search-product-fullstack" placeholder="Nhập để tìm kiếm...">
+                                        <button id="search-btn-fullstack" class="sp-button">Tìm</button>
+                                    </div>
+                                </div>
+                                <div id="edit-form-wrapper-fullstack" style="display: none;">
+                                    <form id="edit-product-form-fullstack">
+                                            <div class="form-grid">
+                                            <div class="form-group">
+                                                <label for="edit-title-fullstack">Tên sản phẩm:</label>
+                                                <input type="text" id="edit-title-fullstack" name="title" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="edit-cost-fullstack">Giá (chỉ nhập số, đơn vị nghìn đồng):</label>
+                                                <input type="number" id="edit-cost-fullstack" name="cost" required>
+                                            </div>
+                                            <div class="form-group full-width">
+                                                <label for="edit-about-fullstack">Về sản phẩm (Giới thiệu):</label>
+                                                <textarea id="edit-about-fullstack" name="about" rows="4"></textarea>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="edit-feature-fullstack">Tính năng (cách nhau bởi dấu phẩy):</label>
+                                                <input type="text" id="edit-feature-fullstack" name="feature">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="edit-parameter-fullstack">Thông số (cách nhau bởi dấu phẩy):</label>
+                                                <input type="text" id="edit-parameter-fullstack" name="parameter">
+                                            </div>
+                                                <div class="form-group">
+                                                <label for="edit-support-fullstack">Hỗ trợ (cách nhau bởi dấu phẩy):</label>
+                                                <input type="text" id="edit-support-fullstack" name="support">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="edit-demo-link-fullstack">Link Demo:</label>
+                                                <input type="url" id="edit-demo-link-fullstack" name="demo_link">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="edit-images-fullstack">Ảnh (chọn folder, ảnh "1" là ảnh chính):</label>
+                                                <input type="file" id="edit-images-fullstack" name="images" webkitdirectory directory multiple>
+                                            </div>
+                                        </div>
+                                        <div class="image-previews" id="edit-image-previews-fullstack"></div>
+                                        <button type="submit" class="sp-button form-submit-btn">Cập nhật</button>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
                         <div id="do-an-panel" class="dashboard-tab-content">
                             <div class="update-notification"><p>Nội dung cho Đồ Án đang được cập nhật.</p></div>
