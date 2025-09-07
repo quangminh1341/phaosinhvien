@@ -761,7 +761,6 @@ function initializeHeader() {
                 .from(animatedText.chars, { yPercent: 115, stagger: 0.02, duration: 0.6, ease: "power2.out" }, "-=0.3")
                 .from('.form-container input, .auth-button', { opacity: 0, y: 20, stagger: 0.02, duration: 0.4, ease: "power2.out" }, "-=0.5");
             
-            // --- SỬA ĐỔI: Thêm tham số useAnimation ---
             openModal = (showRegister, message = '', useAnimation = true) => {
                 document.querySelectorAll('.auth-notification').forEach(el => {
                     el.textContent = '';
@@ -774,10 +773,9 @@ function initializeHeader() {
                 if (useAnimation) {
                     modalAnimation.restart();
                 } else {
-                    // Hiển thị ngay lập tức mà không có animation
                     gsap.set(authContainer, { y: 0, opacity: 1 });
                     gsap.set('.auth-container h1, .auth-container p', { visibility: 'visible' });
-                    gsap.set(animatedText.chars, { yPercent: 0 }); // Reset vị trí ký tự
+                    gsap.set(animatedText.chars, { yPercent: 0 });
                     gsap.set('.form-container input, .auth-button', { opacity: 1, y: 0 });
                 }
 
@@ -897,7 +895,6 @@ function initializeHeader() {
         const closePanelBtn = userPanelModal.querySelector('.user-panel-close-btn');
         const panelSidebarNav = userPanelModal.querySelector('.user-panel-nav');
         
-        // **LOGIC ĐÃ ĐƯỢC SỬA LỖI VÀ TỐI ƯU HÓA**
         const showPanel = async (targetId) => {
             const protectedPanels = [
                 'panel-profile', 'panel-orders', 'panel-payments', 
@@ -916,12 +913,10 @@ function initializeHeader() {
                 return;
             }
             
-            // Chuyển đổi panel nội dung
             userPanelModal.querySelectorAll('.panel-content-item').forEach(p => p.classList.remove('active'));
             const targetPanel = document.getElementById(targetId);
             if (targetPanel) targetPanel.classList.add('active');
 
-            // Cập nhật trạng thái active cho link được nhấp
             userPanelModal.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
             const targetLink = userPanelModal.querySelector(`.nav-link[data-target="${targetId}"]`);
             
@@ -930,20 +925,17 @@ function initializeHeader() {
                 
                 const parentCollapsible = targetLink.closest('.is-collapsible');
                 
-                // Đóng tất cả các menu con KHÁC
                 userPanelModal.querySelectorAll('.is-collapsible').forEach(menu => {
                     if (menu !== parentCollapsible) {
                         menu.classList.remove('active');
                     }
                 });
 
-                // Nếu link được nhấp nằm trong menu con, đảm bảo menu cha của nó được mở
                 if (parentCollapsible) {
                     parentCollapsible.classList.add('active');
                 }
             }
             
-            // Tải dữ liệu cho panel tương ứng
             if (targetId === 'panel-orders') await renderOrders();
             if (targetId === 'panel-payments') {
                 populateMonthFilter();
@@ -991,7 +983,6 @@ function initializeHeader() {
     
         closePanelBtn.addEventListener('click', closePanelModal);
         userPanelModal.addEventListener('click', (e) => { if (e.target === userPanelModal) closePanelModal(); });
-        // **KẾT THÚC VÙNG SỬA LỖI**
 
         const copyReferralBtn = document.getElementById('copy-referral-btn');
         const referralCodeInput = document.getElementById('profile-referral-code');
@@ -1291,7 +1282,6 @@ function initializeHeader() {
             });
         }
         
-        // --- LOGIC CHO DASHBOARD ---
         const dashboardFilters = document.querySelector('.dashboard-filters');
         const dashboardTabs = document.querySelectorAll('.dashboard-tab-content');
 
@@ -1332,46 +1322,24 @@ function initializeHeader() {
             });
         }
 
-        const setupImagePreviews = (inputId, previewContainerId) => {
-            // LOG KIỂM TRA SỐ 1
-            console.log(`Bắt đầu chạy setupImagePreviews cho input: #${inputId}`);
-
-            const imageInput = document.getElementById(inputId);
-            const previewContainer = document.getElementById(previewContainerId);
-
-            // LOG KIỂM TRA SỐ 2
-            console.log(`- Đã tìm thấy phần tử input chưa?`, imageInput);
-            console.log(`- Đã tìm thấy phần tử container chưa?`, previewContainer);
-
-            if (imageInput && previewContainer) {
-                // LOG KIỂM TRA SỐ 3
-                console.log(`- OK! Cả hai phần tử đều tồn tại. Đang gán sự kiện 'change'...`);
-
-                imageInput.addEventListener('change', (event) => {
-                    // LOG KIỂM TRA SỐ 4: ĐÂY LÀ LOG QUAN TRỌNG NHẤT
-                    console.log(`⭐ SỰ KIỆN 'CHANGE' ĐÃ KÍCH HOẠT! Bắt đầu xử lý ảnh...`);
+        // 🚀 BẮT ĐẦU VÙNG CODE MỚI ĐỂ SỬA LỖI CHỌN ẢNH
+        const userPanelContent = document.querySelector('.user-panel-content');
+        if (userPanelContent) {
+            userPanelContent.addEventListener('change', (event) => {
+                if (event.target.id === 'add-images' || event.target.id === 'edit-images') {
+                    const inputId = event.target.id;
+                    const previewContainerId = inputId.replace('-images', '-image-previews');
+                    const previewContainer = document.getElementById(previewContainerId);
+                    
+                    if (!previewContainer) return;
 
                     previewContainer.innerHTML = '';
-
-                    const allFiles = event.target.files;
-                    const webpFiles = [];
-
-                    for (let i = 0; i < allFiles.length; i++) {
-                        const file = allFiles[i];
-                        if (file.name.toLowerCase().endsWith('.webp')) {
-                            webpFiles.push(file);
-                        }
-                    }
-                    
-                    console.log("- Các tệp .webp đã lọc được:", webpFiles);
-                    const files = webpFiles;
+                    const files = Array.from(event.target.files).filter(file => file.name.toLowerCase().endsWith('.webp'));
 
                     if (files.length === 0) {
-                        console.log("- Không có tệp .webp nào trong thư mục.");
                         return;
                     }
 
-                    // ... (phần còn lại của hàm không thay đổi) ...
                     files.sort((a, b) => {
                         const nameA = a.name.split('.')[0];
                         const nameB = b.name.split('.')[0];
@@ -1386,29 +1354,25 @@ function initializeHeader() {
                             const isMain = file.name.split('.')[0] === '1';
                             const previewItem = document.createElement('div');
                             previewItem.classList.add('preview-item');
-                            if (isMain) {
-                                previewItem.classList.add('main-image');
-                            }
+                            if (isMain) previewItem.classList.add('main-image');
+                            
                             const img = document.createElement('img');
                             img.src = e.target.result;
+
                             const caption = document.createElement('div');
                             caption.classList.add('caption');
                             caption.textContent = isMain ? 'Ảnh chính' : 'Ảnh phụ';
+
                             previewItem.appendChild(img);
                             previewItem.appendChild(caption);
                             previewContainer.appendChild(previewItem);
                         };
                         reader.readAsDataURL(file);
                     });
-                });
-            } else {
-                // LOG KIỂM TRA LỖI
-                console.error(`❌ LỖI: Không tìm thấy input '#${inputId}' hoặc container '#${previewContainerId}'. Không thể gán sự kiện.`);
-            }
-        };
-
-        setupImagePreviews('add-images', 'add-image-previews');
-        setupImagePreviews('edit-images', 'edit-image-previews');
+                }
+            });
+        }
+        // 🚀 KẾT THÚC VÙNG CODE MỚI
 
         const addProductForm = document.getElementById('add-product-form');
         if (addProductForm) {
@@ -1433,33 +1397,24 @@ function initializeHeader() {
                     }
 
                     const productFormData = new FormData();
-
-                    // 1. Thêm dữ liệu text/number dạng phẳng để khớp với CreateProductDto
                     productFormData.append('title', document.getElementById('add-title').value);
                     productFormData.append('cost', document.getElementById('add-cost').value);
                     productFormData.append('about', document.getElementById('add-about').value);
                     productFormData.append('feature', document.getElementById('add-feature').value);
                     productFormData.append('parameter', document.getElementById('add-parameter').value);
                     productFormData.append('demo_link', document.getElementById('add-demo-link').value);
-
-                    // 2. Thêm file ảnh chính với tên trường là 'images' (số nhiều)
-                    // Đây là thay đổi cuối cùng và quan trọng nhất để khớp với FileInterceptor('images',...)
                     productFormData.append('images', coverFile);
 
-                    // Gửi request tạo sản phẩm
                     const productResponse = await apiRequest('/products', 'POST', productFormData);
-                    // console.log("Kiểm tra dữ liệu trả về từ API:", productResponse);
                     const productId = productResponse.data.id;
 
                     if (!productId) {
                         throw new Error("Không nhận được ID sản phẩm sau khi tạo.");
                     }
 
-                    // --- BƯỚC 2: UPLOAD CÁC ẢNH PHỤ CÒN LẠI (NẾU CÓ) ---
                     if (otherImages.length > 0) {
                         const galleryFormData = new FormData();
                         for (const file of otherImages) {
-                            // Endpoint này có thể dùng FilesInterceptor('images') để nhận nhiều file
                             galleryFormData.append('images', file);
                         }
                         await apiRequest(`/products/${productId}/images`, 'POST', galleryFormData);
@@ -1546,7 +1501,6 @@ function initializeHeader() {
             });
         }
 
-        // --- LOGIC CHO PHẦN LỌC ĐƠN HÀNG CỦA ADMIN ---
         const adminProjectFilters = document.querySelector('.admin-project-filters');
         const adminStatusFilters = document.querySelector('#panel-admin-orders .order-filters');
 
