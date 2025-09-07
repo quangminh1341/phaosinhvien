@@ -1,3 +1,4 @@
+
 // Dữ liệu hoa hồng giả định
 const mockCommissionHistory = [
     // { usedBy: mockReferralUsages[10], productName: 'Fullstack - Web Bán Hàng', amount: 7500, date: '2025-07-25T16:25:00' },
@@ -14,15 +15,6 @@ let authModalOverlay, authContainer, modalAnimation, openModal, animatedText;
 // ***** LƯU Ý: Đổi lại API_BASE_URL thành endpoint server của bạn khi deploy *****
 const API_BASE_URL = '/api'; 
 let currentUser = null;
-
-// --- VÙNG CODE MỚI: QUẢN LÝ FILE ẢNH CHO DASHBOARD ---
-let managedFiles = {
-    addHtml: [],
-    editHtml: [],
-    addFullstack: [],
-    editFullstack: []
-};
-// --- KẾT THÚC VÙNG CODE MỚI ---
 
 // --- HÀM TRỢ GIÚP API ---
 /**
@@ -1305,6 +1297,13 @@ function initializeHeader() {
             });
         }
         
+        let managedFiles = {
+            addHtml: [],
+            editHtml: [],
+            addFullstack: [],
+            editFullstack: []
+        };
+
         const dashboardFilters = document.querySelector('.dashboard-filters');
         const dashboardTabs = document.querySelectorAll('.dashboard-tab-content');
 
@@ -1323,23 +1322,23 @@ function initializeHeader() {
                 }
             });
         }
-        
-        // 🚀 BẮT ĐẦU VÙNG CODE MỚI: CẤU TRÚC LẠI LOGIC DASHBOARD
-        
+
         /**
-         * Hàm render và quản lý các ảnh preview
-         * @param {string} fileStoreKey - Key trong object managedFiles (vd: 'addHtml')
+         * Hàm render và quản lý các ảnh preview, bao gồm nút xóa và ô thêm ảnh.
+         * @param {string} fileStoreKey - Key trong object managedFiles (vd: 'addHtml').
          */
         const renderImagePreviews = (fileStoreKey) => {
-            const previewContainerId = fileStoreKey.startsWith('add') 
-                ? `#add-image-previews-${fileStoreKey.substring(3).toLowerCase()}`
-                : `#edit-image-previews-${fileStoreKey.substring(4).toLowerCase()}`;
+            let previewContainerId;
+            if (fileStoreKey === 'addHtml') previewContainerId = '#add-image-previews';
+            else if (fileStoreKey === 'editHtml') previewContainerId = '#edit-image-previews';
+            else if (fileStoreKey === 'addFullstack') previewContainerId = '#add-image-previews-fullstack';
+            else if (fileStoreKey === 'editFullstack') previewContainerId = '#edit-image-previews-fullstack';
+
             const previewContainer = document.querySelector(previewContainerId);
             if (!previewContainer) return;
 
             previewContainer.innerHTML = ''; // Xóa sạch preview cũ
 
-            // Sắp xếp file: file tên '1.webp' lên đầu
             const sortedFiles = [...managedFiles[fileStoreKey]].sort((a, b) => {
                 const nameA = a.name.split('.')[0];
                 const nameB = b.name.split('.')[0];
@@ -1349,7 +1348,6 @@ function initializeHeader() {
             });
             managedFiles[fileStoreKey] = sortedFiles;
 
-            // Render từng ảnh đã có
             sortedFiles.forEach(file => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
@@ -1357,63 +1355,54 @@ function initializeHeader() {
                     const previewItem = document.createElement('div');
                     previewItem.className = 'preview-item';
                     if (isMain) previewItem.classList.add('main-image');
-                    
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
 
-                    const caption = document.createElement('div');
-                    caption.className = 'caption';
-                    caption.textContent = isMain ? 'Ảnh chính' : 'Ảnh phụ';
+                    previewItem.innerHTML = `
+                        <img src="${e.target.result}" alt="Preview">
+                        <div class="caption">${isMain ? 'Ảnh chính' : 'Ảnh phụ'}</div>
+                        <button type="button" class="remove-preview-btn">&times;</button>
+                    `;
 
-                    const removeBtn = document.createElement('button');
-                    removeBtn.className = 'remove-preview-btn';
-                    removeBtn.innerHTML = '&times;';
-                    removeBtn.type = 'button'; // Quan trọng để không submit form
-                    removeBtn.onclick = () => {
-                        // Xóa file khỏi mảng quản lý và render lại
+                    previewItem.querySelector('.remove-preview-btn').onclick = () => {
                         managedFiles[fileStoreKey] = managedFiles[fileStoreKey].filter(f => f.name !== file.name);
                         renderImagePreviews(fileStoreKey);
                     };
-
-                    previewItem.append(img, caption, removeBtn);
                     previewContainer.appendChild(previewItem);
                 };
                 reader.readAsDataURL(file);
             });
 
-            // Luôn render ô thêm ảnh
             const addPlaceholder = document.createElement('div');
             addPlaceholder.className = 'add-image-placeholder';
-            addPlaceholder.innerHTML = `+<input type="file" accept="image/webp" multiple />`;
-            addPlaceholder.onclick = () => {
-                addPlaceholder.querySelector('input').click();
-            };
+            addPlaceholder.innerHTML = `+<input type="file" accept="image/*" multiple />`;
+
+            addPlaceholder.onclick = () => addPlaceholder.querySelector('input').click();
+
             addPlaceholder.querySelector('input').onchange = (event) => {
                 const newFiles = Array.from(event.target.files);
                 const existingFileNames = managedFiles[fileStoreKey].map(f => f.name);
-                const uniqueNewFiles = newFiles.filter(f => !existingFileNames.includes(f.name) && f.name.toLowerCase().endsWith('.webp'));
-                
+                const uniqueNewFiles = newFiles.filter(f => !existingFileNames.includes(f.name));
+
                 managedFiles[fileStoreKey].push(...uniqueNewFiles);
                 renderImagePreviews(fileStoreKey);
             };
             previewContainer.appendChild(addPlaceholder);
         };
-        
+
         /**
-         * Hàm khởi tạo cho một tab trong dashboard (HTML hoặc Fullstack)
-         * @param {string} type - 'Html' hoặc 'Fullstack'
+         * Hàm khởi tạo hợp nhất cho một tab trong dashboard (HTML hoặc Fullstack).
+         * @param {string} type - 'Html' hoặc 'Fullstack'.
          */
         const initializeDashboardTab = (type) => {
             const lowerType = type.toLowerCase();
+            const suffix = type === 'Html' ? '' : `-${lowerType}`;
             const addFileStoreKey = `add${type}`;
             const editFileStoreKey = `edit${type}`;
 
-            // Mode Toggle
             const modeToggle = document.getElementById(`mode-toggle-${lowerType}`);
             if (modeToggle) {
                 modeToggle.addEventListener('change', (e) => {
-                    const addContainer = document.getElementById(`add-product-container-${lowerType}`);
-                    const editContainer = document.getElementById(`edit-product-container-${lowerType}`);
+                    const addContainer = document.getElementById(`add-product-container${suffix}`);
+                    const editContainer = document.getElementById(`edit-product-container${suffix}`);
                     const toggleLabels = modeToggle.closest('.mode-toggle-container').querySelectorAll('.toggle-label');
 
                     if (e.target.checked) {
@@ -1430,22 +1419,12 @@ function initializeHeader() {
                 });
             }
 
-            // Input chọn folder
-            const addImagesInput = document.getElementById(`add-images-${lowerType}`);
-            if (addImagesInput) {
-                addImagesInput.addEventListener('change', (event) => {
-                    managedFiles[addFileStoreKey] = Array.from(event.target.files).filter(file => file.name.toLowerCase().endsWith('.webp'));
-                    renderImagePreviews(addFileStoreKey);
-                });
-            }
-            
-            // Form Thêm sản phẩm
-            const addProductForm = document.getElementById(`add-product-form-${lowerType}`);
+            const addProductForm = document.getElementById(`add-product-form${suffix}`);
             if (addProductForm) {
                 addProductForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
-                    
-                    const coverFile = managedFiles[addFileStoreKey].find(f => f.name.split('.')[0] === '1');
+                    const files = managedFiles[addFileStoreKey];
+                    const coverFile = files.find(f => f.name.split('.')[0] === '1');
                     if (!coverFile) {
                         alert('Vui lòng chọn ảnh và đảm bảo có một ảnh tên là "1" làm ảnh chính.');
                         return;
@@ -1453,32 +1432,26 @@ function initializeHeader() {
 
                     try {
                         const productFormData = new FormData();
-                        productFormData.append('title', document.getElementById(`add-title-${lowerType}`).value);
-                        productFormData.append('cost', document.getElementById(`add-cost-${lowerType}`).value);
-                        productFormData.append('about', document.getElementById(`add-about-${lowerType}`).value);
-                        productFormData.append('feature', document.getElementById(`add-feature-${lowerType}`).value);
-                        productFormData.append('parameter', document.getElementById(`add-parameter-${lowerType}`).value);
-                        productFormData.append('demo_link', document.getElementById(`add-demo-link-${lowerType}`).value);
-                        productFormData.append('images', coverFile); // Chỉ gửi ảnh bìa để tạo sản phẩm
-                        
-                        // THÊM CATEGORY CHO SẢN PHẨM
-                        const category = lowerType === 'html' ? 'Website HTML' : 'Fullstack';
+                        productFormData.append('title', document.getElementById(`add-title${suffix}`).value);
+                        productFormData.append('cost', document.getElementById(`add-cost${suffix}`).value);
+                        productFormData.append('about', document.getElementById(`add-about${suffix}`).value);
+                        productFormData.append('feature', document.getElementById(`add-feature${suffix}`).value);
+                        productFormData.append('parameter', document.getElementById(`add-parameter${suffix}`).value);
+                        productFormData.append('demo_link', document.getElementById(`add-demo-link${suffix}`).value);
+                        productFormData.append('images', coverFile);
+
+                        const category = type === 'Html' ? 'Website HTML' : 'Fullstack';
                         productFormData.append('category', category);
 
                         const productResponse = await apiRequest('/products', 'POST', productFormData);
                         const productId = productResponse.data.id;
 
-                        if (!productId) {
-                            throw new Error("Không nhận được ID sản phẩm sau khi tạo.");
-                        }
+                        if (!productId) throw new Error("Không nhận được ID sản phẩm sau khi tạo.");
 
-                        // Gửi các ảnh phụ
-                        const otherImages = managedFiles[addFileStoreKey].filter(f => f.name.split('.')[0] !== '1');
+                        const otherImages = files.filter(f => f.name.split('.')[0] !== '1');
                         if (otherImages.length > 0) {
                             const galleryFormData = new FormData();
-                            for (const file of otherImages) {
-                                galleryFormData.append('images', file);
-                            }
+                            otherImages.forEach(file => galleryFormData.append('images', file));
                             await apiRequest(`/products/${productId}/images`, 'POST', galleryFormData);
                         }
 
@@ -1486,7 +1459,6 @@ function initializeHeader() {
                         addProductForm.reset();
                         managedFiles[addFileStoreKey] = [];
                         renderImagePreviews(addFileStoreKey);
-
                     } catch (error) {
                         alert(`Đã xảy ra lỗi khi đăng bài: ${error.message}`);
                         console.error('Lỗi chi tiết:', error);
@@ -1494,20 +1466,19 @@ function initializeHeader() {
                 });
             }
 
-            // Khởi tạo preview rỗng ban đầu cho form add
+            // Logic cho form sửa sản phẩm có thể được thêm vào đây theo cách tương tự
+            // ...
+
+            // Khởi tạo preview rỗng ban đầu
             renderImagePreviews(addFileStoreKey);
-            renderImagePreviews(editFileStoreKey); // Tương tự cho form edit
+            renderImagePreviews(editFileStoreKey);
         };
-        
+
         // Khởi tạo cho cả hai tab
         initializeDashboardTab('Html');
         initializeDashboardTab('Fullstack');
 
-        // Logic còn lại cho form Sửa (search, submit) cần được tích hợp tương tự
-        // ...
-        
-        // 🚀 KẾT THÚC VÙNG CODE MỚI
-
+        // Logic cho Admin Orders Panel (giữ nguyên từ file của bạn)
         const adminProjectFilters = document.querySelector('.admin-project-filters');
         const adminStatusFilters = document.querySelector('#panel-admin-orders .order-filters');
 
@@ -1517,10 +1488,10 @@ function initializeHeader() {
             const activeStatusBtn = adminStatusFilters.querySelector('.active');
 
             if (!activeProjectTypeBtn || !activeStatusBtn) {
-                 orderListContainer.innerHTML = '<p class="no-orders">Vui lòng chọn bộ lọc.</p>';
-                 return;
+                orderListContainer.innerHTML = '<p class="no-orders">Vui lòng chọn bộ lọc.</p>';
+                return;
             }
-            
+
             const activeProjectType = activeProjectTypeBtn.dataset.projectType;
             const activeStatus = activeStatusBtn.dataset.status;
 
@@ -1533,13 +1504,13 @@ function initializeHeader() {
             ];
 
             let filteredOrders = mockAdminOrders.filter(order => order.projectType === activeProjectType);
-            
+
             if (activeStatus !== 'Tất cả') {
                 filteredOrders = filteredOrders.filter(order => order.status === activeStatus);
             }
-            
+
             if (filteredOrders.length > 0) {
-                 orderListContainer.innerHTML = filteredOrders.map(order => `
+                orderListContainer.innerHTML = filteredOrders.map(order => `
                     <div class="order-item">
                         <div class="order-info">
                             <span class="order-id">#${order.id} (User: ${order.user})</span>
@@ -1564,7 +1535,7 @@ function initializeHeader() {
                 }
             });
         }
-        
+
         if (adminStatusFilters) {
             adminStatusFilters.addEventListener('click', (e) => {
                 if (e.target.classList.contains('filter-btn')) {
