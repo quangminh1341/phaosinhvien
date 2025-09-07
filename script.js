@@ -154,20 +154,26 @@ async function loadAllProducts() {
 
         projectData = groupProductsByCategory(response.data);
 
+        // Lấy tên các danh mục từ dữ liệu đã nhóm
         const projectNames = Object.keys(projectData);
+
         if (projectNames.length === 0) {
             projectSelect.innerHTML = '<option>Không tìm thấy dự án</option>';
             gallery.innerHTML = "<p>Không có sản phẩm nào được tìm thấy.</p>";
             return;
         }
 
+        // Sắp xếp danh sách, ưu tiên "Website HTML" lên đầu
         const sortedProjectNames = [...projectNames].sort((a, b) => {
             if (a === "Website HTML") return -1;
             if (b === "Website HTML") return 1;
             return a.localeCompare(b);
         });
+        
+        // Tạo các <option> cho thẻ <select>
         projectSelect.innerHTML = sortedProjectNames.map(name => `<option value="${name}">${name}</option>`).join('');
 
+        // Thiết lập dự án mặc định để hiển thị
         const defaultProject = "Website HTML";
         currentProject = projectNames.includes(defaultProject) ? defaultProject : sortedProjectNames[0];
         projectSelect.value = currentProject;
@@ -307,6 +313,7 @@ async function initializeServicePanel() {
     const kebabBtn = document.querySelector('.kebab-btn');
     const kebabDropdown = document.querySelector('.kebab-dropdown');
     const deleteProductBtn = document.getElementById('delete-product-btn-detail');
+    const editProductBtn = document.getElementById('edit-product-btn-detail');
 
     if (kebabBtn && kebabDropdown) {
         kebabBtn.addEventListener('click', (e) => {
@@ -321,6 +328,20 @@ async function initializeServicePanel() {
     
     if(deleteProductBtn) {
         deleteProductBtn.addEventListener('click', handleDeleteProduct);
+    }
+    
+    if(editProductBtn) {
+        editProductBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Kiểm tra xem `currentProductData` có tồn tại và hàm `populateAndShowEditForm` đã được khởi tạo chưa
+            if (currentProductData && typeof populateAndShowEditForm === 'function') {
+                // Gọi hàm toàn cục từ header.js để mở và điền form sửa
+                populateAndShowEditForm(currentProductData);
+            } else {
+                console.error("Không thể mở form sửa: Dữ liệu sản phẩm hoặc hàm không tồn tại.");
+                showMessage("Không thể thực hiện hành động này. Vui lòng thử lại.");
+            }
+        });
     }
 }
 

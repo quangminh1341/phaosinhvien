@@ -1,4 +1,3 @@
-
 // Dữ liệu hoa hồng giả định
 const mockCommissionHistory = [
     // { usedBy: mockReferralUsages[10], productName: 'Fullstack - Web Bán Hàng', amount: 7500, date: '2025-07-25T16:25:00' },
@@ -8,8 +7,11 @@ const mockCommissionHistory = [
     // { usedBy: mockReferralUsages[1], productName: 'Fullstack - Blog cá nhân', amount: 6000, date: '2025-08-20T15:30:00' },
 ];
 
-// --- BIẾN TOÀN CỤC CHO MODAL ---
+// --- BIẾN TOÀN CỤC CHO MODAL VÀ DASHBOARD ---
 let authModalOverlay, authContainer, modalAnimation, openModal, animatedText;
+let openPanelModal; 
+let populateAndShowEditForm;
+
 
 // --- CẤU HÌNH API ---
 // ***** LƯU Ý: Đổi lại API_BASE_URL thành endpoint server của bạn khi deploy *****
@@ -965,7 +967,7 @@ function initializeHeader() {
             }
         };
         
-        const openPanelModal = (initialPanelId) => {
+        openPanelModal = (initialPanelId) => {
             userPanelModal.classList.add('visible');
             showPanel(initialPanelId || 'panel-profile');
         };
@@ -998,6 +1000,65 @@ function initializeHeader() {
     
         closePanelBtn.addEventListener('click', closePanelModal);
         userPanelModal.addEventListener('click', (e) => { if (e.target === userPanelModal) closePanelModal(); });
+
+        populateAndShowEditForm = (productData) => {
+            // 1. Mở modal và panel Dashboard
+            openPanelModal('panel-dashboard');
+
+            // Delay một chút để đảm bảo các element trong modal đã sẵn sàng
+            setTimeout(() => {
+                const category = productData.category;
+                let tabId, type, suffix, lowerType;
+
+                if (category === 'Website HTML') {
+                    tabId = 'website-html-panel';
+                    type = 'Html';
+                    suffix = '';
+                    lowerType = 'html';
+                } else if (category === 'Fullstack') {
+                    tabId = 'fullstack-panel';
+                    type = 'Fullstack';
+                    suffix = '-fullstack';
+                    lowerType = 'fullstack';
+                } else {
+                    // Xử lý cho "Đồ Án" hoặc các danh mục khác nếu cần
+                    alert(`Chức năng sửa cho danh mục "${category}" chưa được hỗ trợ.`);
+                    return;
+                }
+
+                // 2. Kích hoạt đúng tab con (Website HTML / Fullstack)
+                document.querySelector('.dashboard-filters .filter-btn.active').classList.remove('active');
+                document.querySelector(`.dashboard-filters .filter-btn[data-target="${tabId}"]`).classList.add('active');
+
+                document.querySelectorAll('.dashboard-tab-content.active').forEach(t => t.classList.remove('active'));
+                document.getElementById(tabId).classList.add('active');
+                
+                // 3. Chuyển sang chế độ "Sửa"
+                const modeToggle = document.getElementById(`mode-toggle-${lowerType}`);
+                if (modeToggle.checked) { // Nếu đang ở chế độ "Thêm"
+                    modeToggle.click(); // Giả lập hành động click để chuyển sang "Sửa"
+                }
+
+                // 4. Điền thông tin sản phẩm vào form
+                const editFormWrapper = document.getElementById(`edit-form-wrapper${suffix}`);
+                editFormWrapper.dataset.productId = productData.id; // Lưu ID để dùng khi submit
+                
+                document.getElementById(`edit-title${suffix}`).value = productData.title || '';
+                document.getElementById(`edit-cost${suffix}`).value = productData.cost || '';
+                document.getElementById(`edit-about${suffix}`).value = productData.about || '';
+                document.getElementById(`edit-feature${suffix}`).value = productData.feature || '';
+                document.getElementById(`edit-parameter${suffix}`).value = productData.parameter || '';
+                document.getElementById(`edit-demo-link${suffix}`).value = productData.demo_link || '';
+                
+                // 5. Hiển thị các ảnh đã có của sản phẩm
+                const fileStoreKey = `edit${type}`;
+                managedFiles[fileStoreKey] = []; // Xóa các file mới đang chờ từ lần sửa trước
+                renderImagePreviews(fileStoreKey, productData.imageGallery || []);
+                
+                editFormWrapper.style.display = 'block';
+
+            }, 150); // Delay 150ms
+        };
 
         const copyReferralBtn = document.getElementById('copy-referral-btn');
         const referralCodeInput = document.getElementById('profile-referral-code');
@@ -1323,86 +1384,88 @@ function initializeHeader() {
             });
         }
 
-        /**
-         * Hàm render và quản lý các ảnh preview, bao gồm nút xóa và ô thêm ảnh.
-         * @param {string} fileStoreKey - Key trong object managedFiles (vd: 'addHtml').
-         */
-        const renderImagePreviews = (fileStoreKey) => {
+        const renderImagePreviews = (fileStoreKey, existingImageUrls = []) => {
             let previewContainerId;
             if (fileStoreKey === 'addHtml') previewContainerId = '#add-image-previews';
             else if (fileStoreKey === 'editHtml') previewContainerId = '#edit-image-previews';
             else if (fileStoreKey === 'addFullstack') previewContainerId = '#add-image-previews-fullstack';
             else if (fileStoreKey === 'editFullstack') previewContainerId = '#edit-image-previews-fullstack';
+            else return;
 
             const previewContainer = document.querySelector(previewContainerId);
             if (!previewContainer) return;
 
-            previewContainer.innerHTML = ''; // Xóa sạch preview cũ
+            previewContainer.innerHTML = ''; // Clear existing previews
 
-            const sortedFiles = [...managedFiles[fileStoreKey]].sort((a, b) => {
+            // 1. Render existing images from URLs
+            existingImageUrls.forEach((url, index) => {
+                const isMain = index === 0; // Assume first image is the main cover
+                const previewItem = document.createElement('div');
+                previewItem.className = 'preview-item existing-image';
+                if (isMain) previewItem.classList.add('main-image');
+                previewItem.dataset.originalUrl = url;
+
+                previewItem.innerHTML = `
+                    <img src="${url}" alt="Existing Preview">
+                    <div class="caption">${isMain ? 'Ảnh chính' : 'Ảnh phụ'}</div>
+                    <button type="button" class="remove-preview-btn">&times;</button>
+                `;
+
+                previewItem.querySelector('.remove-preview-btn').onclick = () => {
+                    previewItem.remove(); // Simply remove the element from the DOM
+                };
+                previewContainer.appendChild(previewItem);
+            });
+
+            // 2. Render newly added files from managedFiles
+            const newFiles = managedFiles[fileStoreKey] || [];
+            const sortedFiles = [...newFiles].sort((a, b) => {
                 const nameA = a.name.split('.')[0];
                 const nameB = b.name.split('.')[0];
                 if (nameA === '1') return -1;
                 if (nameB === '1') return 1;
                 return a.name.localeCompare(b.name, undefined, { numeric: true });
             });
-            managedFiles[fileStoreKey] = sortedFiles;
 
             sortedFiles.forEach(file => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const isMain = file.name.split('.')[0] === '1';
                     const previewItem = document.createElement('div');
-                    previewItem.className = 'preview-item';
+                    previewItem.className = 'preview-item new-file';
                     if (isMain) previewItem.classList.add('main-image');
 
                     previewItem.innerHTML = `
-                        <img src="${e.target.result}" alt="Preview">
-                        <div class="caption">${isMain ? 'Ảnh chính' : 'Ảnh phụ'}</div>
+                        <img src="${e.target.result}" alt="New Preview">
+                        <div class="caption">${isMain ? 'Ảnh chính (Mới)' : 'Ảnh phụ (Mới)'}</div>
                         <button type="button" class="remove-preview-btn">&times;</button>
                     `;
-
                     previewItem.querySelector('.remove-preview-btn').onclick = () => {
                         managedFiles[fileStoreKey] = managedFiles[fileStoreKey].filter(f => f.name !== file.name);
-                        renderImagePreviews(fileStoreKey);
+                        // Re-render only the new files part, keeping existing ones intact
+                        renderImagePreviews(fileStoreKey, existingImageUrls);
                     };
                     previewContainer.appendChild(previewItem);
                 };
                 reader.readAsDataURL(file);
             });
-
+            
+            // 3. Add the placeholder for uploading more files
             const addPlaceholder = document.createElement('div');
-                addPlaceholder.className = 'add-image-placeholder';
-                // Chỉ chứa input để chọn nhiều tệp ảnh
-                addPlaceholder.innerHTML = `+<input type="file" accept="image/*" multiple />`;
+            addPlaceholder.className = 'add-image-placeholder';
+            addPlaceholder.innerHTML = `+<input type="file" accept="image/*" multiple />`;
+            const fileInput = addPlaceholder.querySelector('input');
+            addPlaceholder.onclick = () => fileInput.click();
 
-                const fileInput = addPlaceholder.querySelector('input');
-                // Bấm vào ô sẽ kích hoạt input
-                addPlaceholder.onclick = () => fileInput.click();
-
-                fileInput.onchange = (event) => {
-                    const newFiles = Array.from(event.target.files);
-                    const existingFileNames = managedFiles[fileStoreKey].map(f => f.name);
-                    // Lọc file ảnh mới, không trùng lặp
-                    const uniqueNewFiles = newFiles.filter(f =>
-                        f.type.startsWith('image/') && !existingFileNames.includes(f.name)
-                    );
-
-                    if (uniqueNewFiles.length > 0) {
-                        managedFiles[fileStoreKey].push(...uniqueNewFiles);
-                        renderImagePreviews(fileStoreKey);
-                    }
-                    event.target.value = ''; // Reset để có thể chọn lại file cũ
-                };
-                previewContainer.appendChild(addPlaceholder);
+            fileInput.onchange = (event) => {
+                handleFileSelection(event.target.files, fileStoreKey, false);
+                // After adding new files, re-render with the existing URLs
+                renderImagePreviews(fileStoreKey, existingImageUrls); 
+            };
+            previewContainer.appendChild(addPlaceholder);
         };
 
-        /**
-         * Xử lý các file được chọn, lọc, và thêm vào kho lưu trữ trước khi render lại preview.
-         * @param {FileList} files - Danh sách file từ input.
-         * @param {string} fileStoreKey - Key trong object managedFiles (vd: 'addHtml').
-         * @param {boolean} folderMode - Nếu true, chỉ chấp nhận file .webp.
-         */
+
         const handleFileSelection = (files, fileStoreKey, folderMode = false) => {
             const newFiles = Array.from(files);
             const existingFileNames = managedFiles[fileStoreKey].map(f => f.name);
@@ -1431,10 +1494,6 @@ function initializeHeader() {
             }
         };
 
-        /**
-         * Hàm khởi tạo hợp nhất cho một tab trong dashboard (HTML hoặc Fullstack).
-         * @param {string} type - 'Html' hoặc 'Fullstack'.
-         */
         const initializeDashboardTab = (type) => {
             const lowerType = type.toLowerCase();
             const suffix = type === 'Html' ? '' : `-${lowerType}`;
