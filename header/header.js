@@ -1,6 +1,72 @@
+// Dữ liệu thông báo giả định
+const mockNotifications = [
+    // { id: 1, message: "Chào mừng bạn đến với Phao Sinh Viên! Hãy khám phá các dịch vụ của chúng tôi.", timestamp: "5 phút trước", read: false },
+    // { id: 2, message: "Ưu đãi đặc biệt: Giảm giá 20% cho đơn hàng đầu tiên của bạn khi đăng ký.", timestamp: "1 giờ trước", read: false },
+    // { id: 3, message: "Dự án Website Tĩnh của bạn đã được cập nhật.", timestamp: "3 giờ trước", read: true },
+    // { id: 4, message: "Bạn có một tin nhắn mới từ bộ phận hỗ trợ.", timestamp: "1 ngày trước", read: false },
+    // { id: 5, message: "Chính sách bảo mật của chúng tôi đã được cập nhật.", timestamp: "2 ngày trước", read: true },
+    // ...Array.from({ length: 30 }, (_, i) => ({
+    //     id: i + 6,
+    //     message: `Đây là thông báo số ${i + 6}. Nội dung này chỉ để kiểm tra.`,
+    //     timestamp: `${i + 3} ngày trước`,
+    //     read: i % 3 !== 0,
+    // }))
+];
+
+// Dữ liệu đơn hàng giả định
+const mockOrders = [
+    // { id: 'PSV-A4B1C2', productName: 'Website Tĩnh - CV Cá Nhân', date: '2025-07-28T10:30:00', price: 50000, status: 'Hoàn thành', revisions: 2 },
+    // { id: 'PSV-D5E6F7', productName: 'Fullstack - Web Bán Hàng', date: '2025-07-25T14:00:00', price: 150000, status: 'Hoàn thành', revisions: 1 },
+    // { id: 'PSV-G8H9I0', productName: 'Custom - App Quản Lý', date: '2025-08-30T09:00:00', price: 300000, status: 'Tiến hành', revisions: 0 },
+    // { id: 'PSV-J1K2L3', productName: 'Website Tĩnh - Landing Page', date: '2025-08-31T11:45:00', price: 75000, status: 'Chờ xác nhận', revisions: 0 },
+    // { id: 'PSV-M4N5O6', productName: 'Fullstack - Blog cá nhân', date: '2025-07-22T18:20:00', price: 120000, status: 'Từ Chối', revisions: 0, rejectionReason: 'Yêu cầu không khả thi trong thời gian ngắn.' },
+    // { id: 'PSV-P7Q8R9', productName: 'Website Tĩnh - Portfolio', date: '2025-08-31T16:00:00', price: 60000, status: 'Chờ xác nhận', revisions: 0 },
+    // { id: 'PSV-T5U6V7', productName: 'Website Tĩnh - Web nhà hàng', date: '2025-08-15T12:00:00', price: 90000, status: 'Đã hủy', revisions: 1 },
+];
+
+// Dữ liệu giao dịch giả định
+const mockTransactions = [
+    // { type: 'deposit', amount: 50000, date: '2025-07-15T08:00:00', method: 'Thẻ cào', endingBalance: 1975000 },
+    // { type: 'spent', amount: 50000, date: '2025-07-28T10:31:00', productName: 'Website Tĩnh - CV Cá Nhân', endingBalance: 1925000 },
+    // { type: 'withdrawal', amount: 20000, date: '2025-08-15T14:30:00', endingCommissionBalance: 50000 },
+    // { type: 'deposit', amount: 100000, date: '2025-08-20T09:15:00', method: 'Chuyển khoản', endingBalance: 2025000 },
+    // { type: 'spent', amount: 75000, date: '2025-08-31T11:46:00', productName: 'Website Tĩnh - Landing Page', endingBalance: 1950000 },
+];
+
+// Dữ liệu các cấp độ (Level)
+const mockLevels = [
+    // { id: '123', title: 'Đồng', min_referrals: 0, commission_percentage: 0.05 }, // 5%
+    // { id: '456', title: 'Bạc', min_referrals: 20, commission_percentage: 0.055 }, // 5.5%
+    // { id: '789', title: 'Vàng', min_referrals: 50, commission_percentage: 0.06 }, // 6%
+];
+
+// Dữ liệu lịch sử dùng mã
+const mockReferralUsages = [
+    // { usedByFullName: 'Nguyễn Văn A', usedByGmail: 'nguyenvana@gmail.com', dateUsed: '2025-08-25T10:00:00' },
+    // { usedByFullName: 'Trần Thị B', usedByGmail: 'tranthib@gmail.com', dateUsed: '2025-08-20T15:30:00' },
+    // { usedByFullName: 'Lê Hoàng C', usedByGmail: 'lehoangc@gmail.com', dateUsed: '2025-08-19T11:20:00' },
+    // { usedByFullName: 'Phạm Thị D', usedByGmail: 'phamthid@gmail.com', dateUsed: '2025-08-15T09:05:00' },
+    // { usedByFullName: 'Võ Văn E', usedByGmail: 'vovane@gmail.com', dateUsed: '2025-08-12T20:00:00' },
+    // { usedByFullName: 'Đặng Thị F', usedByGmail: 'dangthif@gmail.com', dateUsed: '2025-08-10T14:10:00' },
+    // { usedByFullName: 'Hồ Văn G', usedByGmail: 'hovang@gmail.com', dateUsed: '2025-08-05T18:45:00' },
+    // { usedByFullName: 'Bùi Thị H', usedByGmail: 'buithih@gmail.com', dateUsed: '2025-08-02T08:00:00' },
+    // { usedByFullName: 'Đỗ Văn I', usedByGmail: 'dovani@gmail.com', dateUsed: '2025-07-30T22:30:00' },
+    // { usedByFullName: 'Hoàng Thị K', usedByGmail: 'hoangthik@gmail.com', dateUsed: '2025-07-28T13:00:00' },
+    // { usedByFullName: 'Ngô Văn L', usedByGmail: 'ngovanl@gmail.com', dateUsed: '2025-07-25T16:25:00' },
+    // { usedByFullName: 'Dương Thị M', usedByGmail: 'duongthim@gmail.com', dateUsed: '2025-07-21T19:00:00' },
+];
+
+// Dữ liệu hoa hồng giả định
+const mockCommissionHistory = [
+    // { usedBy: mockReferralUsages[10], productName: 'Fullstack - Web Bán Hàng', amount: 7500, date: '2025-07-25T16:25:00' },
+    // { usedBy: mockReferralUsages[9], productName: 'Website Tĩnh - CV Cá Nhân', amount: 2500, date: '2025-07-28T13:00:00' },
+    // { usedBy: mockReferralUsages[8], productName: 'Custom - App Quản Lý', amount: 15000, date: '2025-07-30T22:30:00' },
+    // { usedBy: mockReferralUsages[3], productName: 'Website Tĩnh - Portfolio', amount: 3000, date: '2025-08-15T09:05:00' },
+    // { usedBy: mockReferralUsages[1], productName: 'Fullstack - Blog cá nhân', amount: 6000, date: '2025-08-20T15:30:00' },
+];
 
 // --- BIẾN TOÀN CỤC CHO MODAL ---
-let authModalOverlay, authContainer, modalAnimation, openModal;
+let authModalOverlay, authContainer, modalAnimation, openModal, animatedText;
 
 // --- CẤU HÌNH API ---
 // ***** LƯU Ý: Đổi lại API_BASE_URL thành endpoint server của bạn khi deploy *****
@@ -8,21 +74,11 @@ const API_BASE_URL = '/api';
 let currentUser = null;
 
 // --- HÀM TRỢ GIÚP API ---
-/**
- * Hàm đọc giá trị của một cookie cụ thể theo tên
- * @param {string} name - Tên của cookie cần lấy giá trị (ví dụ: 'accessToken').
- * @returns {string|null} - Giá trị của cookie hoặc null nếu không tìm thấy.
- */
-function getCookie(name) {
-    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-    if (match) {
-        return match[2];
-    }
-    return null;
-}
+// --- SỬA ĐỔI: Xóa hàm getCookie không cần thiết và sửa lại hàm apiRequest ---
 async function apiRequest(endpoint, method = 'GET', body = null, token = null) {
     const headers = {};
-    const authToken = token || getCookie('accessToken');
+    // Sửa ở đây: Lấy token từ localStorage thay vì cookie
+    const authToken = token || localStorage.getItem('accessToken');
     if (authToken) {
         headers['Authorization'] = `Bearer ${authToken}`;
     }
@@ -128,12 +184,12 @@ async function handleOAuthCallback() {
                 if (closeModalBtn) closeModalBtn.click();
             } else {
                 const message = "Tài khoản Google này chưa tồn tại. Vui lòng đăng ký.";
-                if (openModal) openModal(false, message);
+                if (openModal) openModal(true, message, false); 
             }
         } else if (authAction === 'register') {
             if (isExist) {
                 const message = "Tài khoản Google này đã tồn tại. Vui lòng đăng nhập.";
-                if (openModal) openModal(false, message);
+                if (openModal) openModal(false, message, false);
             } else {
                 await fetchAndDisplayUserProfile();
                 if (closeModalBtn) closeModalBtn.click();
@@ -735,7 +791,19 @@ function initializeHeader() {
         };
 
         if (authContainer) {
-            const animatedText = new SplitType('.auth-container h1, .auth-container p', { types: 'lines, chars' });
+            const style = document.createElement('style');
+            style.id = 'no-transition-style';
+            if (!document.getElementById(style.id)) {
+                style.innerHTML = `
+                    .no-transition, .no-transition * {
+                        transition: none !important;
+                        animation: none !important;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+
+            animatedText = new SplitType('.auth-container h1, .auth-container p', { types: 'lines, chars' });
             modalAnimation = gsap.timeline({
                 paused: true,
                 onReverseComplete: () => {
@@ -749,16 +817,33 @@ function initializeHeader() {
                 .from(animatedText.chars, { yPercent: 115, stagger: 0.02, duration: 0.6, ease: "power2.out" }, "-=0.3")
                 .from('.form-container input, .auth-button', { opacity: 0, y: 20, stagger: 0.02, duration: 0.4, ease: "power2.out" }, "-=0.5");
             
-            openModal = (showRegister, message = '') => {
+            openModal = (showRegister, message = '', useAnimation = true) => {
                 document.querySelectorAll('.auth-notification').forEach(el => {
                     el.textContent = '';
                     el.style.visibility = 'hidden';
                 });
 
-                authContainer.classList.toggle('right-panel-active', showRegister);
                 authModalOverlay.classList.add('visible');
 
-                modalAnimation.restart();
+                if (useAnimation) {
+                    authContainer.classList.remove('no-transition');
+                    authContainer.classList.toggle('right-panel-active', showRegister);
+                    modalAnimation.restart();
+                } else {
+                    authContainer.classList.add('no-transition');
+                    authContainer.classList.toggle('right-panel-active', showRegister);
+                    
+                    gsap.set(authContainer, { y: 0, opacity: 1 });
+                    gsap.set('.auth-container h1, .auth-container p', { visibility: 'visible' });
+                    if (animatedText) {
+                         gsap.set(animatedText.chars, { yPercent: 0 });
+                    }
+                    gsap.set('.form-container input, .auth-button', { opacity: 1, y: 0 });
+                    
+                    setTimeout(() => {
+                        authContainer.classList.remove('no-transition');
+                    }, 50);
+                }
 
                 if (message) {
                     const targetId = showRegister ? '#auth-notification-signup' : '#auth-notification-signin';
@@ -1568,4 +1653,3 @@ function initializeHeader() {
     handleOAuthCallback();
     checkLoginStatus();
 }
-
