@@ -195,16 +195,11 @@ async function handleOAuthCallback() {
                 if (closeModalBtn) closeModalBtn.click();
             } else {
                 const message = "Tài khoản Google này chưa tồn tại. Vui lòng đăng ký.";
-                if (openModal) openModal(true, message, false); // SỬA ĐỔI: Hiển thị panel đăng ký, không có animation
+                if (openModal) openModal(true, message, false); 
             }
-        } else if (authAction === 'register') {
-            if (isExist) {
-                const message = "Tài khoản Google này đã tồn tại. Vui lòng đăng nhập.";
-                if (openModal) openModal(false, message, false); // SỬA ĐỔI: Hiển thị panel đăng nhập, không có animation
-            } else {
+        } else if (authAction === 'register') {           
                 await fetchAndDisplayUserProfile();
                 if (closeModalBtn) closeModalBtn.click();
-            }
         }
     } catch (error) {
         console.error('Lỗi xử lý callback OAuth:', error);
@@ -260,19 +255,6 @@ async function handleLogout() {
     }
 }
 
-async function fetchAndDisplayNotifications() {
-    try {
-        // Giả định endpoint lấy thông báo của bạn là '/users/me/notifications'
-        // Vui lòng thay đổi nếu cần thiết.
-        const response = await apiRequest('/users/me/notifications'); 
-        const notifications = response.data || []; // Lấy dữ liệu thật, nếu không có thì dùng mảng rỗng
-        updateNotificationUI(notifications);
-    } catch (error) {
-        console.error("Lỗi khi tải thông báo:", error);
-        updateNotificationUI([]); // Hiển thị danh sách trống nếu có lỗi
-    }
-}
-
 
 // --- CÁC HÀM CẬP NHẬT GIAO DIỆN ---
 
@@ -292,7 +274,7 @@ function showLoggedInState(user) {
         profileContainer.style.display = 'block';
         notificationContainer.style.display = 'block';
         
-        fetchAndDisplayNotifications();
+        updateNotificationUI(mockNotifications);
 
         const panelUsername = document.querySelector('.panel-username');
         const panelAvatar = document.querySelector('.panel-avatar');
