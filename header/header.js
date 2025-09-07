@@ -163,7 +163,7 @@ async function fetchAndDisplayUserProfile() {
 
     } catch (error) {
         console.error("Phiên đăng nhập không hợp lệ hoặc đã hết hạn.", error)
-        handleLogout();
+        // handleLogout();
     }
 }
 
