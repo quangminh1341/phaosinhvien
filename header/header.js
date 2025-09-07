@@ -1333,52 +1333,59 @@ function initializeHeader() {
         }
 
         const setupImagePreviews = (inputId, previewContainerId) => {
-            const imageInput = document.getElementById(inputId);
-            const previewContainer = document.getElementById(previewContainerId);
+        const imageInput = document.getElementById(inputId);
+        const previewContainer = document.getElementById(previewContainerId);
 
-            if (imageInput && previewContainer) {
-                imageInput.addEventListener('change', (event) => {
-                    previewContainer.innerHTML = '';
-                    const files = Array.from(event.target.files).filter(file => file.name.toLowerCase().endsWith('.webp'));
-                    
-                    console.log('Các tệp đã được lọc (chỉ .webp):', files);
-                    
-                    if(files.length === 0) return;
+        if (imageInput && previewContainer) {
+            imageInput.addEventListener('change', (event) => {
+                previewContainer.innerHTML = '';
 
-                    files.sort((a, b) => {
-                        const nameA = a.name.split('.')[0];
-                        const nameB = b.name.split('.')[0];
-                        if (nameA === '1') return -1;
-                        if (nameB === '1') return 1;
-                        return a.name.localeCompare(b.name);
-                    });
+                // Lấy danh sách tệp và lọc ngay lập tức
+                const files = Array.from(event.target.files)
+                                .filter(file => file.name.toLowerCase().endsWith('.webp'));
 
-                    files.forEach(file => {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            const isMain = file.name.split('.')[0] === '1';
-                            const previewItem = document.createElement('div');
-                            previewItem.classList.add('preview-item');
-                            if (isMain) {
-                                previewItem.classList.add('main-image');
-                            }
-                            
-                            const img = document.createElement('img');
-                            img.src = e.target.result;
+                if (files.length === 0) {
+                    // Bạn có thể thêm một thông báo ở đây nếu muốn
+                    // previewContainer.innerHTML = '<p>Không tìm thấy file .webp nào.</p>';
+                    return;
+                }
 
-                            const caption = document.createElement('div');
-                            caption.classList.add('caption');
-                            caption.textContent = isMain ? 'Ảnh chính' : 'Ảnh phụ';
-
-                            previewItem.appendChild(img);
-                            previewItem.appendChild(caption);
-                            previewContainer.appendChild(previewItem);
-                        };
-                        reader.readAsDataURL(file);
-                    });
+                // Sắp xếp các tệp đã lọc
+                files.sort((a, b) => {
+                    const nameA = a.name.split('.')[0];
+                    const nameB = b.name.split('.')[0];
+                    if (nameA === '1') return -1;
+                    if (nameB === '1') return 1;
+                    return a.name.localeCompare(b.name, undefined, { numeric: true });
                 });
-            }
-        };
+
+                // Hiển thị các tệp đã được lọc và sắp xếp
+                files.forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const isMain = file.name.split('.')[0] === '1';
+                        const previewItem = document.createElement('div');
+                        previewItem.classList.add('preview-item');
+                        if (isMain) {
+                            previewItem.classList.add('main-image');
+                        }
+                        
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+
+                        const caption = document.createElement('div');
+                        caption.classList.add('caption');
+                        caption.textContent = isMain ? 'Ảnh chính' : 'Ảnh phụ';
+
+                        previewItem.appendChild(img);
+                        previewItem.appendChild(caption);
+                        previewContainer.appendChild(previewItem);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            });
+        }
+    };
 
         setupImagePreviews('add-images', 'add-image-previews');
         setupImagePreviews('edit-images', 'edit-image-previews');
