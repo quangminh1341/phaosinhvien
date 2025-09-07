@@ -57,18 +57,67 @@ function initializePage() {
 
 // --- KHỞI TẠO KHI TẢI TRANG ---
 document.addEventListener("DOMContentLoaded", async () => {
-    try {
-        const response = await fetch('data.json');
-        if (!response.ok) throw new Error('Network response was not ok');
-        projectData = await response.json();
-        
-        createHomepageAnimations();
-        initializeServicePanel();
-    } catch (error) {
-        console.error('Lỗi khi tải dữ liệu dự án:', error);
-    }
+    createHomepageAnimations();
+    await initializeServicePanel();
 });
 
+// --- CÁC HÀM XỬ LÝ DỮ LIỆU & API ---
+
+/**
+ * @description Nhóm một mảng sản phẩm phẳng thành một đối tượng được phân loại theo danh mục.
+ * @param {Array} products - Mảng sản phẩm từ API.
+ * @returns {Object} - Đối tượng sản phẩm đã được nhóm.
+ */
+function groupProductsByCategory(products) {
+    return products.reduce((acc, product) => {
+        const category = product.category || 'Uncategorized';
+        if (!acc[category]) {
+            acc[category] = [];
+        }
+        acc[category].push(product);
+        return acc;
+    }, {});
+}
+
+/**
+ * @description Tải tất cả sản phẩm từ API, nhóm chúng và khởi tạo giao diện.
+ */
+async function loadAllProducts() {
+    try {
+        const response = await apiRequest('/products'); // GET request to /products
+        
+        console.log("✅ [LOG] Phản hồi từ API /products (tất cả sản phẩm):", response);
+
+        if (!response || !response.data) throw new Error('Cấu trúc phản hồi API không hợp lệ');
+
+        projectData = groupProductsByCategory(response.data);
+
+        const projectNames = Object.keys(projectData);
+        if (projectNames.length === 0) {
+            projectSelect.innerHTML = '<option>Không tìm thấy dự án</option>';
+            gallery.innerHTML = "<p>Không có sản phẩm nào được tìm thấy.</p>";
+            return;
+        }
+
+        const sortedProjectNames = [...projectNames].sort((a, b) => {
+            if (a === "Website HTML") return -1;
+            if (b === "Website HTML") return 1;
+            return a.localeCompare(b);
+        });
+        projectSelect.innerHTML = sortedProjectNames.map(name => `<option value="${name}">${name}</option>`).join('');
+
+        const defaultProject = "Website HTML";
+        currentProject = projectNames.includes(defaultProject) ? defaultProject : sortedProjectNames[0];
+        projectSelect.value = currentProject;
+
+        renderGallery(projectData[currentProject]);
+    } catch (error) {
+        console.error('Lỗi khi tải dữ liệu sản phẩm từ API:', error);
+        gallery.innerHTML = "<p>Đã xảy ra lỗi khi tải sản phẩm. Vui lòng thử lại sau.</p>";
+    }
+}
+
+// --- CÁC HÀM CÀI ĐẶT & GIAO DIỆN ---
 
 function updateActiveLink(activeLink) {
     const siteNav = document.querySelector('.site-nav');
@@ -80,8 +129,6 @@ function updateActiveLink(activeLink) {
     }
 }
 
-
-// --- THIẾT LẬP ĐIỀU HƯỚNG ---
 function setupNavigation() {
     const container = document.querySelector("#horizontal-container");
     const panels = gsap.utils.toArray("#horizontal-container > .panel");
@@ -102,6 +149,21 @@ function setupNavigation() {
             const targetSelector = link.getAttribute("data-target");
             if (!targetSelector) return;
             
+            // --- START MODIFICATION ---
+            // Logic để kiểm soát hiển thị của nút "Xem" dựa trên panel đang hoạt động
+            if (targetSelector === '#dichvu-panel') {
+                // Nếu điều hướng ĐẾN panel dịch vụ, chỉ hiển thị nút nếu đang ở chế độ xem chi tiết.
+                if (isDetailViewActive) {
+                    gsap.to(backButton, { autoAlpha: 1, scale: 1, duration: 0.3, overwrite: 'auto' });
+                } else {
+                     gsap.to(backButton, { autoAlpha: 0, scale: 0.8, duration: 0.3, overwrite: 'auto' });
+                }
+            } else {
+                // Nếu điều hướng RA KHỎI panel dịch vụ, luôn ẩn nút.
+                gsap.to(backButton, { autoAlpha: 0, scale: 0.8, duration: 0.3, overwrite: 'auto' });
+            }
+            // --- END MODIFICATION ---
+
             const targetPanel = document.querySelector(targetSelector);
             if (targetPanel) {
                 if (targetPanel.id === 'trangchu-panel') {
@@ -119,7 +181,6 @@ function setupNavigation() {
         });
     });
 }
-
 
 function createHomepageAnimations() {
     homeTl = gsap.timeline({ paused: true });
@@ -151,36 +212,28 @@ function createHomepageAnimations() {
     panel2Tl.fromTo('.img-6', { rotation: 90, x: '100vw', y: '-50vh', opacity: 0 }, { rotation: img2Positions.img6.rotation, x: img2Positions.img6.x, y: img2Positions.img6.y, opacity: 1 }, "<0.2");
     panel2Tl.fromTo('.home-text-content-2 > *', { opacity: 0, y: 20 }, { opacity: 1, y: 0, stagger: 0.2, duration: 0.8 }, "-=0.8");
 }
-function initializeServicePanel() {
-    const projectNames = Object.keys(projectData);
-    if (projectNames.length === 0) return;
-    const sortedProjectNames = [...projectNames].sort((a, b) => {
-        if (a === "Website HTML") return -1;
-        if (b === "Website HTML") return 1;
-        return a.localeCompare(b);
-    });
-    projectSelect.innerHTML = sortedProjectNames.map(name => `<option value="${name}">${name}</option>`).join('');
-    const defaultProject = "Website HTML";
-    currentProject = projectNames.includes(defaultProject) ? defaultProject : sortedProjectNames[0];
-    projectSelect.value = currentProject;
+
+async function initializeServicePanel() {
     gsap.set(backButton, { autoAlpha: 0, scale: 0.8, pointerEvents: 'none' });
     gsap.set(productDetailContainer, { opacity: 0, pointerEvents: 'none' });
-    renderGallery(projectData[currentProject]);
+
+    await loadAllProducts();
+
     projectSelect.addEventListener('change', handleProjectChange);
     gallery.addEventListener('click', handleThumbnailClick);
     backButton.addEventListener('click', handleBackClick);
     closeServiceListBtn.addEventListener('click', handleCloseListClick);
     orderButton.addEventListener('click', () => {
         if (currentUser) {
-                    openOrderModal();
-                } else {
-                    if (typeof openModal === 'function') {
-                        openModal(false, 'Vui lòng đăng nhập để đặt hàng.');
-                    } else {
-                        alert('Vui lòng đăng nhập để đặt hàng.');
-                    }
-                }
-            });
+            openOrderModal();
+        } else {
+            if (typeof openModal === 'function') {
+                openModal(false, 'Vui lòng đăng nhập để đặt hàng.');
+            } else {
+                alert('Vui lòng đăng nhập để đặt hàng.');
+            }
+        }
+    });
     closeModalBtn.addEventListener('click', closeOrderModal);
     orderModal.addEventListener('click', (e) => { if (e.target === orderModal) closeOrderModal(); });
     orderForm.addEventListener('submit', handleOrderSubmit);
@@ -194,20 +247,21 @@ function initializeServicePanel() {
     prevZoomBtn.addEventListener('click', () => updateZoomedImage(currentZoomIndex - 1));
     nextZoomBtn.addEventListener('click', () => updateZoomedImage(currentZoomIndex + 1));
 }
+
 function renderGallery(items) {
-    if (!items) {
+    if (!items || items.length === 0) {
         gallery.innerHTML = "<p>Không có mẫu nào cho danh mục này.</p>";
         return;
     }
-    gallery.innerHTML = items.map((item, index) => {
+    gallery.innerHTML = items.map(item => {
         let priceDisplay = '';
         if (item.cost) {
-            const formattedCost = isNaN(item.cost) ? item.cost : `${Number(item.cost).toLocaleString('vi-VN')}đ`;
+            const formattedCost = `${Number(item.cost).toLocaleString('vi-VN')}đ`;
             priceDisplay = `<div class="thumb-price">${formattedCost.replace('đ','k')}</div>`;
         }
         return `
-            <div class="thumbnail-item" data-index="${index}">
-                <img src="${item.imageUrl}" alt="${item.title}" loading="lazy">
+            <div class="thumbnail-item" data-id="${item.id}">
+                <img src="${item.cover_url}" alt="${item.title}" loading="lazy">
                 ${priceDisplay}
                 <div class="thumbnail-footer">
                     <span class="thumb-title">${item.title}</span>
@@ -217,13 +271,14 @@ function renderGallery(items) {
     }).join('');
     galleryWrapper.scrollTop = 0;
 }
+
 function populateProductDetail(data) {
     currentProductData = data;
     productTitle.textContent = data.title;
     discountToggle.checked = false;
-    if (isNaN(data.cost)) {
+    if (isNaN(data.cost) || Number(data.cost) === 0) {
         productPrice.style.display = 'block';
-        productPrice.textContent = data.cost;
+        productPrice.textContent = data.cost === 0 ? "Liên hệ" : data.cost;
         discountContainer.style.display = 'none';
     } else {
         productPrice.style.display = 'block';
@@ -232,21 +287,23 @@ function populateProductDetail(data) {
     }
     productAboutContent.textContent = data.about;
     if (liveDemoBtn) {
-        liveDemoBtn.href = data.link || '#';
-        liveDemoBtn.style.display = data.link ? 'flex' : 'none';
+        liveDemoBtn.href = data.demo_link || '#';
+        liveDemoBtn.style.display = data.demo_link ? 'flex' : 'none';
     }
     supportLink.setAttribute('data-target', '#lienhe-panel');
+    const specs = data.parameter || '';
     productSpecsList.innerHTML = '';
-    if (data.product) {
-        data.product.split(',').forEach(spec => {
+    if (specs) {
+        specs.split(',').forEach(spec => {
             const li = document.createElement('li');
             li.textContent = spec.trim();
             productSpecsList.appendChild(li);
         });
     }
+    const features = data.feature || '';
     productFeaturesList.innerHTML = '';
-    if (data.features) {
-        data.features.split(',').forEach(feature => {
+    if (features) {
+        features.split(',').forEach(feature => {
             const li = document.createElement('li');
             li.textContent = feature.trim();
             productFeaturesList.appendChild(li);
@@ -272,17 +329,20 @@ function populateProductDetail(data) {
             galleryMain.appendChild(mainImageItem);
         });
     } else {
-        galleryMain.innerHTML = `<img src="placeholder.jpg" alt="Ảnh chính sản phẩm">`;
+        galleryMain.innerHTML = `<img src="images/logo.png" alt="Ảnh chính sản phẩm">`;
     }
     const overlayButtons = document.createElement('div');
     overlayButtons.className = 'image-overlay-buttons';
     overlayButtons.innerHTML = `
         <button class="zoom-btn"><i class="fas fa-search-plus"></i></button>
-        <a href="${data.link || '#'}" target="_blank" class="live-demo-btn" style="display: ${data.link ? 'flex' : 'none'};">Live Demo</a>
+        <a href="${data.demo_link || '#'}" target="_blank" class="live-demo-btn" style="display: ${data.demo_link ? 'flex' : 'none'};">Live Demo</a>
     `;
     galleryMain.appendChild(overlayButtons);
     productDetailContainer.scrollTop = 0;
 }
+
+// --- CÁC HÀM XỬ LÝ SỰ KIỆN ---
+
 function handleDiscountToggle(e) {
     const isChecked = e.target.checked;
     const originalCost = Number(currentProductData.cost);
@@ -294,27 +354,66 @@ function handleDiscountToggle(e) {
         productPrice.innerHTML = `${originalCost.toLocaleString('vi-VN')}.000 VNĐ`;
     }
 }
+
 function handleProjectChange(e) {
     currentProject = e.target.value;
     renderGallery(projectData[currentProject]);
 }
-function handleThumbnailClick(e) {
+
+async function handleThumbnailClick(e) {
     const clickedItem = e.target.closest('.thumbnail-item');
     if (!clickedItem || isAnimating) return;
+
+    const productId = clickedItem.dataset.id;
+    if (!productId) return;
+
     closeServiceListBtn.classList.remove('visible');
     isAnimating = true;
     isDetailViewActive = true;
-    const projectIndex = clickedItem.dataset.index;
-    const selectedProjectData = projectData[currentProject][projectIndex];
-    populateProductDetail(selectedProjectData);
-    const tl = gsap.timeline({ onComplete: () => { isAnimating = false; } });
-    tl.to(serviceListContainer, { xPercent: -50, opacity: 0, duration: 0.4, ease: 'power2.in' })
-      .set(serviceListContainer, { pointerEvents: 'none' })
-      .set(productDetailContainer, { pointerEvents: 'auto' })
-      .set(backButton, { pointerEvents: 'auto' })
-      .to(productDetailContainer, { autoAlpha: 1, duration: 0.4 }, "-=0.2")
-      .to(backButton, { autoAlpha: 1, scale: 1, duration: 0.3 }, "<");
+    
+    try {
+        const [productDetailsResponse, productImagesResponse] = await Promise.all([
+            apiRequest(`/products/${productId}`),
+            apiRequest(`/products/${productId}/images`)
+        ]);
+
+        console.log(`✅ [LOG] Phản hồi từ API /products/${productId}/images:`, productImagesResponse);
+
+        if (!productDetailsResponse || !productDetailsResponse.data) {
+             throw new Error('Không thể tải chi tiết sản phẩm.');
+        }
+
+        const productDetails = productDetailsResponse.data;
+        // SỬA LỖI: Đổi `img.url` thành `img.image_url` để khớp với API
+        const imageUrls = productImagesResponse.data ? productImagesResponse.data.map(img => img.image_url) : [];
+        
+        console.log("✅ [LOG] Các URL ảnh đã được xử lý cho thư viện:", imageUrls);
+        
+        const combinedProductData = {
+            ...productDetails,
+            imageGallery: imageUrls
+        };
+
+        console.log("✅ [LOG] Dữ liệu cuối cùng được đưa vào populateProductDetail:", combinedProductData);
+        
+        populateProductDetail(combinedProductData);
+
+        const tl = gsap.timeline({ onComplete: () => { isAnimating = false; } });
+        tl.to(serviceListContainer, { xPercent: -50, opacity: 0, duration: 0.4, ease: 'power2.in' })
+          .set(serviceListContainer, { pointerEvents: 'none' })
+          .set(productDetailContainer, { pointerEvents: 'auto' })
+          .set(backButton, { pointerEvents: 'auto' })
+          .to(productDetailContainer, { autoAlpha: 1, duration: 0.4 }, "-=0.2")
+          .to(backButton, { autoAlpha: 1, scale: 1, duration: 0.3 }, "<");
+
+    } catch (error) {
+        console.error(`Lỗi khi tải chi tiết sản phẩm ID ${productId}:`, error);
+        alert('Không thể tải chi tiết sản phẩm. Vui lòng thử lại.');
+        isAnimating = false;
+        isDetailViewActive = false;
+    }
 }
+
 function handleBackClick() {
     if (isAnimating) return;
     isAnimating = true;
@@ -327,6 +426,7 @@ function handleBackClick() {
       .to(serviceListContainer, { xPercent: 0, opacity: 1, duration: 0.4, ease: 'power2.out' });
     closeServiceListBtn.classList.add('visible');
 }
+
 function handleCloseListClick() {
     if (isAnimating) return;
     isAnimating = true;
@@ -340,6 +440,7 @@ function handleCloseListClick() {
       .to(productDetailContainer, { autoAlpha: 1, duration: 0.4 }, "-=0.2")
       .to(backButton, { autoAlpha: 1, scale: 1, duration: 0.3 }, "<");
 }
+
 function handleGalleryClick(e) {
     const clickedThumb = e.target.closest('.gallery-thumb-item');
     if (!clickedThumb) return;
@@ -420,20 +521,16 @@ async function handleOrderSubmit(e) {
     const contactInput = document.getElementById('order-contact').value.trim();
     const phoneInput = document.getElementById('order-phone').value.trim();
 
-    // --- VALIDATION START ---
-    // 1. Validate contact info: if it's an email, it must be a @gmail.com address
     if (contactInput.includes('@') && !contactInput.toLowerCase().endsWith('@gmail.com')) {
         alert("Lỗi: Nếu bạn nhập email, vui lòng chỉ sử dụng địa chỉ @gmail.com.");
-        return; // Stop the function
+        return;
     }
 
-    // 2. Validate phone number: must start with 0 and be exactly 10 digits
     const phoneRegex = /^0\d{9}$/;
     if (!phoneRegex.test(phoneInput)) {
         alert("Lỗi: Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại bắt đầu bằng 0 và có đúng 10 chữ số.");
-        return; // Stop the function
+        return;
     }
-    // --- VALIDATION END ---
 
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
@@ -448,6 +545,7 @@ async function handleOrderSubmit(e) {
         alert("Đã có lỗi xảy ra. Vui lòng thử lại sau.");
     }
 }
+
 async function sendDiscordWebhook(data) {
     const embed = {
         title: "📢 Yêu Cầu Đặt Hàng Mới",
