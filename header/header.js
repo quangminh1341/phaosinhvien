@@ -214,24 +214,32 @@ async function handleOAuthCallback() {
     }
 }
 
+/**
+ * @description **LOGIC MỚI**: Lấy hồ sơ người dùng và quyết định trạng thái đăng nhập.
+ * @returns {Promise<boolean>} - Trả về true nếu đăng nhập thành công (có token và hồ sơ đầy đủ), ngược lại trả về false.
+ */
 async function fetchAndDisplayUserProfile() {
     try {
         const response = await apiRequest('/users/me/profile');
         const userData = response.data;
+        
+        // **THAY ĐỔI**: Kiểm tra xem hồ sơ đã có tên đầy đủ và số điện thoại chưa.
         if (!userData || !userData.full_name || !userData.phone_number) {
-            
-            console.warn("Hồ sơ người dùng chưa hoàn chỉnh. Yêu cầu cập nhật.");
-            // openModal(true, 'Để tiếp tục, vui lòng hoàn tất thông tin hồ sơ của bạn.');
-            
-            return;
+            console.warn("Hồ sơ người dùng chưa hoàn chỉnh (thiếu tên hoặc SĐT). Yêu cầu cập nhật.");
+            // Không hiển thị trạng thái đăng nhập và trả về false.
+            return false;
         }
         
+        // Nếu hồ sơ đầy đủ, cập nhật UI và trả về true.
         currentUser = userData;
         showLoggedInState(currentUser);
+        return true;
 
     } catch (error) {
         console.error("Phiên đăng nhập không hợp lệ hoặc đã hết hạn.", error)
         handleLogout();
+        // Có lỗi (token không hợp lệ), trả về false.
+        return false;
     }
 }
 
