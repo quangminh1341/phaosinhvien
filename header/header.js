@@ -222,6 +222,7 @@ async function fetchAndDisplayUserProfile() {
     try {
         const response = await apiRequest('/users/me/profile');
         const userData = response.data;
+        console.log('Dữ liệu người dùng nhận được từ API:', userData);
         
         // **THAY ĐỔI**: Kiểm tra xem hồ sơ đã có tên đầy đủ và số điện thoại chưa.
         if (!userData || !userData.full_name || !userData.phone_number) {
@@ -238,7 +239,6 @@ async function fetchAndDisplayUserProfile() {
     } catch (error) {
         console.error("Phiên đăng nhập không hợp lệ hoặc đã hết hạn.", error)
         handleLogout();
-        // Có lỗi (token không hợp lệ), trả về false.
         return false;
     }
 }
@@ -257,6 +257,19 @@ async function handleLogout() {
         sessionStorage.clear();
         currentUser = null;
         showLoggedOutState();
+    }
+}
+
+async function fetchAndDisplayNotifications() {
+    try {
+        // Giả định endpoint lấy thông báo của bạn là '/users/me/notifications'
+        // Vui lòng thay đổi nếu cần thiết.
+        const response = await apiRequest('/users/me/notifications'); 
+        const notifications = response.data || []; // Lấy dữ liệu thật, nếu không có thì dùng mảng rỗng
+        updateNotificationUI(notifications);
+    } catch (error) {
+        console.error("Lỗi khi tải thông báo:", error);
+        updateNotificationUI([]); // Hiển thị danh sách trống nếu có lỗi
     }
 }
 
@@ -279,7 +292,7 @@ function showLoggedInState(user) {
         profileContainer.style.display = 'block';
         notificationContainer.style.display = 'block';
         
-        updateNotificationUI(mockNotifications);
+        fetchAndDisplayNotifications();
 
         const panelUsername = document.querySelector('.panel-username');
         const panelAvatar = document.querySelector('.panel-avatar');
