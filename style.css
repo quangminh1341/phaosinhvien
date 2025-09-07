@@ -1992,7 +1992,6 @@ body.light-mode .referral-date {
 
 /* --- CSS MỚI CHO DASHBOARD IMAGE PREVIEWS --- */
 .image-previews {
-    /* Đảm bảo flex-wrap hoạt động tốt với phần tử mới */
     display: flex;
     flex-wrap: wrap;
     gap: 15px;
@@ -2000,7 +1999,6 @@ body.light-mode .referral-date {
 
 .preview-item {
     position: relative;
-    /* Thêm transition cho hiệu ứng hover */
     transition: transform 0.2s ease;
 }
 
@@ -2014,7 +2012,7 @@ body.light-mode .referral-date {
     right: -5px;
     width: 24px;
     height: 24px;
-    background-color: rgba(229, 57, 53, 0.9); /* Màu đỏ */
+    background-color: rgba(229, 57, 53, 0.9);
     color: white;
     border: 2px solid var(--bg-primary);
     border-radius: 50%;
@@ -2044,17 +2042,15 @@ body.light-mode .referral-date {
 
 .add-image-placeholder {
     width: 120px;
-    height: auto; /* Chiều cao tự động để vừa với nội dung */
-    min-height: 90px; /* Giữ chiều cao tối thiểu */
+    height: 90px;
     border: 2px dashed var(--border-color);
     border-radius: 8px;
     display: flex;
-    flex-direction: column; /* Sắp xếp các mục theo chiều dọc */
     justify-content: center;
     align-items: center;
-    cursor: default; /* Con trỏ mặc định vì nút bấm mới là hành động chính */
-    padding: 10px 5px;
-    box-sizing: border-box;
+    cursor: pointer;
+    font-size: 3rem;
+    color: var(--border-color);
     transition: all 0.2s ease;
     position: relative;
 }
@@ -2066,7 +2062,7 @@ body.light-mode .referral-date {
 }
 
 .add-image-placeholder input[type="file"] {
-    display: none; /* Ẩn input file thực tế */
+    display: none;
 }
 
 /* --- CSS MỚI CHO DASHBOARD IMAGE PREVIEWS --- */
