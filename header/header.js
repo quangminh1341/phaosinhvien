@@ -1372,20 +1372,66 @@ function initializeHeader() {
             });
 
             const addPlaceholder = document.createElement('div');
-            addPlaceholder.className = 'add-image-placeholder';
-            addPlaceholder.innerHTML = `+<input type="file" accept="image/*" multiple />`;
+                addPlaceholder.className = 'add-image-placeholder';
 
-            addPlaceholder.onclick = () => addPlaceholder.querySelector('input').click();
+                // Tạo một hàm xử lý chung cho cả hai loại input (chọn tệp và chọn thư mục)
+                const handleFilesSelected = (event) => {
+                    const newFiles = Array.from(event.target.files);
+                    const existingFileNames = managedFiles[fileStoreKey].map(f => f.name);
 
-            addPlaceholder.querySelector('input').onchange = (event) => {
-                const newFiles = Array.from(event.target.files);
-                const existingFileNames = managedFiles[fileStoreKey].map(f => f.name);
-                const uniqueNewFiles = newFiles.filter(f => !existingFileNames.includes(f.name));
+                    // Lọc ra các file ảnh mới, không trùng lặp
+                    const uniqueNewImageFiles = newFiles.filter(f => 
+                        f.type.startsWith('image/') && !existingFileNames.includes(f.name)
+                    );
 
-                managedFiles[fileStoreKey].push(...uniqueNewFiles);
-                renderImagePreviews(fileStoreKey);
-            };
-            previewContainer.appendChild(addPlaceholder);
+                    if (uniqueNewImageFiles.length > 0) {
+                        managedFiles[fileStoreKey].push(...uniqueNewImageFiles);
+                        renderImagePreviews(fileStoreKey); // Render lại toàn bộ preview
+                    }
+                    // Reset giá trị của input để người dùng có thể chọn lại cùng thư mục/tệp sau khi đã xóa
+                    event.target.value = '';
+                };
+
+                // Tạo input ẩn để CHỌN TỆP
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = 'image/*';
+                fileInput.multiple = true;
+                fileInput.style.display = 'none';
+                fileInput.onchange = handleFilesSelected;
+
+                // Tạo input ẩn để CHỌN THƯ MỤC
+                const folderInput = document.createElement('input');
+                folderInput.type = 'file';
+                folderInput.webkitdirectory = true;
+                folderInput.style.display = 'none';
+                folderInput.onchange = handleFilesSelected;
+
+                // Tạo các thành phần giao diện người dùng có thể thấy được
+                const addIcon = document.createElement('div');
+                addIcon.className = 'add-icon';
+                addIcon.textContent = '+';
+                addIcon.onclick = () => fileInput.click(); // Bấm vào dấu '+' sẽ mặc định là chọn tệp
+
+                const buttonsContainer = document.createElement('div');
+                buttonsContainer.className = 'add-buttons-container';
+
+                const chooseFilesBtn = document.createElement('button');
+                chooseFilesBtn.type = 'button';
+                chooseFilesBtn.className = 'add-image-btn';
+                chooseFilesBtn.textContent = 'Chọn Tệp';
+                chooseFilesBtn.onclick = () => fileInput.click();
+
+                const chooseFolderBtn = document.createElement('button');
+                chooseFolderBtn.type = 'button';
+                chooseFolderBtn.className = 'add-image-btn';
+                chooseFolderBtn.textContent = 'Chọn Thư mục';
+                chooseFolderBtn.onclick = () => folderInput.click();
+
+                // Gắn các thành phần lại với nhau
+                buttonsContainer.append(chooseFilesBtn, chooseFolderBtn);
+                addPlaceholder.append(addIcon, buttonsContainer, fileInput, folderInput);
+                previewContainer.appendChild(addPlaceholder);
         };
 
         /**

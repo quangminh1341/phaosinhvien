@@ -2044,15 +2044,17 @@ body.light-mode .referral-date {
 
 .add-image-placeholder {
     width: 120px;
-    height: 90px;
+    height: auto; /* Chiều cao tự động để vừa với nội dung */
+    min-height: 90px; /* Giữ chiều cao tối thiểu */
     border: 2px dashed var(--border-color);
     border-radius: 8px;
     display: flex;
+    flex-direction: column; /* Sắp xếp các mục theo chiều dọc */
     justify-content: center;
     align-items: center;
-    cursor: pointer;
-    font-size: 3rem;
-    color: var(--border-color);
+    cursor: default; /* Con trỏ mặc định vì nút bấm mới là hành động chính */
+    padding: 10px 5px;
+    box-sizing: border-box;
     transition: all 0.2s ease;
     position: relative;
 }
@@ -2136,10 +2138,51 @@ body.light-mode .referral-date {
 
 .add-image-placeholder:hover {
     border-color: var(--accent-primary);
-    color: var(--accent-primary);
     background-color: var(--fomt-box-color);
 }
 
+.add-image-placeholder .add-icon {
+    font-size: 2rem; /* Thu nhỏ icon '+' một chút */
+    color: var(--border-color);
+    line-height: 1;
+    margin-bottom: 5px;
+    transition: color 0.2s ease;
+    cursor: pointer; /* Icon vẫn có thể bấm để chọn tệp */
+}
+
+.add-image-placeholder:hover .add-icon {
+    color: var(--accent-primary);
+}
+
+.add-image-placeholder .add-buttons-container {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 100%;
+    align-items: center;
+    margin-top: 5px;
+}
+
+.add-image-btn {
+    background: var(--fomt-box-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Montserrat', sans-serif;
+    transition: all 0.2s ease;
+    width: 90%;
+    text-align: center;
+}
+
+.add-image-btn:hover {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: var(--text-on-accent);
+}
+
 .add-image-placeholder input[type="file"] {
-    display: none; /* Ẩn input file thực tế */
+    display: none;
 }
