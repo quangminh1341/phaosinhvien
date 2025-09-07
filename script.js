@@ -42,6 +42,11 @@ const zoomedImage = imageZoomModal.querySelector('img');
 const prevZoomBtn = document.getElementById('prev-zoom-btn');
 const nextZoomBtn = document.getElementById('next-zoom-btn');
 
+// --- START: BIẾN TOÀN CỤC CHO MODAL THÔNG BÁO ---
+let messageModal, messageModalTitle, messageModalText, messageModalActions, confirmBtn, cancelBtn;
+let confirmCallback = null;
+// --- END: BIẾN TOÀN CỤC CHO MODAL THÔNG BÁO ---
+
 
 // --- HÀM KHỞI TẠO CHÍNH ---
 function initializePage() {
@@ -50,6 +55,7 @@ function initializePage() {
     });
     initializeHeader();
     setupNavigation();
+    initializeMessageModal(); // Thêm hàm khởi tạo modal
     const initialLink = document.querySelector('.site-nav a[data-target="#trangchu-panel"]');
     updateActiveLink(initialLink);
 }
@@ -60,6 +66,64 @@ document.addEventListener("DOMContentLoaded", async () => {
     createHomepageAnimations();
     await initializeServicePanel();
 });
+
+
+// --- START: KHỞI TẠO VÀ HIỂN THỊ MODAL THÔNG BÁO ---
+function initializeMessageModal() {
+    messageModal = document.getElementById('message-modal');
+    messageModalTitle = document.getElementById('message-modal-title');
+    messageModalText = document.getElementById('message-modal-text');
+    messageModalActions = document.getElementById('message-modal-actions');
+    confirmBtn = document.getElementById('message-modal-confirm-btn');
+    cancelBtn = document.getElementById('message-modal-cancel-btn');
+
+    const closeModal = () => {
+        messageModal.classList.remove('visible');
+        if (confirmCallback) {
+            confirmCallback = null;
+        }
+    };
+
+    cancelBtn.addEventListener('click', closeModal);
+    confirmBtn.addEventListener('click', () => {
+        if (confirmCallback) {
+            confirmCallback();
+        }
+        closeModal();
+    });
+    messageModal.addEventListener('click', (e) => {
+        if (e.target === messageModal) {
+            closeModal();
+        }
+    });
+}
+
+/**
+ * Hiển thị một modal thông báo tùy chỉnh.
+ * @param {string} text - Nội dung thông báo.
+ * @param {string} [title='Thông báo'] - Tiêu đề của modal.
+ * @param {boolean} [showConfirm=false] - Có hiển thị các nút xác nhận hay không.
+ * @param {function} [callback=null] - Hàm sẽ được gọi khi nhấn nút 'Có'.
+ */
+function showMessage(text, title = 'Thông báo', showConfirm = false, callback = null) {
+    messageModalTitle.textContent = title;
+    messageModalText.textContent = text;
+    confirmCallback = callback;
+
+    if (showConfirm) {
+        messageModalActions.style.display = 'flex';
+        cancelBtn.textContent = 'Không';
+        confirmBtn.style.display = 'inline-block';
+    } else {
+        messageModalActions.style.display = 'flex';
+        cancelBtn.textContent = 'Đóng';
+        confirmBtn.style.display = 'none';
+    }
+
+    messageModal.classList.add('visible');
+}
+// --- END: KHỞI TẠO VÀ HIỂN THỊ MODAL THÔNG BÁO ---
+
 
 // --- CÁC HÀM XỬ LÝ DỮ LIỆU & API ---
 
@@ -224,13 +288,13 @@ async function initializeServicePanel() {
     backButton.addEventListener('click', handleBackClick);
     closeServiceListBtn.addEventListener('click', handleCloseListClick);
     orderButton.addEventListener('click', () => {
-        if (currentUser) {
+        if (window.currentUser) {
             openOrderModal();
         } else {
             if (typeof openModal === 'function') {
                 openModal(false, 'Vui lòng đăng nhập để đặt hàng.');
             } else {
-                alert('Vui lòng đăng nhập để đặt hàng.');
+                showMessage('Vui lòng đăng nhập để đặt hàng.');
             }
         }
     });
@@ -246,6 +310,27 @@ async function initializeServicePanel() {
     });
     prevZoomBtn.addEventListener('click', () => updateZoomedImage(currentZoomIndex - 1));
     nextZoomBtn.addEventListener('click', () => updateZoomedImage(currentZoomIndex + 1));
+    
+    // START: Xử lý menu kebab
+    const kebabBtn = document.querySelector('.kebab-btn');
+    const kebabDropdown = document.querySelector('.kebab-dropdown');
+    const deleteProductBtn = document.getElementById('delete-product-btn-detail');
+
+    if (kebabBtn && kebabDropdown) {
+        kebabBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            kebabDropdown.classList.toggle('active');
+        });
+
+        document.addEventListener('click', () => {
+            kebabDropdown.classList.remove('active');
+        });
+    }
+    
+    if(deleteProductBtn) {
+        deleteProductBtn.addEventListener('click', handleDeleteProduct);
+    }
+    // END: Xử lý menu kebab
 }
 
 function renderGallery(items) {
@@ -343,6 +428,38 @@ function populateProductDetail(data) {
 
 // --- CÁC HÀM XỬ LÝ SỰ KIỆN ---
 
+// START: HÀM XỬ LÝ SỰ KIỆN XÓA
+function handleDeleteProduct(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!currentProductData || !currentProductData.id) {
+        showMessage('Không tìm thấy thông tin sản phẩm để xóa.');
+        return;
+    }
+    
+    showMessage(
+        'Bạn có chắc chắn muốn xóa dự án này không? Hành động này không thể hoàn tác.',
+        'Xác nhận xóa',
+        true,
+        async () => {
+            try {
+                const response = await apiRequest(`/products/${currentProductData.id}`, 'DELETE');
+                if (response && response.message === "Deleted successfully") {
+                    showMessage('Đã xóa sản phẩm thành công!');
+                    handleBackClick();
+                    await loadAllProducts();
+                } else {
+                    throw new Error('Phản hồi từ server không hợp lệ.');
+                }
+            } catch (error) {
+                console.error('Lỗi khi xóa sản phẩm:', error);
+                showMessage(`Đã xảy ra lỗi khi xóa sản phẩm: ${error.message}`);
+            }
+        }
+    );
+}
+// END: HÀM XỬ LÝ SỰ KIỆN XÓA
+
 function handleDiscountToggle(e) {
     const isChecked = e.target.checked;
     const originalCost = Number(currentProductData.cost);
@@ -397,6 +514,15 @@ async function handleThumbnailClick(e) {
         // console.log("✅ [LOG] Dữ liệu cuối cùng được đưa vào populateProductDetail:", combinedProductData);
         
         populateProductDetail(combinedProductData);
+        
+        // START: Hiển thị menu admin nếu người dùng là admin
+        const adminMenu = document.querySelector('.admin-actions-menu');
+        if (window.currentUser && window.currentUser.role === 'admin') {
+            adminMenu.style.display = 'block';
+        } else {
+            adminMenu.style.display = 'none';
+        }
+        // END: Hiển thị menu admin
 
         const tl = gsap.timeline({ onComplete: () => { isAnimating = false; } });
         tl.to(serviceListContainer, { xPercent: -50, opacity: 0, duration: 0.4, ease: 'power2.in' })
@@ -408,7 +534,7 @@ async function handleThumbnailClick(e) {
 
     } catch (error) {
         console.error(`Lỗi khi tải chi tiết sản phẩm ID ${productId}:`, error);
-        alert('Không thể tải chi tiết sản phẩm. Vui lòng thử lại.');
+        showMessage('Không thể tải chi tiết sản phẩm. Vui lòng thử lại.'); // Thay thế alert
         isAnimating = false;
         isDetailViewActive = false;
     }
@@ -522,13 +648,13 @@ async function handleOrderSubmit(e) {
     const phoneInput = document.getElementById('order-phone').value.trim();
 
     if (contactInput.includes('@') && !contactInput.toLowerCase().endsWith('@gmail.com')) {
-        alert("Lỗi: Nếu bạn nhập email, vui lòng chỉ sử dụng địa chỉ @gmail.com.");
+        showMessage("Lỗi: Nếu bạn nhập email, vui lòng chỉ sử dụng địa chỉ @gmail.com.");
         return;
     }
 
     const phoneRegex = /^0\d{9}$/;
     if (!phoneRegex.test(phoneInput)) {
-        alert("Lỗi: Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại bắt đầu bằng 0 và có đúng 10 chữ số.");
+        showMessage("Lỗi: Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại bắt đầu bằng 0 và có đúng 10 chữ số.");
         return;
     }
 
@@ -539,10 +665,10 @@ async function handleOrderSubmit(e) {
         await sendDiscordWebhook(data);
         closeOrderModal();
         e.target.reset();
-        alert("Gửi đi yêu cầu thành công! Chúng tôi sẽ liên lạc lại cho bạn theo thông tin liên lạc của bạn, hãy để ý hộp thư để tránh bị bỏ lỡ phản hồi nhé. Xin cảm ơn!");
+        showMessage("Gửi yêu cầu thành công! Chúng tôi sẽ liên lạc lại cho bạn sớm nhất. Xin cảm ơn!");
     } catch (error) {
         console.error("Lỗi khi gửi Webhook:", error);
-        alert("Đã có lỗi xảy ra. Vui lòng thử lại sau.");
+        showMessage("Đã có lỗi xảy ra. Vui lòng thử lại sau.");
     }
 }
 
@@ -567,3 +693,4 @@ async function sendDiscordWebhook(data) {
     });
     if (!response.ok) { throw new Error(`Could not send webhook. Status: ${response.status}`); }
 }
+

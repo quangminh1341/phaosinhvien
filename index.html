@@ -82,7 +82,18 @@
                         </div>
                     </div>
                     <div class="product-payment-info">
-                        <h2 class="product-title">Tên sản phẩm</h2>
+                        <!-- START: Updated Section -->
+                        <div class="product-title-wrapper">
+                            <h2 class="product-title">Tên sản phẩm</h2>
+                            <div class="admin-actions-menu admin-only" style="display: none;">
+                                <button class="kebab-btn"><i class="fas fa-ellipsis-v"></i></button>
+                                <div class="kebab-dropdown">
+                                    <a href="#" class="kebab-item" id="edit-product-btn-detail">Sửa</a>
+                                    <a href="#" class="kebab-item" id="delete-product-btn-detail">Xóa</a>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- END: Updated Section -->
                         <div class="price-section">
                             <div class="product-price">Giá tiền</div>
                             <div class="discount-container">
@@ -227,6 +238,19 @@
         <button class="zoom-nav-btn" id="prev-zoom-btn" aria-label="Previous image"><i class="fas fa-chevron-left"></i></button>
         <button class="zoom-nav-btn" id="next-zoom-btn" aria-label="Next image"><i class="fas fa-chevron-right"></i></button>
     </div>
+    
+    <!-- START: New Message Modal -->
+    <div id="message-modal" class="modal-overlay">
+        <div class="message-modal-content">
+            <h3 id="message-modal-title">Thông báo</h3>
+            <p id="message-modal-text"></p>
+            <div id="message-modal-actions">
+                <button id="message-modal-confirm-btn" class="sp-button">Có</button>
+                <button id="message-modal-cancel-btn" class="sp-button gray-btn">Không</button>
+            </div>
+        </div>
+    </div>
+    <!-- END: New Message Modal -->
 
     <script src="https://unpkg.com/split-type"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
