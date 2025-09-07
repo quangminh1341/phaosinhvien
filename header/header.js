@@ -1341,6 +1341,8 @@ function initializeHeader() {
                     previewContainer.innerHTML = '';
                     const files = Array.from(event.target.files).filter(file => file.name.toLowerCase().endsWith('.webp'));
                     
+                    console.log('Các tệp đã được lọc (chỉ .webp):', files);
+                    
                     if(files.length === 0) return;
 
                     files.sort((a, b) => {
