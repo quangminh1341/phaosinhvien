@@ -1333,47 +1333,53 @@ function initializeHeader() {
         }
 
         const setupImagePreviews = (inputId, previewContainerId) => {
+            // LOG KIỂM TRA SỐ 1
+            console.log(`Bắt đầu chạy setupImagePreviews cho input: #${inputId}`);
+
             const imageInput = document.getElementById(inputId);
             const previewContainer = document.getElementById(previewContainerId);
 
+            // LOG KIỂM TRA SỐ 2
+            console.log(`- Đã tìm thấy phần tử input chưa?`, imageInput);
+            console.log(`- Đã tìm thấy phần tử container chưa?`, previewContainer);
+
             if (imageInput && previewContainer) {
+                // LOG KIỂM TRA SỐ 3
+                console.log(`- OK! Cả hai phần tử đều tồn tại. Đang gán sự kiện 'change'...`);
+
                 imageInput.addEventListener('change', (event) => {
+                    // LOG KIỂM TRA SỐ 4: ĐÂY LÀ LOG QUAN TRỌNG NHẤT
+                    console.log(`⭐ SỰ KIỆN 'CHANGE' ĐÃ KÍCH HOẠT! Bắt đầu xử lý ảnh...`);
+
                     previewContainer.innerHTML = '';
 
                     const allFiles = event.target.files;
-                    const webpFiles = []; // Tạo một mảng rỗng để chứa các file .webp
+                    const webpFiles = [];
 
-                    // ---- BƯỚC LỌC THỦ CÔNG ----
-                    // Duyệt qua tất cả các tệp người dùng đã chọn
                     for (let i = 0; i < allFiles.length; i++) {
                         const file = allFiles[i];
-                        // Kiểm tra nếu tên tệp (viết thường) kết thúc bằng '.webp'
                         if (file.name.toLowerCase().endsWith('.webp')) {
-                            // Nếu đúng, thêm tệp này vào mảng webpFiles
                             webpFiles.push(file);
                         }
                     }
-                    // -------------------------
-                    console.log("Các tệp .webp đã được lọc:", webpFiles);
-                    // Gán mảng đã lọc cho biến files để xử lý tiếp
-                    const files = webpFiles; 
+                    
+                    console.log("- Các tệp .webp đã lọc được:", webpFiles);
+                    const files = webpFiles;
 
                     if (files.length === 0) {
-                        console.log("Không có tệp .webp nào được tìm thấy trong thư mục đã chọn.");
+                        console.log("- Không có tệp .webp nào trong thư mục.");
                         return;
                     }
 
-                    // Sắp xếp các tệp đã lọc
+                    // ... (phần còn lại của hàm không thay đổi) ...
                     files.sort((a, b) => {
                         const nameA = a.name.split('.')[0];
                         const nameB = b.name.split('.')[0];
                         if (nameA === '1') return -1;
                         if (nameB === '1') return 1;
-                        // Sắp xếp theo số nếu tên file là số
                         return a.name.localeCompare(b.name, undefined, { numeric: true });
                     });
 
-                    // Hiển thị các tệp đã được lọc và sắp xếp
                     files.forEach(file => {
                         const reader = new FileReader();
                         reader.onload = (e) => {
@@ -1383,14 +1389,11 @@ function initializeHeader() {
                             if (isMain) {
                                 previewItem.classList.add('main-image');
                             }
-                            
                             const img = document.createElement('img');
                             img.src = e.target.result;
-
                             const caption = document.createElement('div');
                             caption.classList.add('caption');
                             caption.textContent = isMain ? 'Ảnh chính' : 'Ảnh phụ';
-
                             previewItem.appendChild(img);
                             previewItem.appendChild(caption);
                             previewContainer.appendChild(previewItem);
@@ -1398,6 +1401,9 @@ function initializeHeader() {
                         reader.readAsDataURL(file);
                     });
                 });
+            } else {
+                // LOG KIỂM TRA LỖI
+                console.error(`❌ LỖI: Không tìm thấy input '#${inputId}' hoặc container '#${previewContainerId}'. Không thể gán sự kiện.`);
             }
         };
 

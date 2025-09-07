@@ -86,7 +86,7 @@ async function loadAllProducts() {
     try {
         const response = await apiRequest('/products'); // GET request to /products
         
-        console.log("✅ [LOG] Phản hồi từ API /products (tất cả sản phẩm):", response);
+        // console.log("✅ [LOG] Phản hồi từ API /products (tất cả sản phẩm):", response);
 
         if (!response || !response.data) throw new Error('Cấu trúc phản hồi API không hợp lệ');
 
@@ -377,7 +377,7 @@ async function handleThumbnailClick(e) {
             apiRequest(`/products/${productId}/images`)
         ]);
 
-        console.log(`✅ [LOG] Phản hồi từ API /products/${productId}/images:`, productImagesResponse);
+        // console.log(`✅ [LOG] Phản hồi từ API /products/${productId}/images:`, productImagesResponse);
 
         if (!productDetailsResponse || !productDetailsResponse.data) {
              throw new Error('Không thể tải chi tiết sản phẩm.');
@@ -387,14 +387,14 @@ async function handleThumbnailClick(e) {
         // SỬA LỖI: Đổi `img.url` thành `img.image_url` để khớp với API
         const imageUrls = productImagesResponse.data ? productImagesResponse.data.map(img => img.image_url) : [];
         
-        console.log("✅ [LOG] Các URL ảnh đã được xử lý cho thư viện:", imageUrls);
+        // console.log("✅ [LOG] Các URL ảnh đã được xử lý cho thư viện:", imageUrls);
         
         const combinedProductData = {
             ...productDetails,
             imageGallery: imageUrls
         };
 
-        console.log("✅ [LOG] Dữ liệu cuối cùng được đưa vào populateProductDetail:", combinedProductData);
+        // console.log("✅ [LOG] Dữ liệu cuối cùng được đưa vào populateProductDetail:", combinedProductData);
         
         populateProductDetail(combinedProductData);
 
