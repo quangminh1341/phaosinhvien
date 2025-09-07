@@ -311,17 +311,17 @@ async function initializeServicePanel() {
     prevZoomBtn.addEventListener('click', () => updateZoomedImage(currentZoomIndex - 1));
     nextZoomBtn.addEventListener('click', () => updateZoomedImage(currentZoomIndex + 1));
     
-    // START: Xử lý menu kebab
     const kebabBtn = document.querySelector('.kebab-btn');
     const kebabDropdown = document.querySelector('.kebab-dropdown');
     const deleteProductBtn = document.getElementById('delete-product-btn-detail');
 
     if (kebabBtn && kebabDropdown) {
         kebabBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
+            e.stopPropagation(); // Ngăn sự kiện click lan ra document
             kebabDropdown.classList.toggle('active');
         });
 
+        // Đóng dropdown khi click ra ngoài
         document.addEventListener('click', () => {
             kebabDropdown.classList.remove('active');
         });
@@ -330,7 +330,6 @@ async function initializeServicePanel() {
     if(deleteProductBtn) {
         deleteProductBtn.addEventListener('click', handleDeleteProduct);
     }
-    // END: Xử lý menu kebab
 }
 
 function renderGallery(items) {
@@ -472,6 +471,37 @@ function handleDiscountToggle(e) {
     }
 }
 
+// START: HÀM XỬ LÝ SỰ KIỆN XÓA
+function handleDeleteProduct(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!currentProductData || !currentProductData.id) {
+        showMessage('Không tìm thấy thông tin sản phẩm để xóa.');
+        return;
+    }
+    
+    showMessage(
+        'Bạn có chắc chắn muốn xóa dự án này không? Hành động này không thể hoàn tác.',
+        'Xác nhận xóa',
+        true,
+        async () => {
+            try {
+                const response = await apiRequest(`/products/${currentProductData.id}`, 'DELETE');
+                if (response && response.message === "Deleted successfully") {
+                    showMessage('Đã xóa sản phẩm thành công!');
+                    handleBackClick();
+                    await loadAllProducts(); // Tải lại danh sách sản phẩm sau khi xóa
+                } else {
+                    throw new Error('Phản hồi từ server không hợp lệ.');
+                }
+            } catch (error) {
+                console.error('Lỗi khi xóa sản phẩm:', error);
+                showMessage(`Đã xảy ra lỗi khi xóa sản phẩm: ${error.message}`);
+            }
+        }
+    );
+}
+
 function handleProjectChange(e) {
     currentProject = e.target.value;
     renderGallery(projectData[currentProject]);
@@ -494,24 +524,17 @@ async function handleThumbnailClick(e) {
             apiRequest(`/products/${productId}/images`)
         ]);
 
-        // console.log(`✅ [LOG] Phản hồi từ API /products/${productId}/images:`, productImagesResponse);
-
         if (!productDetailsResponse || !productDetailsResponse.data) {
              throw new Error('Không thể tải chi tiết sản phẩm.');
         }
 
         const productDetails = productDetailsResponse.data;
-        // SỬA LỖI: Đổi `img.url` thành `img.image_url` để khớp với API
         const imageUrls = productImagesResponse.data ? productImagesResponse.data.map(img => img.image_url) : [];
-        
-        // console.log("✅ [LOG] Các URL ảnh đã được xử lý cho thư viện:", imageUrls);
         
         const combinedProductData = {
             ...productDetails,
             imageGallery: imageUrls
         };
-
-        // console.log("✅ [LOG] Dữ liệu cuối cùng được đưa vào populateProductDetail:", combinedProductData);
         
         populateProductDetail(combinedProductData);
         
@@ -534,7 +557,7 @@ async function handleThumbnailClick(e) {
 
     } catch (error) {
         console.error(`Lỗi khi tải chi tiết sản phẩm ID ${productId}:`, error);
-        showMessage('Không thể tải chi tiết sản phẩm. Vui lòng thử lại.'); // Thay thế alert
+        showMessage('Không thể tải chi tiết sản phẩm. Vui lòng thử lại.');
         isAnimating = false;
         isDetailViewActive = false;
     }

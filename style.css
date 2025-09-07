@@ -1919,3 +1919,73 @@ body.light-mode .referral-date {
 .gray-btn:hover {
     background-color: #999;
 }
+
+/* --- CSS CHO MENU KEBAB CỦA ADMIN TRONG CHI TIẾT SẢN PHẨM --- */
+.product-title-wrapper {
+    position: relative;
+    display: flex; 
+    justify-content: space-between;
+    align-items: flex-start; /* Canh chỉnh theo đỉnh */
+    gap: 15px; /* Thêm khoảng cách */
+}
+
+.admin-actions-menu {
+    position: relative;
+    flex-shrink: 0; /* Ngăn không cho menu bị co lại */
+}
+
+.kebab-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    color: var(--text-primary);
+    font-size: 1rem;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.kebab-btn:hover {
+    background-color: var(--fomt-box-color);
+    border-color: var(--accent-primary);
+}
+
+.kebab-dropdown {
+    position: absolute;
+    top: calc(100% + 5px); /* Khoảng cách với nút */
+    right: 0;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    z-index: 15;
+    width: 120px;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.kebab-dropdown.active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.kebab-item {
+    display: block;
+    padding: 10px 15px;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: background-color 0.2s ease;
+}
+
+.kebab-item:hover {
+    background-color: var(--fomt-box-color);
+}
