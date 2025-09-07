@@ -70,15 +70,25 @@ let authModalOverlay, authContainer, modalAnimation, openModal, animatedText;
 
 // --- CẤU HÌNH API ---
 // ***** LƯU Ý: Đổi lại API_BASE_URL thành endpoint server của bạn khi deploy *****
-const API_BASE_URL = '/api'; 
+const API_BASE_URL = 'https://phaosinhvien.com/api'; 
 let currentUser = null;
 
 // --- HÀM TRỢ GIÚP API ---
-// --- SỬA ĐỔI: Xóa hàm getCookie không cần thiết và sửa lại hàm apiRequest ---
+/**
+ * Hàm đọc giá trị của một cookie cụ thể theo tên
+ * @param {string} name - Tên của cookie cần lấy giá trị (ví dụ: 'accessToken').
+ * @returns {string|null} - Giá trị của cookie hoặc null nếu không tìm thấy.
+ */
+function getCookie(name) {
+    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    if (match) {
+        return match[2];
+    }
+    return null;
+}
 async function apiRequest(endpoint, method = 'GET', body = null, token = null) {
     const headers = {};
-    // Sửa ở đây: Lấy token từ localStorage thay vì cookie
-    const authToken = token || localStorage.getItem('accessToken');
+    const authToken = token || getCookie('accessToken');
     if (authToken) {
         headers['Authorization'] = `Bearer ${authToken}`;
     }
@@ -175,7 +185,8 @@ async function handleOAuthCallback() {
         const closeModalBtn = document.querySelector('#auth-modal-overlay .auth-close-btn');
 
         if (accessToken) {
-            localStorage.setItem('accessToken', accessToken);
+            const expiryDays = 30;
+            document.cookie = `accessToken=${accessToken}; path=/; max-age=${expiryDays * 24 * 60 * 60}; SameSite=Strict; Secure`;
         }
 
         if (authAction === 'login') {
@@ -184,12 +195,12 @@ async function handleOAuthCallback() {
                 if (closeModalBtn) closeModalBtn.click();
             } else {
                 const message = "Tài khoản Google này chưa tồn tại. Vui lòng đăng ký.";
-                if (openModal) openModal(true, message, false); 
+                if (openModal) openModal(true, message, false); // SỬA ĐỔI: Hiển thị panel đăng ký, không có animation
             }
         } else if (authAction === 'register') {
             if (isExist) {
                 const message = "Tài khoản Google này đã tồn tại. Vui lòng đăng nhập.";
-                if (openModal) openModal(false, message, false);
+                if (openModal) openModal(false, message, false); // SỬA ĐỔI: Hiển thị panel đăng nhập, không có animation
             } else {
                 await fetchAndDisplayUserProfile();
                 if (closeModalBtn) closeModalBtn.click();
@@ -791,18 +802,6 @@ function initializeHeader() {
         };
 
         if (authContainer) {
-            const style = document.createElement('style');
-            style.id = 'no-transition-style';
-            if (!document.getElementById(style.id)) {
-                style.innerHTML = `
-                    .no-transition, .no-transition * {
-                        transition: none !important;
-                        animation: none !important;
-                    }
-                `;
-                document.head.appendChild(style);
-            }
-
             animatedText = new SplitType('.auth-container h1, .auth-container p', { types: 'lines, chars' });
             modalAnimation = gsap.timeline({
                 paused: true,
@@ -817,32 +816,24 @@ function initializeHeader() {
                 .from(animatedText.chars, { yPercent: 115, stagger: 0.02, duration: 0.6, ease: "power2.out" }, "-=0.3")
                 .from('.form-container input, .auth-button', { opacity: 0, y: 20, stagger: 0.02, duration: 0.4, ease: "power2.out" }, "-=0.5");
             
+            // --- SỬA ĐỔI: Thêm tham số useAnimation ---
             openModal = (showRegister, message = '', useAnimation = true) => {
                 document.querySelectorAll('.auth-notification').forEach(el => {
                     el.textContent = '';
                     el.style.visibility = 'hidden';
                 });
 
+                authContainer.classList.toggle('right-panel-active', showRegister);
                 authModalOverlay.classList.add('visible');
 
                 if (useAnimation) {
-                    authContainer.classList.remove('no-transition');
-                    authContainer.classList.toggle('right-panel-active', showRegister);
                     modalAnimation.restart();
                 } else {
-                    authContainer.classList.add('no-transition');
-                    authContainer.classList.toggle('right-panel-active', showRegister);
-                    
+                    // Hiển thị ngay lập tức mà không có animation
                     gsap.set(authContainer, { y: 0, opacity: 1 });
                     gsap.set('.auth-container h1, .auth-container p', { visibility: 'visible' });
-                    if (animatedText) {
-                         gsap.set(animatedText.chars, { yPercent: 0 });
-                    }
+                    gsap.set(animatedText.chars, { yPercent: 0 }); // Reset vị trí ký tự
                     gsap.set('.form-container input, .auth-button', { opacity: 1, y: 0 });
-                    
-                    setTimeout(() => {
-                        authContainer.classList.remove('no-transition');
-                    }, 50);
                 }
 
                 if (message) {
