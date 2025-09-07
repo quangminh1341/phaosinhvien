@@ -1398,6 +1398,40 @@ function initializeHeader() {
         };
 
         /**
+         * Xử lý các file được chọn, lọc, và thêm vào kho lưu trữ trước khi render lại preview.
+         * @param {FileList} files - Danh sách file từ input.
+         * @param {string} fileStoreKey - Key trong object managedFiles (vd: 'addHtml').
+         * @param {boolean} folderMode - Nếu true, chỉ chấp nhận file .webp.
+         */
+        const handleFileSelection = (files, fileStoreKey, folderMode = false) => {
+            const newFiles = Array.from(files);
+            const existingFileNames = managedFiles[fileStoreKey].map(f => f.name);
+            
+            let uniqueNewFiles;
+
+            if (folderMode) {
+                // Chế độ chọn thư mục: Chỉ lọc file .webp
+                uniqueNewFiles = newFiles.filter(f =>
+                    f.name.toLowerCase().endsWith('.webp') && !existingFileNames.includes(f.name)
+                );
+                if (newFiles.length > 0 && uniqueNewFiles.length === 0) {
+                    alert('Thư mục đã chọn không chứa file ảnh .webp nào.');
+                }
+            } else {
+                // Chế độ chọn tệp: Lọc các file ảnh thông thường
+                uniqueNewFiles = newFiles.filter(f =>
+                    f.type.startsWith('image/') && !existingFileNames.includes(f.name)
+                );
+            }
+
+            if (uniqueNewFiles.length > 0) {
+                managedFiles[fileStoreKey].push(...uniqueNewFiles);
+                // Sau khi cập nhật, gọi render lại để hiển thị
+                renderImagePreviews(fileStoreKey);
+            }
+        };
+
+        /**
          * Hàm khởi tạo hợp nhất cho một tab trong dashboard (HTML hoặc Fullstack).
          * @param {string} type - 'Html' hoặc 'Fullstack'.
          */
@@ -1427,6 +1461,25 @@ function initializeHeader() {
                     }
                 });
             }
+
+            const addFolderInput = document.getElementById(`add-images${suffix}`);
+                if (addFolderInput) {
+                    addFolderInput.addEventListener('change', (event) => {
+                        // GỌI HÀM XỬ LÝ CHUNG
+                        handleFileSelection(event.target.files, addFileStoreKey, true); // folderMode = true để lọc .webp
+                        event.target.value = ''; // Reset input để có thể chọn lại cùng thư mục
+                    });
+                }
+
+                // Tương tự cho form Sửa
+                const editFolderInput = document.getElementById(`edit-images${suffix}`);
+                if (editFolderInput) {
+                    editFolderInput.addEventListener('change', (event) => {
+                        // GỌI HÀM XỬ LÝ CHUNG
+                        handleFileSelection(event.target.files, editFileStoreKey, true); // folderMode = true để lọc .webp
+                        event.target.value = ''; // Reset input
+                    });
+                }
 
             const addProductForm = document.getElementById(`add-product-form${suffix}`);
             if (addProductForm) {
