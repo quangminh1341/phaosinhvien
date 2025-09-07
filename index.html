@@ -176,7 +176,9 @@
                                     <li>Khi tiến hành đặt hàng và thanh toán, khách hàng được xem là đã đọc, hiểu và đồng ý với toàn bộ Chính sách mua hàng này.</li>
                                     <li>Chính sách có thể được cập nhật bất kỳ lúc nào, và phiên bản mới nhất sẽ được công bố công khai trên website.</li>
                                 </ul>
-                        </div>
+                            </li>
+                        </ol>
+                    </div>
                     <div class="contact-info-card">
                         <div class="card-content">
                             <div class="contact-details">
@@ -300,7 +302,7 @@
                 </div>
                 <nav class="user-panel-nav">
                     <div class="nav-category is-collapsible">
-                        <a href="#" class="nav-category-toggle" data-target="panel-profile">
+                        <a href="#" class="nav-category-toggle">
                             <span class="nav-category-title">Thông tin</span>
                             <i class="fas fa-chevron-down"></i>
                         </a>
@@ -321,6 +323,17 @@
                     </div>
                     <div class="nav-category admin-only" style="display: none;">
                         <a href="#" class="nav-link top-level" data-target="panel-dashboard">Dashboard</a>
+                    </div>
+                    <div class="nav-category admin-only is-collapsible" style="display: none;">
+                        <a href="#" class="nav-category-toggle">
+                            <span class="nav-category-title">Admin</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </a>
+                        <ul class="submenu">
+                            <li><a href="#" class="nav-link" data-target="panel-admin-orders">Đơn hàng</a></li>
+                            <li><a href="#" class="nav-link" data-target="panel-admin-notifications">Thông báo</a></li>
+                            <li><a href="#" class="nav-link" data-target="panel-admin-codes">Quản lý Code</a></li>
+                        </ul>
                     </div>
                 </nav>
             </div>
@@ -447,7 +460,7 @@
                                 <h3 id="stat-total-commission" class="stat-value">0 VNĐ</h3>
                             </div>
                             <div class="stat-card">
-                                <span class="stat-label">Đã nhận trong tháng</span>
+                                <span class="stat-label" id="stat-monthly-label">Đã nhận trong tháng</span>
                                 <h3 id="stat-monthly-commission" class="stat-value">0 VNĐ</h3>
                             </div>
                         </div>
@@ -652,6 +665,38 @@
                         <div id="do-an-panel" class="dashboard-tab-content">
                             <div class="update-notification"><p>Nội dung cho Đồ Án đang được cập nhật.</p></div>
                         </div>
+                    </div>
+                </div>
+                 <div id="panel-admin-orders" class="panel-content-item">
+                    <h1>Quản lý Đơn hàng</h1>
+                    <div class="admin-order-controls">
+                        <div class="admin-project-filters">
+                            <button class="filter-btn active" data-project-type="Website HTML">Website HTML</button>
+                            <button class="filter-btn" data-project-type="Fullstack">Fullstack</button>
+                        </div>
+                        <div class="order-filters">
+                            <button class="filter-btn active" data-status="Tất cả">Tất cả</button>
+                            <button class="filter-btn" data-status="Mới">Mới</button>
+                            <button class="filter-btn" data-status="Tiến hành">Tiến hành</button>
+                            <button class="filter-btn" data-status="Hoàn thành">Hoàn thành</button>
+                            <button class="filter-btn" data-status="Đã hủy">Đã hủy</button>
+                        </div>
+                    </div>
+                    <div class="order-list-admin">
+                        <p class="no-orders">Vui lòng chọn loại dự án để xem đơn hàng.</p>
+                    </div>
+                </div>
+
+                <div id="panel-admin-notifications" class="panel-content-item">
+                    <h1>Quản lý Thông báo</h1>
+                    <div class="update-notification">
+                        <p>Chức năng đang được phát triển.</p>
+                    </div>
+                </div>
+                <div id="panel-admin-codes" class="panel-content-item">
+                    <h1>Quản lý Code</h1>
+                    <div class="update-notification">
+                        <p>Chức năng đang được phát triển.</p>
                     </div>
                 </div>
             </div>

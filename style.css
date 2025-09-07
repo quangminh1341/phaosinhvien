@@ -1755,3 +1755,53 @@ body.light-mode .referral-date {
     text-align: center;
     padding: 4px 0;
 }
+
+/* --- CSS CHO PANEL ĐƠN HÀNG CỦA ADMIN --- */
+#panel-admin-orders h1 {
+    margin-bottom: 25px;
+}
+
+.admin-order-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.admin-project-filters {
+    display: flex;
+    gap: 15px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.admin-project-filters .filter-btn {
+    font-size: 1.1rem;
+    font-weight: 700;
+    padding: 10px 20px;
+    background-color: transparent;
+    border: 2px solid transparent;
+    border-bottom: 2px solid transparent;
+    color: var(--text-primary);
+    opacity: 0.7;
+    border-radius: 0;
+}
+
+.admin-project-filters .filter-btn:hover {
+    opacity: 1;
+    color: var(--hover-color);
+}
+
+.admin-project-filters .filter-btn.active {
+    opacity: 1;
+    color: var(--accent-primary);
+    border-bottom-color: var(--accent-primary);
+    background-color: transparent;
+}
+
+
+.order-list-admin {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}

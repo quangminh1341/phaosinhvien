@@ -70,7 +70,7 @@ let authModalOverlay, authContainer, modalAnimation, openModal;
 
 // --- CẤU HÌNH API ---
 // ***** LƯU Ý: Đổi lại API_BASE_URL thành endpoint server của bạn khi deploy *****
-const API_BASE_URL = 'https://phaosinhvien.com/api'; 
+const API_BASE_URL = '/api'; 
 let currentUser = null;
 
 // --- HÀM TRỢ GIÚP API ---
@@ -918,134 +918,102 @@ function initializeHeader() {
         const profileDashboardBtn = document.getElementById('profile-dashboard-btn');
         const closePanelBtn = userPanelModal.querySelector('.user-panel-close-btn');
         const panelSidebarNav = userPanelModal.querySelector('.user-panel-nav');
-        const collapsibleCategory = userPanelModal.querySelector('.nav-category.is-collapsible');
-    
-        const collapseAll = () => {
-            if (collapsibleCategory) {
-                collapsibleCategory.classList.remove('active');
-            }
-        };
-    
-        const expandInfo = () => {
-            if (collapsibleCategory) {
-                collapsibleCategory.classList.add('active');
-            }
-        };
-    
+        
+        // **LOGIC ĐÃ ĐƯỢC SỬA LỖI VÀ TỐI ƯU HÓA**
         const showPanel = async (targetId) => {
-            userPanelModal.querySelectorAll('.panel-content-item').forEach(p => p.classList.remove('active'));
-            userPanelModal.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            const protectedPanels = [
+                'panel-profile', 'panel-orders', 'panel-payments', 
+                'panel-marketing', 'panel-dashboard', 'panel-admin-orders', 
+                'panel-admin-notifications', 'panel-admin-codes'
+            ];
+
+            if (protectedPanels.includes(targetId) && !currentUser) {
+                openModal(false, 'Vui lòng đăng nhập để truy cập chức năng này.');
+                return;
+            }
+
+            const isAdminPanel = targetId.startsWith('panel-admin-') || targetId === 'panel-dashboard';
+            if (isAdminPanel && (!currentUser || currentUser.role !== 'admin')) {
+                alert('Bạn không có quyền truy cập chức năng này.');
+                return;
+            }
             
+            // Chuyển đổi panel nội dung
+            userPanelModal.querySelectorAll('.panel-content-item').forEach(p => p.classList.remove('active'));
             const targetPanel = document.getElementById(targetId);
+            if (targetPanel) targetPanel.classList.add('active');
+
+            // Cập nhật trạng thái active cho link được nhấp
+            userPanelModal.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
             const targetLink = userPanelModal.querySelector(`.nav-link[data-target="${targetId}"]`);
             
-            if (targetPanel) {
-                targetPanel.classList.add('active');
-            }
             if (targetLink) {
                 targetLink.classList.add('active');
-                if (targetLink.closest('.submenu')) {
-                    expandInfo();
-                } else {
-                    collapseAll();
+                
+                const parentCollapsible = targetLink.closest('.is-collapsible');
+                
+                // Đóng tất cả các menu con KHÁC
+                userPanelModal.querySelectorAll('.is-collapsible').forEach(menu => {
+                    if (menu !== parentCollapsible) {
+                        menu.classList.remove('active');
+                    }
+                });
+
+                // Nếu link được nhấp nằm trong menu con, đảm bảo menu cha của nó được mở
+                if (parentCollapsible) {
+                    parentCollapsible.classList.add('active');
                 }
             }
-            if (targetId === 'panel-profile') {
-                populateProfilePanel(currentUser);
-            }
-            if (targetId === 'panel-orders') {
-                renderOrders();
-            }
+            
+            // Tải dữ liệu cho panel tương ứng
+            if (targetId === 'panel-orders') await renderOrders();
             if (targetId === 'panel-payments') {
                 populateMonthFilter();
                 renderTransactions();
             }
-            if (targetId === 'panel-marketing') {
-                try {
-                    const marketingData = await apiRequest('/users/me/marketing/commission');
-                    
-                    const levelEl = document.getElementById('stat-level');
-                    const codesUsedEl = document.getElementById('stat-codes-used');
-                    
-                    if (levelEl) levelEl.textContent = marketingData.level_name || '--';
-                    if (codesUsedEl) codesUsedEl.textContent = marketingData.referrals || 0;
-                    
-                } catch (error) {
-                    console.error("Lỗi khi tải dữ liệu tóm tắt tiếp thị:", error);
-                    const levelEl = document.getElementById('stat-level');
-                    const codesUsedEl = document.getElementById('stat-codes-used');
-                    if (levelEl) levelEl.textContent = 'Lỗi';
-                    if (codesUsedEl) codesUsedEl.textContent = 'N/A';
+            if (targetId === 'panel-marketing') await renderMarketingStats();
+            if (targetId === 'panel-admin-orders') {
+                const projectFilters = document.querySelector('.admin-project-filters');
+                if(projectFilters.querySelector('.active')) {
+                     renderAdminOrders();
                 }
-                
-                await renderMarketingStats();
-            }
-            if (targetId === 'panel-dashboard') {
-                console.log("Hiển thị Admin Dashboard");
             }
         };
-    
-        const openPanelModal = async (initialPanelId) => {
-            await showPanel(initialPanelId);
+        
+        const openPanelModal = (initialPanelId) => {
             userPanelModal.classList.add('visible');
+            showPanel(initialPanelId || 'panel-profile');
         };
         
-        const closePanelModal = () => {
-            userPanelModal.classList.remove('visible');
-            collapseAll();
-        };
-    
-        if (profileInfoBtn) {
-            profileInfoBtn.addEventListener('click', async (e) => {
-                e.preventDefault();
-                await openPanelModal('panel-profile');
-            });
-        }
-    
-        if (profileOrdersBtn) {
-            profileOrdersBtn.addEventListener('click', async (e) => {
-                e.preventDefault();
-                await openPanelModal('panel-orders');
-            });
-        }
-        
-        if (profilePaymentsBtn) {
-            profilePaymentsBtn.addEventListener('click', async (e) => {
-                e.preventDefault();
-                await openPanelModal('panel-payments');
-            });
-        }
-        
-        if (profileDashboardBtn) {
-            profileDashboardBtn.addEventListener('click', async (e) => {
-                e.preventDefault();
-                await openPanelModal('panel-dashboard');
-            });
-        }
-    
+        const closePanelModal = () => userPanelModal.classList.remove('visible');
+
+        if (profileInfoBtn) profileInfoBtn.addEventListener('click', (e) => { e.preventDefault(); openPanelModal('panel-profile'); });
+        if (profileOrdersBtn) profileOrdersBtn.addEventListener('click', (e) => { e.preventDefault(); openPanelModal('panel-orders'); });
+        if (profilePaymentsBtn) profilePaymentsBtn.addEventListener('click', (e) => { e.preventDefault(); openPanelModal('panel-payments'); });
+        if (profileDashboardBtn) profileDashboardBtn.addEventListener('click', (e) => { e.preventDefault(); openPanelModal('panel-dashboard'); });
+
         if (panelSidebarNav) {
-            panelSidebarNav.addEventListener('click', async (e) => {
+            panelSidebarNav.addEventListener('click', (e) => {
                 const link = e.target.closest('a');
                 if (!link) return;
-    
+                
                 e.preventDefault();
                 
                 if (link.classList.contains('nav-category-toggle')) {
-                    collapsibleCategory.classList.toggle('active');
+                    const parentCategory = link.closest('.is-collapsible');
+                    if (parentCategory) {
+                        parentCategory.classList.toggle('active');
+                    }
                 } 
                 else if (link.dataset.target) {
-                    const targetId = link.dataset.target;
-                    await showPanel(targetId);
+                    showPanel(link.dataset.target);
                 }
             });
         }
     
         closePanelBtn.addEventListener('click', closePanelModal);
-        userPanelModal.addEventListener('click', (e) => {
-            if (e.target === userPanelModal) {
-                closePanelModal();
-            }
-        });
+        userPanelModal.addEventListener('click', (e) => { if (e.target === userPanelModal) closePanelModal(); });
+        // **KẾT THÚC VÙNG SỬA LỖI**
 
         const copyReferralBtn = document.getElementById('copy-referral-btn');
         const referralCodeInput = document.getElementById('profile-referral-code');
@@ -1439,64 +1407,59 @@ function initializeHeader() {
         if (addProductForm) {
             addProductForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const formData = new FormData();
-                const productData = {
-                    title: document.getElementById('add-title').value,
-                    cost: parseInt(document.getElementById('add-cost').value, 10),
-                    about: document.getElementById('add-about').value,
-                    // feature: document.getElementById('add-feature').value,
-                    // parameter: document.getElementById('add-parameter').value,
-                    demo_link: document.getElementById('add-demo-link').value,
-                };
-
-                const imageFiles = document.getElementById('add-images').files;
-                let coverFile = null;
-                const otherImages = [];
-                
-                for (const file of imageFiles) {
-                    if (file.name.split('.')[0] === '1') {
-                        coverFile = file;
-                    } else {
-                        otherImages.push(file);
-                    }
-                }
-                
-                if (!coverFile) {
-                    alert('Vui lòng chọn ảnh và đảm bảo có một ảnh tên là "1" làm ảnh chính.');
-                    return;
-                }
-                
-                formData.append('product', JSON.stringify(productData));
-                formData.append('file', coverFile);
-                
                 try {
-                    console.log('Đang gửi POST tới /products với dữ liệu JSON...');
-                    const productResponse = await apiRequest('/products', 'POST', productData);
-                    
-                    const productId = productResponse.id;
-                    console.log('Tạo sản phẩm thành công, ID:', productId);
+                    const imageFiles = document.getElementById('add-images').files;
+                    let coverFile = null;
+                    const otherImages = [];
 
-                    if (imageFiles.length > 0 && productId) {
-                        const imageFormData = new FormData();
-                        
-                        // Thêm TẤT CẢ các file vào FormData với tên trường là "images"
-                        for (const file of imageFiles) {
-                            imageFormData.append('images', file);
+                    for (const file of imageFiles) {
+                        if (file.name.split('.')[0] === '1') {
+                            coverFile = file;
+                        } else {
+                            otherImages.push(file);
                         }
-                        
-                        //  Gọi API để tải lên các ảnh
-                        console.log(`Đang gửi POST tới /products/${productId}/images với ${imageFiles.length} ảnh...`);
-                        await apiRequest(`/products/${productId}/images`, 'POST', imageFormData);
-                        console.log('Tải ảnh lên thành công!');
                     }
 
-                    alert('Đăng bài thành công!');
+                    if (!coverFile) {
+                        alert('Vui lòng chọn ảnh và đảm bảo có một ảnh tên là "1" làm ảnh chính.');
+                        return;
+                    }
+
+                    // --- BƯỚC 1: TẠO SẢN PHẨM VỚI DỮ LIỆU FLAT VÀ ẢNH BÌA ---
+                    const productFormData = new FormData();
+                    
+                    productFormData.append('title', document.getElementById('add-title').value);
+                    productFormData.append('cost', parseInt(document.getElementById('add-cost').value, 10));
+                    productFormData.append('about', document.getElementById('add-about').value);
+                    productFormData.append('feature', document.getElementById('add-feature').value);
+                    productFormData.append('parameter', document.getElementById('add-parameter').value);
+                    productFormData.append('demo_link', document.getElementById('add-demo-link').value);
+                    
+                    productFormData.append('images', coverFile);
+
+                    const productResponse = await apiRequest('/products', 'POST', productFormData);
+                    const productId = productResponse.id;
+
+                    if (!productId) {
+                        throw new Error("Không nhận được ID sản phẩm sau khi tạo.");
+                    }
+
+                    // --- BƯỚC 2: UPLOAD CÁC ẢNH PHỤ CÒN LẠI (NẾU CÓ) ---
+                    if (otherImages.length > 0) {
+                        const galleryFormData = new FormData();
+                        for (const file of otherImages) {
+                            galleryFormData.append('images', file);
+                        }
+                        await apiRequest(`/products/${productId}/images`, 'POST', galleryFormData);
+                    }
+
+                    alert('Đăng bài và tải tất cả ảnh lên thành công!');
                     addProductForm.reset();
                     document.getElementById('add-image-previews').innerHTML = '';
 
                 } catch (error) {
-                    alert(`Đã xảy ra lỗi: ${error.message}`);
-                    console.error('Lỗi khi đăng bài:', error);
+                    alert(`Đã xảy ra lỗi khi đăng bài: ${error.message}`);
+                    console.error('Lỗi chi tiết:', error);
                 }
             });
         }
@@ -1511,7 +1474,6 @@ function initializeHeader() {
                 const query = document.getElementById('search-product').value;
                 if (!query) return;
 
-                console.log(`Đang tìm sản phẩm với query: ${query}`);
                 alert('Chức năng tìm kiếm đang được phát triển. Dữ liệu mẫu sẽ được hiển thị.');
 
                 currentEditingProductId = 'demo-product-123';
@@ -1525,7 +1487,6 @@ function initializeHeader() {
                 editFormWrapper.style.display = 'block';
              });
          }
-
 
         if (editProductForm) {
             editProductForm.addEventListener('submit', async (e) => {
@@ -1563,7 +1524,6 @@ function initializeHeader() {
                 }
 
                 try {
-                    console.log(`Đang gửi PATCH tới /products/${currentEditingProductId}...`);
                     await apiRequest(`/products/${currentEditingProductId}`, 'PATCH', formData);
                     alert('Cập nhật sản phẩm thành công!');
 
@@ -1573,9 +1533,75 @@ function initializeHeader() {
                 }
             });
         }
-    }
-    
 
+        // --- LOGIC CHO PHẦN LỌC ĐƠN HÀNG CỦA ADMIN ---
+        const adminProjectFilters = document.querySelector('.admin-project-filters');
+        const adminStatusFilters = document.querySelector('#panel-admin-orders .order-filters');
+
+        const renderAdminOrders = () => {
+            const orderListContainer = document.querySelector('.order-list-admin');
+            const activeProjectTypeBtn = adminProjectFilters.querySelector('.active');
+            const activeStatusBtn = adminStatusFilters.querySelector('.active');
+
+            if (!activeProjectTypeBtn || !activeStatusBtn) {
+                 orderListContainer.innerHTML = '<p class="no-orders">Vui lòng chọn bộ lọc.</p>';
+                 return;
+            }
+            
+            const activeProjectType = activeProjectTypeBtn.dataset.projectType;
+            const activeStatus = activeStatusBtn.dataset.status;
+
+            const mockAdminOrders = [
+                { id: 'PSV-001', user: 'User A', productName: 'Website Tĩnh A', projectType: 'Website HTML', status: 'Mới' },
+                { id: 'PSV-002', user: 'User B', productName: 'Fullstack App B', projectType: 'Fullstack', status: 'Tiến hành' },
+                { id: 'PSV-003', user: 'User C', productName: 'Website Tĩnh C', projectType: 'Website HTML', status: 'Hoàn thành' },
+                { id: 'PSV-004', user: 'User D', productName: 'Fullstack App D', projectType: 'Fullstack', status: 'Đã hủy' },
+                { id: 'PSV-005', user: 'User E', productName: 'Website Tĩnh E', projectType: 'Website HTML', status: 'Tiến hành' },
+            ];
+
+            let filteredOrders = mockAdminOrders.filter(order => order.projectType === activeProjectType);
+            
+            if (activeStatus !== 'Tất cả') {
+                filteredOrders = filteredOrders.filter(order => order.status === activeStatus);
+            }
+            
+            if (filteredOrders.length > 0) {
+                 orderListContainer.innerHTML = filteredOrders.map(order => `
+                    <div class="order-item">
+                        <div class="order-info">
+                            <span class="order-id">#${order.id} (User: ${order.user})</span>
+                            <p class="order-product">${order.productName}</p>
+                        </div>
+                        <div class="order-details">
+                            <span class="order-status">${order.status}</span>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                orderListContainer.innerHTML = '<p class="no-orders">Không có đơn hàng nào phù hợp.</p>';
+            }
+        };
+
+        if (adminProjectFilters) {
+            adminProjectFilters.addEventListener('click', (e) => {
+                if (e.target.classList.contains('filter-btn')) {
+                    adminProjectFilters.querySelector('.active').classList.remove('active');
+                    e.target.classList.add('active');
+                    renderAdminOrders();
+                }
+            });
+        }
+        
+        if (adminStatusFilters) {
+            adminStatusFilters.addEventListener('click', (e) => {
+                if (e.target.classList.contains('filter-btn')) {
+                    adminStatusFilters.querySelector('.active').classList.remove('active');
+                    e.target.classList.add('active');
+                    renderAdminOrders();
+                }
+            });
+        }
+    }
     
     handleOAuthCallback();
     checkLoginStatus();
