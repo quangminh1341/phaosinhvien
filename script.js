@@ -150,8 +150,6 @@ async function loadAllProducts() {
     try {
         const response = await apiRequest('/products'); // GET request to /products
         
-        // console.log("✅ [LOG] Phản hồi từ API /products (tất cả sản phẩm):", response);
-
         if (!response || !response.data) throw new Error('Cấu trúc phản hồi API không hợp lệ');
 
         projectData = groupProductsByCategory(response.data);
@@ -213,20 +211,15 @@ function setupNavigation() {
             const targetSelector = link.getAttribute("data-target");
             if (!targetSelector) return;
             
-            // --- START MODIFICATION ---
-            // Logic để kiểm soát hiển thị của nút "Xem" dựa trên panel đang hoạt động
             if (targetSelector === '#dichvu-panel') {
-                // Nếu điều hướng ĐẾN panel dịch vụ, chỉ hiển thị nút nếu đang ở chế độ xem chi tiết.
                 if (isDetailViewActive) {
                     gsap.to(backButton, { autoAlpha: 1, scale: 1, duration: 0.3, overwrite: 'auto' });
                 } else {
                      gsap.to(backButton, { autoAlpha: 0, scale: 0.8, duration: 0.3, overwrite: 'auto' });
                 }
             } else {
-                // Nếu điều hướng RA KHỎI panel dịch vụ, luôn ẩn nút.
                 gsap.to(backButton, { autoAlpha: 0, scale: 0.8, duration: 0.3, overwrite: 'auto' });
             }
-            // --- END MODIFICATION ---
 
             const targetPanel = document.querySelector(targetSelector);
             if (targetPanel) {
@@ -317,11 +310,10 @@ async function initializeServicePanel() {
 
     if (kebabBtn && kebabDropdown) {
         kebabBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Ngăn sự kiện click lan ra document
+            e.stopPropagation();
             kebabDropdown.classList.toggle('active');
         });
 
-        // Đóng dropdown khi click ra ngoài
         document.addEventListener('click', () => {
             kebabDropdown.classList.remove('active');
         });
@@ -427,7 +419,18 @@ function populateProductDetail(data) {
 
 // --- CÁC HÀM XỬ LÝ SỰ KIỆN ---
 
-// START: HÀM XỬ LÝ SỰ KIỆN XÓA
+function handleDiscountToggle(e) {
+    const isChecked = e.target.checked;
+    const originalCost = Number(currentProductData.cost);
+    if (isNaN(originalCost)) return;
+    if (isChecked) {
+        const discountedCost = originalCost * 0.8;
+        productPrice.innerHTML = `<span class="new-price">${discountedCost.toLocaleString('vi-VN')}.000 VNĐ</span> <span class="old-price">${originalCost.toLocaleString('vi-VN')}.000 VNĐ</span>`;
+    } else {
+        productPrice.innerHTML = `${originalCost.toLocaleString('vi-VN')}.000 VNĐ`;
+    }
+}
+
 function handleDeleteProduct(e) {
     e.preventDefault();
     e.stopPropagation();
@@ -447,50 +450,6 @@ function handleDeleteProduct(e) {
                     showMessage('Đã xóa sản phẩm thành công!');
                     handleBackClick();
                     await loadAllProducts();
-                } else {
-                    throw new Error('Phản hồi từ server không hợp lệ.');
-                }
-            } catch (error) {
-                console.error('Lỗi khi xóa sản phẩm:', error);
-                showMessage(`Đã xảy ra lỗi khi xóa sản phẩm: ${error.message}`);
-            }
-        }
-    );
-}
-// END: HÀM XỬ LÝ SỰ KIỆN XÓA
-
-function handleDiscountToggle(e) {
-    const isChecked = e.target.checked;
-    const originalCost = Number(currentProductData.cost);
-    if (isNaN(originalCost)) return;
-    if (isChecked) {
-        const discountedCost = originalCost * 0.8;
-        productPrice.innerHTML = `<span class="new-price">${discountedCost.toLocaleString('vi-VN')}.000 VNĐ</span> <span class="old-price">${originalCost.toLocaleString('vi-VN')}.000 VNĐ</span>`;
-    } else {
-        productPrice.innerHTML = `${originalCost.toLocaleString('vi-VN')}.000 VNĐ`;
-    }
-}
-
-// START: HÀM XỬ LÝ SỰ KIỆN XÓA
-function handleDeleteProduct(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!currentProductData || !currentProductData.id) {
-        showMessage('Không tìm thấy thông tin sản phẩm để xóa.');
-        return;
-    }
-    
-    showMessage(
-        'Bạn có chắc chắn muốn xóa dự án này không? Hành động này không thể hoàn tác.',
-        'Xác nhận xóa',
-        true,
-        async () => {
-            try {
-                const response = await apiRequest(`/products/${currentProductData.id}`, 'DELETE');
-                if (response && response.message === "Deleted successfully") {
-                    showMessage('Đã xóa sản phẩm thành công!');
-                    handleBackClick();
-                    await loadAllProducts(); // Tải lại danh sách sản phẩm sau khi xóa
                 } else {
                     throw new Error('Phản hồi từ server không hợp lệ.');
                 }
@@ -538,15 +497,6 @@ async function handleThumbnailClick(e) {
         
         populateProductDetail(combinedProductData);
         
-        // START: Hiển thị menu admin nếu người dùng là admin
-        const adminMenu = document.querySelector('.admin-actions-menu');
-        if (window.currentUser && window.currentUser.role === 'admin') {
-            adminMenu.style.display = 'block';
-        } else {
-            adminMenu.style.display = 'none';
-        }
-        // END: Hiển thị menu admin
-
         const tl = gsap.timeline({ onComplete: () => { isAnimating = false; } });
         tl.to(serviceListContainer, { xPercent: -50, opacity: 0, duration: 0.4, ease: 'power2.in' })
           .set(serviceListContainer, { pointerEvents: 'none' })
@@ -716,4 +666,3 @@ async function sendDiscordWebhook(data) {
     });
     if (!response.ok) { throw new Error(`Could not send webhook. Status: ${response.status}`); }
 }
-
