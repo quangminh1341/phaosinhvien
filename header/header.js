@@ -1,5 +1,6 @@
+
 // --- BIẾN TOÀN CỤC CHO MODAL ---
-let authModalOverlay, authContainer, modalAnimation, openModal, animatedText;
+let authModalOverlay, authContainer, modalAnimation, openModal;
 
 // --- CẤU HÌNH API ---
 // ***** LƯU Ý: Đổi lại API_BASE_URL thành endpoint server của bạn khi deploy *****
@@ -127,12 +128,12 @@ async function handleOAuthCallback() {
                 if (closeModalBtn) closeModalBtn.click();
             } else {
                 const message = "Tài khoản Google này chưa tồn tại. Vui lòng đăng ký.";
-                if (openModal) openModal(true, message, false); 
+                if (openModal) openModal(false, message);
             }
         } else if (authAction === 'register') {
             if (isExist) {
                 const message = "Tài khoản Google này đã tồn tại. Vui lòng đăng nhập.";
-                if (openModal) openModal(false, message, false);
+                if (openModal) openModal(false, message);
             } else {
                 await fetchAndDisplayUserProfile();
                 if (closeModalBtn) closeModalBtn.click();
@@ -163,7 +164,7 @@ async function fetchAndDisplayUserProfile() {
 
     } catch (error) {
         console.error("Phiên đăng nhập không hợp lệ hoặc đã hết hạn.", error)
-        // handleLogout();
+        handleLogout();
     }
 }
 
@@ -734,20 +735,7 @@ function initializeHeader() {
         };
 
         if (authContainer) {
-            // --- SỬA ĐỔI: Thêm style để tắt transition khi cần ---
-            const style = document.createElement('style');
-            style.id = 'no-transition-style';
-            if (!document.getElementById(style.id)) {
-                style.innerHTML = `
-                    .no-transition, .no-transition * {
-                        transition: none !important;
-                        animation: none !important;
-                    }
-                `;
-                document.head.appendChild(style);
-            }
-
-            animatedText = new SplitType('.auth-container h1, .auth-container p', { types: 'lines, chars' });
+            const animatedText = new SplitType('.auth-container h1, .auth-container p', { types: 'lines, chars' });
             modalAnimation = gsap.timeline({
                 paused: true,
                 onReverseComplete: () => {
@@ -761,34 +749,16 @@ function initializeHeader() {
                 .from(animatedText.chars, { yPercent: 115, stagger: 0.02, duration: 0.6, ease: "power2.out" }, "-=0.3")
                 .from('.form-container input, .auth-button', { opacity: 0, y: 20, stagger: 0.02, duration: 0.4, ease: "power2.out" }, "-=0.5");
             
-            // --- SỬA ĐỔI: Cập nhật hàm openModal ---
-            openModal = (showRegister, message = '', useAnimation = true) => {
+            openModal = (showRegister, message = '') => {
                 document.querySelectorAll('.auth-notification').forEach(el => {
                     el.textContent = '';
                     el.style.visibility = 'hidden';
                 });
 
+                authContainer.classList.toggle('right-panel-active', showRegister);
                 authModalOverlay.classList.add('visible');
 
-                if (useAnimation) {
-                    authContainer.classList.remove('no-transition');
-                    authContainer.classList.toggle('right-panel-active', showRegister);
-                    modalAnimation.restart();
-                } else {
-                    authContainer.classList.add('no-transition');
-                    authContainer.classList.toggle('right-panel-active', showRegister);
-                    
-                    gsap.set(authContainer, { y: 0, opacity: 1 });
-                    gsap.set('.auth-container h1, .auth-container p', { visibility: 'visible' });
-                    if (animatedText) {
-                         gsap.set(animatedText.chars, { yPercent: 0 });
-                    }
-                    gsap.set('.form-container input, .auth-button', { opacity: 1, y: 0 });
-                    
-                    setTimeout(() => {
-                        authContainer.classList.remove('no-transition');
-                    }, 50);
-                }
+                modalAnimation.restart();
 
                 if (message) {
                     const targetId = showRegister ? '#auth-notification-signup' : '#auth-notification-signin';
@@ -1598,3 +1568,4 @@ function initializeHeader() {
     handleOAuthCallback();
     checkLoginStatus();
 }
+
