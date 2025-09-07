@@ -1354,7 +1354,7 @@ function initializeHeader() {
                         }
                     }
                     // -------------------------
-
+                    console.log("Các tệp .webp đã được lọc:", webpFiles);
                     // Gán mảng đã lọc cho biến files để xử lý tiếp
                     const files = webpFiles; 
 
