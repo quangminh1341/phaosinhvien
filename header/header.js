@@ -170,7 +170,7 @@ async function fetchAndDisplayUserProfile() {
         
         // Nếu hồ sơ đầy đủ, cập nhật UI và trả về true.
         currentUser = userData;
-        showLoggedInState(currentUser);
+        await showLoggedInState(currentUser)
         return true;
 
     } catch (error) {
@@ -200,7 +200,7 @@ async function handleLogout() {
 
 // --- CÁC HÀM CẬP NHẬT GIAO DIỆN ---
 
-function showLoggedInState(user) {
+async function showLoggedInState(user) {
     const headerAuth = document.querySelector('.header-auth');
     const profileContainer = document.querySelector('.profile-container');
     const notificationContainer = document.querySelector('.notification-container');
@@ -216,7 +216,22 @@ function showLoggedInState(user) {
         profileContainer.style.display = 'block';
         notificationContainer.style.display = 'block';
         
-        updateNotificationUI(mockNotifications);
+        // --- BẮT ĐẦU VÙNG CODE ĐÃ SỬA ---
+        // Dòng code cũ đã bị xóa: updateNotificationUI(mockNotifications);
+
+        // Logic mới để gọi API lấy thông báo thực tế từ server
+        try {
+            // Giả sử endpoint để lấy thông báo là '/users/me/notifications'
+            // Bạn cần đảm bảo endpoint này tồn tại trên server của bạn.
+            const notificationResponse = await apiRequest('/users/me/notifications', 'GET');
+            const notifications = notificationResponse.data || []; // Lấy dữ liệu hoặc mảng rỗng nếu không có
+            updateNotificationUI(notifications);
+        } catch (error) {
+            console.error("Lỗi khi tải thông báo:", error);
+            // Hiển thị danh sách rỗng nếu có lỗi, tránh làm sập toàn bộ quá trình đăng nhập
+            updateNotificationUI([]); 
+        }
+        // --- KẾT THÚC VÙNG CODE ĐÃ SỬA ---
 
         const panelUsername = document.querySelector('.panel-username');
         const panelAvatar = document.querySelector('.panel-avatar');
