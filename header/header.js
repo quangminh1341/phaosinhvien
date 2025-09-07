@@ -74,9 +74,21 @@ const API_BASE_URL = '/api';
 let currentUser = null;
 
 // --- HÀM TRỢ GIÚP API ---
+/**
+ * Hàm đọc giá trị của một cookie cụ thể theo tên
+ * @param {string} name - Tên của cookie cần lấy giá trị (ví dụ: 'accessToken').
+ * @returns {string|null} - Giá trị của cookie hoặc null nếu không tìm thấy.
+ */
+function getCookie(name) {
+    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    if (match) {
+        return match[2];
+    }
+    return null;
+}
 async function apiRequest(endpoint, method = 'GET', body = null, token = null) {
     const headers = {};
-    const authToken = token || localStorage.getItem('accessToken');
+    const authToken = token || getCookie('accessToken');
     if (authToken) {
         headers['Authorization'] = `Bearer ${authToken}`;
     }
@@ -109,7 +121,8 @@ async function apiRequest(endpoint, method = 'GET', body = null, token = null) {
         
         const newAccessToken = response.headers.get('X-Access-Token');
         if (newAccessToken) {
-            localStorage.setItem('accessToken', newAccessToken);
+            // Nếu server gửi token mới qua header, bạn có thể cân nhắc lưu nó vào cookie ở đây
+            // document.cookie = `accessToken=${newAccessToken}; path=/; max-age=...`;
         }
 
         if (!response.ok) {
@@ -121,7 +134,7 @@ async function apiRequest(endpoint, method = 'GET', body = null, token = null) {
         }
         const responseData = await response.json();
         
-        return responseData.data ? { ...responseData.data, message: responseData.message } : { ...responseData, message: responseData.message };
+        return responseData;
 
     } catch (error) {
         console.error(`Lỗi API tại ${endpoint}:`, error);
@@ -203,7 +216,7 @@ async function handleOAuthCallback() {
 async function fetchAndDisplayUserProfile() {
     try {
         const response = await apiRequest('/users/me/profile');
-        currentUser = response;
+        currentUser = response.data;
         showLoggedInState(currentUser);
     } catch (error) {
         console.error("Phiên đăng nhập không hợp lệ hoặc đã hết hạn.", error);
@@ -1425,20 +1438,24 @@ function initializeHeader() {
                         return;
                     }
 
-                    // --- BƯỚC 1: TẠO SẢN PHẨM VỚI DỮ LIỆU FLAT VÀ ẢNH BÌA ---
                     const productFormData = new FormData();
-                    
+
+                    // 1. Thêm dữ liệu text/number dạng phẳng để khớp với CreateProductDto
                     productFormData.append('title', document.getElementById('add-title').value);
-                    productFormData.append('cost', parseInt(document.getElementById('add-cost').value, 10));
+                    productFormData.append('cost', document.getElementById('add-cost').value);
                     productFormData.append('about', document.getElementById('add-about').value);
                     productFormData.append('feature', document.getElementById('add-feature').value);
                     productFormData.append('parameter', document.getElementById('add-parameter').value);
                     productFormData.append('demo_link', document.getElementById('add-demo-link').value);
-                    
+
+                    // 2. Thêm file ảnh chính với tên trường là 'images' (số nhiều)
+                    // Đây là thay đổi cuối cùng và quan trọng nhất để khớp với FileInterceptor('images',...)
                     productFormData.append('images', coverFile);
 
+                    // Gửi request tạo sản phẩm
                     const productResponse = await apiRequest('/products', 'POST', productFormData);
-                    const productId = productResponse.id;
+                    // console.log("Kiểm tra dữ liệu trả về từ API:", productResponse);
+                    const productId = productResponse.data.id;
 
                     if (!productId) {
                         throw new Error("Không nhận được ID sản phẩm sau khi tạo.");
@@ -1448,6 +1465,7 @@ function initializeHeader() {
                     if (otherImages.length > 0) {
                         const galleryFormData = new FormData();
                         for (const file of otherImages) {
+                            // Endpoint này có thể dùng FilesInterceptor('images') để nhận nhiều file
                             galleryFormData.append('images', file);
                         }
                         await apiRequest(`/products/${productId}/images`, 'POST', galleryFormData);
