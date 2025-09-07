@@ -1,60 +1,3 @@
-// Dữ liệu thông báo giả định
-const mockNotifications = [
-    // { id: 1, message: "Chào mừng bạn đến với Phao Sinh Viên! Hãy khám phá các dịch vụ của chúng tôi.", timestamp: "5 phút trước", read: false },
-    // { id: 2, message: "Ưu đãi đặc biệt: Giảm giá 20% cho đơn hàng đầu tiên của bạn khi đăng ký.", timestamp: "1 giờ trước", read: false },
-    // { id: 3, message: "Dự án Website Tĩnh của bạn đã được cập nhật.", timestamp: "3 giờ trước", read: true },
-    // { id: 4, message: "Bạn có một tin nhắn mới từ bộ phận hỗ trợ.", timestamp: "1 ngày trước", read: false },
-    // { id: 5, message: "Chính sách bảo mật của chúng tôi đã được cập nhật.", timestamp: "2 ngày trước", read: true },
-    // ...Array.from({ length: 30 }, (_, i) => ({
-    //     id: i + 6,
-    //     message: `Đây là thông báo số ${i + 6}. Nội dung này chỉ để kiểm tra.`,
-    //     timestamp: `${i + 3} ngày trước`,
-    //     read: i % 3 !== 0,
-    // }))
-];
-
-// Dữ liệu đơn hàng giả định
-const mockOrders = [
-    // { id: 'PSV-A4B1C2', productName: 'Website Tĩnh - CV Cá Nhân', date: '2025-07-28T10:30:00', price: 50000, status: 'Hoàn thành', revisions: 2 },
-    // { id: 'PSV-D5E6F7', productName: 'Fullstack - Web Bán Hàng', date: '2025-07-25T14:00:00', price: 150000, status: 'Hoàn thành', revisions: 1 },
-    // { id: 'PSV-G8H9I0', productName: 'Custom - App Quản Lý', date: '2025-08-30T09:00:00', price: 300000, status: 'Tiến hành', revisions: 0 },
-    // { id: 'PSV-J1K2L3', productName: 'Website Tĩnh - Landing Page', date: '2025-08-31T11:45:00', price: 75000, status: 'Chờ xác nhận', revisions: 0 },
-    // { id: 'PSV-M4N5O6', productName: 'Fullstack - Blog cá nhân', date: '2025-07-22T18:20:00', price: 120000, status: 'Từ Chối', revisions: 0, rejectionReason: 'Yêu cầu không khả thi trong thời gian ngắn.' },
-    // { id: 'PSV-P7Q8R9', productName: 'Website Tĩnh - Portfolio', date: '2025-08-31T16:00:00', price: 60000, status: 'Chờ xác nhận', revisions: 0 },
-    // { id: 'PSV-T5U6V7', productName: 'Website Tĩnh - Web nhà hàng', date: '2025-08-15T12:00:00', price: 90000, status: 'Đã hủy', revisions: 1 },
-];
-
-// Dữ liệu giao dịch giả định
-const mockTransactions = [
-    // { type: 'deposit', amount: 50000, date: '2025-07-15T08:00:00', method: 'Thẻ cào', endingBalance: 1975000 },
-    // { type: 'spent', amount: 50000, date: '2025-07-28T10:31:00', productName: 'Website Tĩnh - CV Cá Nhân', endingBalance: 1925000 },
-    // { type: 'withdrawal', amount: 20000, date: '2025-08-15T14:30:00', endingCommissionBalance: 50000 },
-    // { type: 'deposit', amount: 100000, date: '2025-08-20T09:15:00', method: 'Chuyển khoản', endingBalance: 2025000 },
-    // { type: 'spent', amount: 75000, date: '2025-08-31T11:46:00', productName: 'Website Tĩnh - Landing Page', endingBalance: 1950000 },
-];
-
-// Dữ liệu các cấp độ (Level)
-const mockLevels = [
-    // { id: '123', title: 'Đồng', min_referrals: 0, commission_percentage: 0.05 }, // 5%
-    // { id: '456', title: 'Bạc', min_referrals: 20, commission_percentage: 0.055 }, // 5.5%
-    // { id: '789', title: 'Vàng', min_referrals: 50, commission_percentage: 0.06 }, // 6%
-];
-
-// Dữ liệu lịch sử dùng mã
-const mockReferralUsages = [
-    // { usedByFullName: 'Nguyễn Văn A', usedByGmail: 'nguyenvana@gmail.com', dateUsed: '2025-08-25T10:00:00' },
-    // { usedByFullName: 'Trần Thị B', usedByGmail: 'tranthib@gmail.com', dateUsed: '2025-08-20T15:30:00' },
-    // { usedByFullName: 'Lê Hoàng C', usedByGmail: 'lehoangc@gmail.com', dateUsed: '2025-08-19T11:20:00' },
-    // { usedByFullName: 'Phạm Thị D', usedByGmail: 'phamthid@gmail.com', dateUsed: '2025-08-15T09:05:00' },
-    // { usedByFullName: 'Võ Văn E', usedByGmail: 'vovane@gmail.com', dateUsed: '2025-08-12T20:00:00' },
-    // { usedByFullName: 'Đặng Thị F', usedByGmail: 'dangthif@gmail.com', dateUsed: '2025-08-10T14:10:00' },
-    // { usedByFullName: 'Hồ Văn G', usedByGmail: 'hovang@gmail.com', dateUsed: '2025-08-05T18:45:00' },
-    // { usedByFullName: 'Bùi Thị H', usedByGmail: 'buithih@gmail.com', dateUsed: '2025-08-02T08:00:00' },
-    // { usedByFullName: 'Đỗ Văn I', usedByGmail: 'dovani@gmail.com', dateUsed: '2025-07-30T22:30:00' },
-    // { usedByFullName: 'Hoàng Thị K', usedByGmail: 'hoangthik@gmail.com', dateUsed: '2025-07-28T13:00:00' },
-    // { usedByFullName: 'Ngô Văn L', usedByGmail: 'ngovanl@gmail.com', dateUsed: '2025-07-25T16:25:00' },
-    // { usedByFullName: 'Dương Thị M', usedByGmail: 'duongthim@gmail.com', dateUsed: '2025-07-21T19:00:00' },
-];
 
 // Dữ liệu hoa hồng giả định
 const mockCommissionHistory = [
@@ -70,7 +13,7 @@ let authModalOverlay, authContainer, modalAnimation, openModal, animatedText;
 
 // --- CẤU HÌNH API ---
 // ***** LƯU Ý: Đổi lại API_BASE_URL thành endpoint server của bạn khi deploy *****
-const API_BASE_URL = 'https://phaosinhvien.com/api'; 
+const API_BASE_URL = '/api'; 
 let currentUser = null;
 
 // --- HÀM TRỢ GIÚP API ---
@@ -217,9 +160,8 @@ async function fetchAndDisplayUserProfile() {
     try {
         const response = await apiRequest('/users/me/profile');
         const userData = response.data;
-        console.log('Dữ liệu người dùng nhận được từ API:', userData);
+        // console.log('Dữ liệu người dùng nhận được từ API:', userData);
         
-        // **THAY ĐỔI**: Kiểm tra xem hồ sơ đã có tên đầy đủ và số điện thoại chưa.
         if (!userData || !userData.full_name || !userData.phone_number) {
             console.warn("Hồ sơ người dùng chưa hoàn chỉnh (thiếu tên hoặc SĐT). Yêu cầu cập nhật.");
             // Không hiển thị trạng thái đăng nhập và trả về false.
@@ -1397,7 +1339,7 @@ function initializeHeader() {
             if (imageInput && previewContainer) {
                 imageInput.addEventListener('change', (event) => {
                     previewContainer.innerHTML = '';
-                    const files = Array.from(event.target.files);
+                    const files = Array.from(event.target.files).filter(file => file.name.toLowerCase().endsWith('.webp'));
                     
                     if(files.length === 0) return;
 
