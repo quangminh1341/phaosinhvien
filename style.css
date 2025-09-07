@@ -1809,28 +1809,40 @@ body.light-mode .referral-date {
 /* --- CSS CHO MENU KEBAB CỦA ADMIN TRONG CHI TIẾT SẢN PHẨM --- */
 .product-title-wrapper {
     position: relative;
+    display: flex; 
+    justify-content: space-between;
+    align-items: flex-start; /* Canh chỉnh theo đỉnh */
+    gap: 15px; /* Thêm khoảng cách */
 }
 
 .admin-actions-menu {
     position: relative;
+    flex-shrink: 0; /* Ngăn không cho menu bị co lại */
 }
 
 .kebab-btn {
     background: transparent;
-    border: none;
-    color: var(--accent-primary);
-    font-size: 1.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    color: var(--text-primary);
+    font-size: 1rem;
     cursor: pointer;
-    padding: 5px 10px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.2s, border-color 0.2s;
 }
 
 .kebab-btn:hover {
-    color: var(--hover-color);
+    background-color: var(--fomt-box-color);
+    border-color: var(--accent-primary);
 }
 
 .kebab-dropdown {
     position: absolute;
-    top: 100%;
+    top: calc(100% + 5px); /* Khoảng cách với nút */
     right: 0;
     background-color: var(--bg-secondary);
     border: 1px solid var(--border-color);
