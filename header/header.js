@@ -1640,7 +1640,10 @@ function initializeHeader() {
                             console.log("Cập nhật thông tin text và ảnh bìa thành công!");
                             updateSuccess = true;
                         } else {
-                            throw new Error("Phản hồi cập nhật thông tin không thành công.");
+                            // Chuyển đổi phản hồi từ server thành chuỗi để dễ đọc
+                            const serverResponseText = JSON.stringify(patchResponse, null, 2); 
+                            // Ném ra lỗi mới với thông tin chi tiết hơn
+                            throw new Error(`Phản hồi cập nhật không thành công. Máy chủ trả về:\n\n${serverResponseText}`);
                         }
 
                         // --- STEP 2: POST new gallery images ---
