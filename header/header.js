@@ -1621,7 +1621,8 @@ function initializeHeader() {
                     try {
                         // --- STEP 1: PATCH text data and new cover image ---
                         const patchFormData = new FormData();
-                        const fields = ['title', 'cost', 'about', 'feature', 'parameter', 'demo_link'];
+                        // header.js (khoảng dòng 1625)
+                        const fields = ['title', 'cost', 'about', 'feature', 'parameter', 'support', 'demo_link'];
                         fields.forEach(field => {
                             const input = document.getElementById(`edit-${field}${suffix}`);
                             patchFormData.append(field, input.value);

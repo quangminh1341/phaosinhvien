@@ -148,7 +148,7 @@ function groupProductsByCategory(products) {
  */
 async function loadAllProducts() {
     try {
-        const response = await apiRequest('/products'); // GET request to /products
+        const response = await apiRequest('/products?page=1&limit=20'); // GET request to /products
         
         if (!response || !response.data) throw new Error('Cấu trúc phản hồi API không hợp lệ');
 
