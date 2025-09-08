@@ -1636,7 +1636,7 @@ function initializeHeader() {
                         }
                         
                         const patchResponse = await apiRequest(`/products/${productId}`, 'PATCH', patchFormData);
-                        if (patchResponse && patchResponse.message === "Updated successfully") {
+                        if (patchResponse && patchResponse.message === "updated successfully") {
                             console.log("Cập nhật thông tin text và ảnh bìa thành công!");
                             updateSuccess = true;
                         } else {
