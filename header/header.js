@@ -1630,67 +1630,60 @@ function initializeHeader() {
 
             // START: MODIFICATION - UPDATE BUTTON LOGIC
             const updateBtn = document.getElementById(`update-product-btn${suffix}`);
-            if (updateBtn) {
-                updateBtn.addEventListener('click', async () => {
-                    const formWrapper = updateBtn.closest('[id^="edit-form-wrapper"]');
-                    const productId = formWrapper.dataset.productId;
-                    
-                    if (!productId) {
-                        alert('Lỗi: Không tìm thấy ID sản phẩm để cập nhật.');
-                        return;
-                    }
-
-                    updateBtn.disabled = true;
-                    updateBtn.textContent = 'Đang cập nhật...';
-
-                    try {
-                        // --- LOGIC MỚI ---
-
-                        // --- BƯỚC 1: Chuẩn bị dữ liệu metadata và ảnh bìa mới (nếu có) ---
-                        const metadataFormData = new FormData();
-                        metadataFormData.append('title', document.getElementById(`edit-title${suffix}`).value);
-                        metadataFormData.append('cost', document.getElementById(`edit-cost${suffix}`).value);
-                        metadataFormData.append('about', document.getElementById(`edit-about${suffix}`).value);
-                        metadataFormData.append('feature', document.getElementById(`edit-feature${suffix}`).value);
-                        metadataFormData.append('parameter', document.getElementById(`edit-parameter${suffix}`).value);
-                        metadataFormData.append('demo_link', document.getElementById(`edit-demo-link${suffix}`).value);
+                if (updateBtn) {
+                    updateBtn.addEventListener('click', async () => {
+                        const formWrapper = updateBtn.closest('[id^="edit-form-wrapper"]');
+                        const productId = formWrapper.dataset.productId;
                         
-                        const newFiles = managedFiles[editFileStoreKey];
-                        const newCoverFile = newFiles.find(f => f.name.split('.')[0] === '1');
-                        
-                        // Nếu có ảnh bìa mới được tải lên (tên là "1"), thêm nó vào yêu cầu PATCH
-                        if (newCoverFile) {
-                            metadataFormData.append('cover_image', newCoverFile);
-                        }
-                        
-                        // --- BƯỚC 2: Gửi yêu cầu PATCH với metadata và ảnh bìa mới ---
-                        await apiRequest(`/products/${productId}`, 'PATCH', metadataFormData);
-
-                        // --- BƯỚC 3: Tải lên TẤT CẢ các ảnh mới vào gallery ---
-                        // (Bao gồm cả ảnh bìa mới nếu có)
-                        if (newFiles.length > 0) {
-                            const galleryFormData = new FormData();
-                            newFiles.forEach(file => {
-                                galleryFormData.append('images', file);
-                            });
-                            await apiRequest(`/products/${productId}/images`, 'POST', galleryFormData);
+                        if (!productId) {
+                            alert('Lỗi: Không tìm thấy ID sản phẩm để cập nhật.');
+                            return;
                         }
 
-                        alert("Cập nhật sản phẩm thành công!");
-                        
-                        managedFiles[editFileStoreKey] = [];
-                        // Tùy chọn: Bạn có thể thêm logic để tải lại dữ liệu sản phẩm và hiển thị lại form ở đây
-                        
-                    } catch (error) {
-                        alert(`Lỗi khi cập nhật sản phẩm: ${error.message}`);
-                    } finally {
-                        updateBtn.disabled = false;
-                        updateBtn.textContent = 'Cập nhật';
-                    }
-                });
-            }
+                        updateBtn.disabled = true;
+                        updateBtn.textContent = 'Đang cập nhật...';
 
-            
+                        try {
+                            // --- LOGIC ĐÃ SỬA ---
+
+                            // --- BƯỚC 1: Chuẩn bị và gửi dữ liệu metadata (CHỈ CÓ VĂN BẢN) ---
+                            const metadataFormData = new FormData();
+                            metadataFormData.append('title', document.getElementById(`edit-title${suffix}`).value);
+                            metadataFormData.append('cost', document.getElementById(`edit-cost${suffix}`).value);
+                            metadataFormData.append('about', document.getElementById(`edit-about${suffix}`).value);
+                            metadataFormData.append('feature', document.getElementById(`edit-feature${suffix}`).value);
+                            metadataFormData.append('parameter', document.getElementById(`edit-parameter${suffix}`).value);
+                            metadataFormData.append('demo_link', document.getElementById(`edit-demo-link${suffix}`).value);
+                            
+                            // Gửi yêu cầu PATCH chỉ với metadata. Yêu cầu này sẽ thành công.
+                            await apiRequest(`/products/${productId}`, 'PATCH', metadataFormData);
+
+                            // --- BƯỚC 2: Tải lên TẤT CẢ các ảnh MỚI vào gallery ---
+                            const newFiles = managedFiles[editFileStoreKey];
+                            if (newFiles.length > 0) {
+                                const galleryFormData = new FormData();
+                                newFiles.forEach(file => {
+                                    galleryFormData.append('images', file);
+                                });
+                                // Yêu cầu này sẽ tải tất cả ảnh mới lên.
+                                // Server sẽ tự xử lý file tên "1.webp" để cập nhật ảnh bìa.
+                                await apiRequest(`/products/${productId}/images`, 'POST', galleryFormData);
+                            }
+
+                            alert("Cập nhật sản phẩm thành công!");
+                            
+                            managedFiles[editFileStoreKey] = [];
+                            // Cân nhắc tải lại dữ liệu sản phẩm và hiển thị lại form tại đây
+                            
+                        } catch (error) {
+                            alert(`Lỗi khi cập nhật sản phẩm: ${error.message}`);
+                        } finally {
+                            updateBtn.disabled = false;
+                            updateBtn.textContent = 'Cập nhật';
+                        }
+                    });
+                }
+         
             renderImagePreviews(addFileStoreKey, []);
             renderImagePreviews(editFileStoreKey, []);
         };
