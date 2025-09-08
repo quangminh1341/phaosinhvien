@@ -912,22 +912,39 @@ function initializeHeader() {
         
         const showPanel = async (targetId) => {
             const protectedPanels = [
-                'panel-profile', 'panel-orders', 'panel-payments', 
-                'panel-marketing', 'panel-dashboard', 'panel-admin-orders', 
+                'panel-profile', 'panel-orders', 'panel-payments',
+                'panel-marketing', 'panel-dashboard', 'panel-admin-orders',
                 'panel-admin-notifications', 'panel-admin-codes'
             ];
 
-            if (protectedPanels.includes(targetId) && !currentUser) {
-                openModal(false, 'Vui lòng đăng nhập để truy cập chức năng này.');
-                return;
-            }
+            // --- BẮT ĐẦU PHẦN CHỈNH SỬA ---
 
-            const isAdminPanel = targetId.startsWith('panel-admin-') || targetId === 'panel-dashboard';
-            if (isAdminPanel && (!currentUser || currentUser.role !== 'admin')) {
-                alert('Bạn không có quyền truy cập chức năng này.');
-                return;
+            // Nếu đây là panel cần bảo vệ, hãy tiến hành kiểm tra đăng nhập
+            if (protectedPanels.includes(targetId)) {
+                // Kiểm tra xem thông tin người dùng đã được tải chưa
+                let isLoggedIn = !!window.currentUser;
+
+                // Nếu chưa, thử lấy thông tin người dùng từ server (dựa vào cookie)
+                if (!isLoggedIn) {
+                    isLoggedIn = await fetchAndDisplayUserProfile();
+                }
+
+                // Nếu sau khi thử vẫn không đăng nhập được, thì mới hiển thị modal
+                if (!isLoggedIn) {
+                    openModal(false, 'Vui lòng đăng nhập để truy cập chức năng này.');
+                    return; // Dừng hàm tại đây
+                }
+
+                // Kiểm tra quyền admin (chỉ thực hiện khi đã chắc chắn đăng nhập)
+                const isAdminPanel = targetId.startsWith('panel-admin-') || targetId === 'panel-dashboard';
+                if (isAdminPanel && (!window.currentUser || window.currentUser.role !== 'admin')) {
+                    alert('Bạn không có quyền truy cập chức năng này.');
+                    return;
+                }
             }
             
+            // --- KẾT THÚC PHẦN CHỈNH SỬA ---
+
             userPanelModal.querySelectorAll('.panel-content-item').forEach(p => p.classList.remove('active'));
             const targetPanel = document.getElementById(targetId);
             if (targetPanel) targetPanel.classList.add('active');
