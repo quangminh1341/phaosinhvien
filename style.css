@@ -2182,3 +2182,78 @@ body.light-mode .referral-date {
 .add-image-placeholder input[type="file"] {
     display: none;
 }
+
+/* --- CSS MỚI CHO DASHBOARD IMAGE PREVIEWS --- */
+.image-previews {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.preview-item {
+    position: relative;
+    transition: transform 0.2s ease;
+}
+
+.preview-item:hover {
+    transform: scale(1.05);
+}
+
+.remove-preview-btn {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 24px;
+    height: 24px;
+    background-color: rgba(229, 57, 53, 0.9);
+    color: white;
+    border: 2px solid var(--bg-primary);
+    border-radius: 50%;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 2;
+}
+
+.preview-item:hover .remove-preview-btn {
+    opacity: 1;
+    pointer-events: auto;
+    transform: scale(1.1);
+}
+
+.remove-preview-btn:hover {
+    background-color: #e53935;
+    transform: scale(1.2);
+}
+
+.add-image-placeholder {
+    width: 120px;
+    height: 90px;
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-size: 3rem;
+    color: var(--border-color);
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.add-image-placeholder:hover {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+    background-color: var(--fomt-box-color);
+}
+
+.add-image-placeholder input[type="file"] {
+    display: none;
+}

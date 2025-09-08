@@ -12,6 +12,14 @@ let authModalOverlay, authContainer, modalAnimation, openModal, animatedText;
 let openPanelModal; 
 let populateAndShowEditForm;
 
+// --- BIẾN TOÀN CỤC CHO QUẢN LÝ TỆP ---
+let managedFiles = {
+    addHtml: [],
+    editHtml: [],
+    addFullstack: [],
+    editFullstack: []
+};
+
 
 // --- CẤU HÌNH API ---
 // ***** LƯU Ý: Đổi lại API_BASE_URL thành endpoint server của bạn khi deploy *****
@@ -1002,10 +1010,8 @@ function initializeHeader() {
         userPanelModal.addEventListener('click', (e) => { if (e.target === userPanelModal) closePanelModal(); });
 
         populateAndShowEditForm = (productData) => {
-            // 1. Mở modal và panel Dashboard
             openPanelModal('panel-dashboard');
 
-            // Delay một chút để đảm bảo các element trong modal đã sẵn sàng
             setTimeout(() => {
                 const category = productData.category;
                 let tabId, type, suffix, lowerType;
@@ -1021,27 +1027,23 @@ function initializeHeader() {
                     suffix = '-fullstack';
                     lowerType = 'fullstack';
                 } else {
-                    // Xử lý cho "Đồ Án" hoặc các danh mục khác nếu cần
                     alert(`Chức năng sửa cho danh mục "${category}" chưa được hỗ trợ.`);
                     return;
                 }
 
-                // 2. Kích hoạt đúng tab con (Website HTML / Fullstack)
                 document.querySelector('.dashboard-filters .filter-btn.active').classList.remove('active');
                 document.querySelector(`.dashboard-filters .filter-btn[data-target="${tabId}"]`).classList.add('active');
 
                 document.querySelectorAll('.dashboard-tab-content.active').forEach(t => t.classList.remove('active'));
                 document.getElementById(tabId).classList.add('active');
                 
-                // 3. Chuyển sang chế độ "Sửa"
                 const modeToggle = document.getElementById(`mode-toggle-${lowerType}`);
-                if (modeToggle.checked) { // Nếu đang ở chế độ "Thêm"
-                    modeToggle.click(); // Giả lập hành động click để chuyển sang "Sửa"
+                if (!modeToggle.checked) {
+                    modeToggle.click();
                 }
 
-                // 4. Điền thông tin sản phẩm vào form
                 const editFormWrapper = document.getElementById(`edit-form-wrapper${suffix}`);
-                editFormWrapper.dataset.productId = productData.id; // Lưu ID để dùng khi submit
+                editFormWrapper.dataset.productId = productData.id;
                 
                 document.getElementById(`edit-title${suffix}`).value = productData.title || '';
                 document.getElementById(`edit-cost${suffix}`).value = productData.cost || '';
@@ -1050,14 +1052,12 @@ function initializeHeader() {
                 document.getElementById(`edit-parameter${suffix}`).value = productData.parameter || '';
                 document.getElementById(`edit-demo-link${suffix}`).value = productData.demo_link || '';
                 
-                // 5. Hiển thị các ảnh đã có của sản phẩm
                 const fileStoreKey = `edit${type}`;
-                managedFiles[fileStoreKey] = []; // Xóa các file mới đang chờ từ lần sửa trước
+                managedFiles[fileStoreKey] = [];
                 renderImagePreviews(fileStoreKey, productData.imageGallery || []);
                 
                 editFormWrapper.style.display = 'block';
-
-            }, 150); // Delay 150ms
+            }, 150);
         };
 
         const copyReferralBtn = document.getElementById('copy-referral-btn');
@@ -1205,7 +1205,7 @@ function initializeHeader() {
 
         if (openBankLinkModalBtn) openBankLinkModalBtn.addEventListener('click', () => openPaymentModal(bankLinkModal));
         if (openMomoLinkModalBtn) openMomoLinkModalBtn.addEventListener('click', () => openPaymentModal(momoLinkModal));
-        if (openZaloPayLinkModalBtn) openZaloPayLinkModalBtn.addEventListener('click', () => openPaymentModal(zaloPayLinkModal));
+        if (openZaloPayLinkModalBtn) openZaloPayLinkModalBtn.addEventListener('click', () => openPaymentModal(zalopayLinkModal));
 
         allPaymentModals.forEach(modal => {
             if (modal) {
@@ -1358,13 +1358,6 @@ function initializeHeader() {
             });
         }
         
-        let managedFiles = {
-            addHtml: [],
-            editHtml: [],
-            addFullstack: [],
-            editFullstack: []
-        };
-
         const dashboardFilters = document.querySelector('.dashboard-filters');
         const dashboardTabs = document.querySelectorAll('.dashboard-tab-content');
 
@@ -1384,121 +1377,11 @@ function initializeHeader() {
             });
         }
 
-        const renderImagePreviews = (fileStoreKey, existingImageUrls = []) => {
-            let previewContainerId;
-            if (fileStoreKey === 'addHtml') previewContainerId = '#add-image-previews';
-            else if (fileStoreKey === 'editHtml') previewContainerId = '#edit-image-previews';
-            else if (fileStoreKey === 'addFullstack') previewContainerId = '#add-image-previews-fullstack';
-            else if (fileStoreKey === 'editFullstack') previewContainerId = '#edit-image-previews-fullstack';
-            else return;
-
-            const previewContainer = document.querySelector(previewContainerId);
-            if (!previewContainer) return;
-
-            previewContainer.innerHTML = ''; // Clear existing previews
-
-            // 1. Render existing images from URLs
-            existingImageUrls.forEach((url, index) => {
-                const isMain = index === 0; // Assume first image is the main cover
-                const previewItem = document.createElement('div');
-                previewItem.className = 'preview-item existing-image';
-                if (isMain) previewItem.classList.add('main-image');
-                previewItem.dataset.originalUrl = url;
-
-                previewItem.innerHTML = `
-                    <img src="${url}" alt="Existing Preview">
-                    <div class="caption">${isMain ? 'Ảnh chính' : 'Ảnh phụ'}</div>
-                    <button type="button" class="remove-preview-btn">&times;</button>
-                `;
-
-                previewItem.querySelector('.remove-preview-btn').onclick = () => {
-                    previewItem.remove(); // Simply remove the element from the DOM
-                };
-                previewContainer.appendChild(previewItem);
-            });
-
-            // 2. Render newly added files from managedFiles
-            const newFiles = managedFiles[fileStoreKey] || [];
-            const sortedFiles = [...newFiles].sort((a, b) => {
-                const nameA = a.name.split('.')[0];
-                const nameB = b.name.split('.')[0];
-                if (nameA === '1') return -1;
-                if (nameB === '1') return 1;
-                return a.name.localeCompare(b.name, undefined, { numeric: true });
-            });
-
-            sortedFiles.forEach(file => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const isMain = file.name.split('.')[0] === '1';
-                    const previewItem = document.createElement('div');
-                    previewItem.className = 'preview-item new-file';
-                    if (isMain) previewItem.classList.add('main-image');
-
-                    previewItem.innerHTML = `
-                        <img src="${e.target.result}" alt="New Preview">
-                        <div class="caption">${isMain ? 'Ảnh chính (Mới)' : 'Ảnh phụ (Mới)'}</div>
-                        <button type="button" class="remove-preview-btn">&times;</button>
-                    `;
-                    previewItem.querySelector('.remove-preview-btn').onclick = () => {
-                        managedFiles[fileStoreKey] = managedFiles[fileStoreKey].filter(f => f.name !== file.name);
-                        // Re-render only the new files part, keeping existing ones intact
-                        renderImagePreviews(fileStoreKey, existingImageUrls);
-                    };
-                    previewContainer.appendChild(previewItem);
-                };
-                reader.readAsDataURL(file);
-            });
-            
-            // 3. Add the placeholder for uploading more files
-            const addPlaceholder = document.createElement('div');
-            addPlaceholder.className = 'add-image-placeholder';
-            addPlaceholder.innerHTML = `+<input type="file" accept="image/*" multiple />`;
-            const fileInput = addPlaceholder.querySelector('input');
-            addPlaceholder.onclick = () => fileInput.click();
-
-            fileInput.onchange = (event) => {
-                handleFileSelection(event.target.files, fileStoreKey, false);
-                // After adding new files, re-render with the existing URLs
-                renderImagePreviews(fileStoreKey, existingImageUrls); 
-            };
-            previewContainer.appendChild(addPlaceholder);
-        };
-
-
-        const handleFileSelection = (files, fileStoreKey, folderMode = false) => {
-            const newFiles = Array.from(files);
-            const existingFileNames = managedFiles[fileStoreKey].map(f => f.name);
-            
-            let uniqueNewFiles;
-
-            if (folderMode) {
-                // Chế độ chọn thư mục: Chỉ lọc file .webp
-                uniqueNewFiles = newFiles.filter(f =>
-                    f.name.toLowerCase().endsWith('.webp') && !existingFileNames.includes(f.name)
-                );
-                if (newFiles.length > 0 && uniqueNewFiles.length === 0) {
-                    alert('Thư mục đã chọn không chứa file ảnh .webp nào.');
-                }
-            } else {
-                // Chế độ chọn tệp: Lọc các file ảnh thông thường
-                uniqueNewFiles = newFiles.filter(f =>
-                    f.type.startsWith('image/') && !existingFileNames.includes(f.name)
-                );
-            }
-
-            if (uniqueNewFiles.length > 0) {
-                managedFiles[fileStoreKey].push(...uniqueNewFiles);
-                // Sau khi cập nhật, gọi render lại để hiển thị
-                renderImagePreviews(fileStoreKey);
-            }
-        };
-
         const initializeDashboardTab = (type) => {
             const lowerType = type.toLowerCase();
             const suffix = type === 'Html' ? '' : `-${lowerType}`;
             const addFileStoreKey = `add${type}`;
-            const editFileStoreKey = `edit${type}`;
+            const editFileStoreKey = `edit${lowerType}`;
 
             const modeToggle = document.getElementById(`mode-toggle-${lowerType}`);
             if (modeToggle) {
@@ -1524,19 +1407,16 @@ function initializeHeader() {
             const addFolderInput = document.getElementById(`add-images${suffix}`);
                 if (addFolderInput) {
                     addFolderInput.addEventListener('change', (event) => {
-                        // GỌI HÀM XỬ LÝ CHUNG
-                        handleFileSelection(event.target.files, addFileStoreKey, true); // folderMode = true để lọc .webp
-                        event.target.value = ''; // Reset input để có thể chọn lại cùng thư mục
+                        handleFileSelection(event.target.files, addFileStoreKey, true);
+                        event.target.value = '';
                     });
                 }
 
-                // Tương tự cho form Sửa
                 const editFolderInput = document.getElementById(`edit-images${suffix}`);
                 if (editFolderInput) {
                     editFolderInput.addEventListener('change', (event) => {
-                        // GỌI HÀM XỬ LÝ CHUNG
-                        handleFileSelection(event.target.files, editFileStoreKey, true); // folderMode = true để lọc .webp
-                        event.target.value = ''; // Reset input
+                        handleFileSelection(event.target.files, editFileStoreKey, true);
+                        event.target.value = '';
                     });
                 }
 
@@ -1586,20 +1466,59 @@ function initializeHeader() {
                     }
                 });
             }
+            
+            const editProductForm = document.getElementById(`edit-product-form${suffix}`);
+            if (editProductForm) {
+                editProductForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
 
-            // Logic cho form sửa sản phẩm có thể được thêm vào đây theo cách tương tự
-            // ...
+                    const editFormWrapper = document.getElementById(`edit-form-wrapper${suffix}`);
+                    const productId = editFormWrapper.dataset.productId;
+                    if (!productId) {
+                        alert('Không tìm thấy ID sản phẩm để cập nhật.');
+                        return;
+                    }
 
-            // Khởi tạo preview rỗng ban đầu
+                    const editFileStoreKey = `edit${type}`;
+                    const newFiles = managedFiles[editFileStoreKey];
+                    
+                    const coverFile = newFiles.find(f => f.name.split('.')[0] === '1');
+                    
+                    const productFormData = new FormData();
+                    productFormData.append('title', document.getElementById(`edit-title${suffix}`).value);
+                    productFormData.append('cost', document.getElementById(`edit-cost${suffix}`).value);
+                    productFormData.append('about', document.getElementById(`edit-about${suffix}`).value);
+                    productFormData.append('feature', document.getElementById(`edit-feature${suffix}`).value);
+                    productFormData.append('parameter', document.getElementById(`edit-parameter${suffix}`).value);
+                    productFormData.append('demo_link', document.getElementById(`edit-demo-link${suffix}`).value);
+                    if (coverFile) {
+                        productFormData.append('cover_image', coverFile);
+                    }
+                    
+                    try {
+                        const response = await apiRequest(`/products/${productId}`, 'PATCH', productFormData);
+                        
+                        if (response.message === "Updated successfully") {
+                            alert('Cập nhật thành công!');
+                            editProductForm.reset();
+                            managedFiles[editFileStoreKey] = [];
+                            renderImagePreviews(editFileStoreKey);
+                            editFormWrapper.style.display = 'none';
+                        }
+                    } catch (error) {
+                        alert(`Đã xảy ra lỗi khi cập nhật: ${error.message}`);
+                        console.error('Lỗi chi tiết:', error);
+                    }
+                });
+            }
+
             renderImagePreviews(addFileStoreKey);
             renderImagePreviews(editFileStoreKey);
         };
 
-        // Khởi tạo cho cả hai tab
         initializeDashboardTab('Html');
         initializeDashboardTab('Fullstack');
-
-        // Logic cho Admin Orders Panel (giữ nguyên từ file của bạn)
+        
         const adminProjectFilters = document.querySelector('.admin-project-filters');
         const adminStatusFilters = document.querySelector('#panel-admin-orders .order-filters');
 
