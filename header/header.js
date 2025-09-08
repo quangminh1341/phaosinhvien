@@ -202,17 +202,20 @@ async function handleLogout() {
 
 // --- CÁC HÀM CẬP NHẬT GIAO DIỆN ---
 
-async function showLoggedInState(user) {
+async function showLoggedInState() {
     const headerAuth = document.querySelector('.header-auth');
     const profileContainer = document.querySelector('.profile-container');
     const notificationContainer = document.querySelector('.notification-container');
 
-    if (headerAuth && profileContainer && notificationContainer && user) {
+    // SỬA Ở ĐÂY: Kiểm tra trực tiếp 'window.currentUser'
+    if (headerAuth && profileContainer && notificationContainer && window.currentUser) { 
         profileContainer.querySelector('.profile-name').textContent = window.currentUser.full_name || window.currentUser.email;
-        profileContainer.querySelector('.profile-money').textContent = `Số dư: ${user.moneys?.toLocaleString('vi-VN') || 0} VNĐ`;
+        // SỬA Ở ĐÂY: Sử dụng 'window.currentUser'
+        profileContainer.querySelector('.profile-money').textContent = `Số dư: ${window.currentUser.moneys?.toLocaleString('vi-VN') || 0} VNĐ`; 
         
         const profileAvatar = profileContainer.querySelector('.profile-avatar');
-        if (user.avatar_url) profileAvatar.src = user.avatar_url;
+        // SỬA Ở ĐÂY: Sử dụng 'window.currentUser'
+        if (window.currentUser.avatar_url) profileAvatar.src = window.currentUser.avatar_url;
 
         headerAuth.style.display = 'none';
         profileContainer.style.display = 'block';
@@ -229,16 +232,19 @@ async function showLoggedInState(user) {
 
         const panelUsername = document.querySelector('.panel-username');
         const panelAvatar = document.querySelector('.panel-avatar');
-        if (panelUsername) panelUsername.textContent = user.full_name || user.email;
-        if (panelAvatar) panelAvatar.src = user.avatar_url || 'images/logo.png';
+        // SỬA Ở ĐÂY: Sử dụng 'window.currentUser'
+        if (panelUsername) panelUsername.textContent = window.currentUser.full_name || window.currentUser.email;
+        if (panelAvatar) panelAvatar.src = window.currentUser.avatar_url || 'images/logo.png';
         
         const adminOnlyElements = document.querySelectorAll('.admin-only');
-        const displayStyle = (user.role === 'admin') ? 'block' : 'none';
+        // SỬA Ở ĐÂY: Sử dụng 'window.currentUser'
+        const displayStyle = (window.currentUser.role === 'admin') ? 'block' : 'none';
         adminOnlyElements.forEach(el => {
             el.style.display = displayStyle;
         });
         
-        populateProfilePanel(user);
+        // SỬA Ở ĐÂY: Sử dụng 'window.currentUser'
+        populateProfilePanel(window.currentUser); 
     }
 }
 
