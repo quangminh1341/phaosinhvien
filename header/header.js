@@ -1385,6 +1385,7 @@ function initializeHeader() {
         
             previewContainer.innerHTML = '';
         
+            // START: MODIFICATION FOR IMAGE DELETION
             existingImages.forEach((img, index) => {
                 const isMain = index === 0;
                 const previewItem = document.createElement('div');
@@ -1408,12 +1409,22 @@ function initializeHeader() {
                         return;
                     }
 
+                    if (!confirm("Bạn có chắc chắn muốn xóa ảnh này không?")) {
+                        return;
+                    }
+
                     try {
                         const response = await apiRequest(`/products/${productId}/images/${imageId}`, 'DELETE');
                         if (response && response.message === "Deleted successfully") {
-                            previewItem.remove(); // Xóa khỏi giao diện
+                            previewItem.remove();
+                            // Also remove from the local state to prevent it from being re-rendered
+                            const originalData = formWrapper._originalData;
+                            if (originalData && originalData.imageGallery) {
+                                originalData.imageGallery = originalData.imageGallery.filter(i => i.id !== imageId);
+                            }
+                            alert("Đã xóa ảnh thành công.");
                         } else {
-                            throw new Error("Phản hồi xóa không thành công.");
+                            throw new Error("Phản hồi xóa từ server không thành công.");
                         }
                     } catch (error) {
                         console.error(`Lỗi khi xóa ảnh ${imageId}:`, error);
@@ -1422,6 +1433,7 @@ function initializeHeader() {
                 };
                 previewContainer.appendChild(previewItem);
             });
+            // END: MODIFICATION FOR IMAGE DELETION
         
             const newFiles = managedFiles[fileStoreKey] || [];
             const sortedFiles = [...newFiles].sort((a, b) => {
@@ -1462,7 +1474,10 @@ function initializeHeader() {
         
             fileInput.onchange = (event) => {
                 handleFileSelection(event.target.files, fileStoreKey, false);
-                renderImagePreviews(fileStoreKey, existingImages); 
+                renderImagePreviews(fileStoreKey, existingImages);
+                // START: MODIFICATION - FIX DOUBLE IMAGE BUG
+                event.target.value = ''; // Reset input to allow re-selecting the same file
+                // END: MODIFICATION
             };
             previewContainer.appendChild(addPlaceholder);
         };
@@ -1587,7 +1602,7 @@ function initializeHeader() {
                 });
             }
 
-            // THAY ĐỔI BẮT ĐẦU TỪ ĐÂY: Chuyển sang sự kiện click cho nút Cập nhật
+            // START: MODIFICATION - UPDATE BUTTON LOGIC
             const updateBtn = document.getElementById(`update-product-btn${suffix}`);
             if (updateBtn) {
                 updateBtn.addEventListener('click', async () => {
@@ -1600,37 +1615,68 @@ function initializeHeader() {
                         return;
                     }
 
-                    const formData = new FormData();
-                    
-                    // Chỉ gửi các trường text
-                    const fields = ['title', 'cost', 'about', 'feature', 'parameter', 'demo_link'];
-                    fields.forEach(field => {
-                        const input = document.getElementById(`edit-${field}${suffix}`);
-                        formData.append(field, input.value);
-                    });
+                    let updateSuccess = false;
+                    let gallerySuccess = false;
 
-                    // Kiểm tra ảnh chính mới
-                    const newFiles = managedFiles[editFileStoreKey];
-                    const newCoverFile = newFiles.find(f => f.name.split('.')[0] === '1');
-                    if (newCoverFile) {
-                        formData.append('cover_image', newCoverFile);
-                    }
-                    
                     try {
-                        const response = await apiRequest(`/products/${productId}`, 'PATCH', formData);
-                        if (response && response.message === "Updated successfully") {
-                            alert("Cập nhật sản phẩm thành công!");
-                            // Tùy chọn: Làm mới dữ liệu hoặc đóng modal sau khi cập nhật
-                        } else {
-                             throw new Error("Phản hồi cập nhật không thành công.");
+                        // --- STEP 1: PATCH text data and new cover image ---
+                        const patchFormData = new FormData();
+                        const fields = ['title', 'cost', 'about', 'feature', 'parameter', 'demo_link'];
+                        fields.forEach(field => {
+                            const input = document.getElementById(`edit-${field}${suffix}`);
+                            patchFormData.append(field, input.value);
+                        });
+
+                        const newFiles = managedFiles[editFileStoreKey];
+                        const newCoverFile = newFiles.find(f => f.name.split('.')[0] === '1');
+                        if (newCoverFile) {
+                            patchFormData.append('images', newCoverFile); // API docs say "images", not "cover_image" for PATCH
                         }
+                        
+                        const patchResponse = await apiRequest(`/products/${productId}`, 'PATCH', patchFormData);
+                        if (patchResponse && patchResponse.message === "Updated successfully") {
+                            console.log("Cập nhật thông tin text và ảnh bìa thành công!");
+                            updateSuccess = true;
+                        } else {
+                            throw new Error("Phản hồi cập nhật thông tin không thành công.");
+                        }
+
+                        // --- STEP 2: POST new gallery images (including the new cover as per request) ---
+                        const newGalleryFiles = newFiles.filter(f => f.name); // Get all new files
+                        
+                        if (newGalleryFiles.length > 0) {
+                            const galleryFormData = new FormData();
+                            newGalleryFiles.forEach(file => {
+                                galleryFormData.append('images', file);
+                            });
+
+                            const galleryResponse = await apiRequest(`/products/${productId}/images`, 'POST', galleryFormData);
+                            if (galleryResponse && galleryResponse.message === "Created successfully") {
+                                console.log("Tải lên ảnh phụ mới thành công!");
+                                gallerySuccess = true;
+                            } else {
+                                throw new Error("Phản hồi tải lên ảnh phụ không thành công.");
+                            }
+                        } else {
+                            // If there are no new gallery images, we consider this step successful.
+                            gallerySuccess = true;
+                        }
+
+                        // --- FINAL: Show result ---
+                        if (updateSuccess && gallerySuccess) {
+                            alert("Cập nhật sản phẩm thành công!");
+                            // Optionally, refresh data or close modal
+                            managedFiles[editFileStoreKey] = []; // Clear uploaded files after success
+                            // You might want to re-fetch the product data and re-render the form
+                        }
+
                     } catch (error) {
                         alert(`Lỗi khi cập nhật sản phẩm: ${error.message}`);
                         console.error("Lỗi chi tiết:", error);
                     }
                 });
             }
-            // KẾT THÚC THAY ĐỔI
+            // END: MODIFICATION
             
             renderImagePreviews(addFileStoreKey, []);
             renderImagePreviews(editFileStoreKey, []);

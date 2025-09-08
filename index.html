@@ -82,6 +82,7 @@
                         </div>
                     </div>
                     <div class="product-payment-info">
+                        <!-- START: Updated Section -->
                         <div class="product-title-wrapper">
                             <h2 class="product-title">Tên sản phẩm</h2>
                             <div class="admin-actions-menu admin-only" style="display: none;">
@@ -92,6 +93,7 @@
                                 </div>
                             </div>
                         </div>
+                        <!-- END: Updated Section -->
                         <div class="price-section">
                             <div class="product-price">Giá tiền</div>
                             <div class="discount-container">
@@ -237,6 +239,7 @@
         <button class="zoom-nav-btn" id="next-zoom-btn" aria-label="Next image"><i class="fas fa-chevron-right"></i></button>
     </div>
     
+    <!-- START: New Message Modal -->
     <div id="message-modal" class="modal-overlay">
         <div class="message-modal-content">
             <h3 id="message-modal-title">Thông báo</h3>
@@ -247,6 +250,8 @@
             </div>
         </div>
     </div>
+    <!-- END: New Message Modal -->
+
     <script src="https://unpkg.com/split-type"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
@@ -455,7 +460,15 @@
                             <span class="stat-label">Mã đã được dùng</span>
                             <h3 id="stat-codes-used" class="stat-value">0</h3>
                         </div>
+                        <!-- <div class="stat-card">
+                            <span class="stat-label">Hoa hồng cấp hiện tại</span>
+                            <h3 id="stat-current-commission" class="stat-value">0%</h3>
                         </div>
+                        <div class="stat-card">
+                            <span class="stat-label">Hoa hồng cấp tiếp theo</span>
+                            <h3 id="stat-next-commission" class="stat-value">0%</h3>
+                        </div> -->
+                    </div>
 
                     <div class="marketing-controls">
                         <div class="marketing-filters">
@@ -510,7 +523,21 @@
                     <div class="update-notification">
                         <p>Hệ thống đang được update, dự tính hoạt động vào 12/09/2025</p>
                     </div>
-                    </div>
+                    <!-- <div class="payment-links-container">
+                        <button class="payment-link-btn" id="open-bank-link-modal-btn">
+                            <i class="fas fa-university"></i>
+                            <span>Liên kết Ngân hàng</span>
+                        </button>
+                        <button class="payment-link-btn" id="open-momo-link-modal-btn">
+                            <i class="fas fa-mobile-alt"></i>
+                            <span>Liên kết Momo</span>
+                        </button>
+                        <button class="payment-link-btn" id="open-zalopay-link-modal-btn">
+                            <i class="fas fa-wallet"></i>
+                            <span>Liên kết ZaloPay</span>
+                        </button>
+                    </div> -->
+                </div>
                 <div id="panel-orders" class="panel-content-item">
                     <h1>Lịch sử đơn hàng</h1>
                     <div class="order-controls">
@@ -554,6 +581,7 @@
                     </div>
                 
                     <div class="dashboard-content">
+                        <!-- Bảng điều khiển cho Website HTML -->
                         <div id="website-html-panel" class="dashboard-tab-content active">
                             <div class="mode-toggle-container">
                                 <span class="toggle-label">Sửa</span>
@@ -564,6 +592,7 @@
                                 <span class="toggle-label active">Thêm</span>
                             </div>
                 
+                            <!-- Form Thêm Sản Phẩm -->
                             <div id="add-product-container" class="form-mode-container active">
                                 <form id="add-product-form">
                                     <div class="form-grid">
@@ -601,6 +630,7 @@
                                 </form>
                             </div>
                 
+                            <!-- Form Sửa Sản Phẩm -->
                             <div id="edit-product-container" class="form-mode-container">
                                 <div class="form-group">
                                     <label for="search-product">Tìm kiếm (theo tên hoặc ID sản phẩm):</label>
@@ -646,12 +676,13 @@
                                             </div>
                                         </div>
                                         <div class="image-previews" id="edit-image-previews"></div>
-                                        <button type="button" id="update-product-btn" class="sp-button form-submit-btn">Cập nhật</button>
+                                        <button type="submit" class="sp-button form-submit-btn">Cập nhật</button>
                                     </form>
                                 </div>
                             </div>
                         </div>
                         
+                        <!-- Các panel cho Fullstack và Đồ Án (tạm thời) -->
                         <div id="fullstack-panel" class="dashboard-tab-content">
                             <div class="mode-toggle-container">
                                 <span class="toggle-label">Sửa</span>
@@ -744,7 +775,7 @@
                                             </div>
                                         </div>
                                         <div class="image-previews" id="edit-image-previews-fullstack"></div>
-                                        <button type="button" id="update-product-btn-fullstack" class="sp-button form-submit-btn">Cập nhật</button>
+                                        <button type="submit" class="sp-button form-submit-btn">Cập nhật</button>
                                     </form>
                                 </div>
                             </div>
