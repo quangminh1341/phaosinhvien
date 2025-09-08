@@ -993,7 +993,6 @@ function initializeHeader() {
         closePanelBtn.addEventListener('click', closePanelModal);
         userPanelModal.addEventListener('click', (e) => { if (e.target === userPanelModal) closePanelModal(); });
         
-        // START: MODIFIED SECTION
         populateAndShowEditForm = (productData) => {
             openPanelModal('panel-dashboard');
 
@@ -1048,7 +1047,6 @@ function initializeHeader() {
 
             }, 150);
         };
-        // END: MODIFIED SECTION
 
         const copyReferralBtn = document.getElementById('copy-referral-btn');
         const referralCodeInput = document.getElementById('profile-referral-code');
@@ -1374,7 +1372,6 @@ function initializeHeader() {
             });
         }
 
-        // START: MODIFIED SECTION
         const renderImagePreviews = (fileStoreKey, existingImages = []) => {
             let previewContainerId;
             if (fileStoreKey === 'addHtml') previewContainerId = '#add-image-previews';
@@ -1402,14 +1399,19 @@ function initializeHeader() {
                 `;
         
                 previewItem.querySelector('.remove-preview-btn').onclick = async () => {
-                    const formWrapper = previewItem.closest('.form-mode-container').querySelector('[id^="edit-form-wrapper"]');
+                    const formWrapper = previewContainer.closest('[id^="edit-form-wrapper"]');
                     const productId = formWrapper.dataset.productId;
                     const imageId = previewItem.dataset.imageId;
                     
+                    if (!productId || !imageId) {
+                        alert("Lỗi: Không tìm thấy ID sản phẩm hoặc ID ảnh.");
+                        return;
+                    }
+
                     try {
                         const response = await apiRequest(`/products/${productId}/images/${imageId}`, 'DELETE');
                         if (response && response.message === "Deleted successfully") {
-                            previewItem.remove();
+                            previewItem.remove(); // Xóa khỏi giao diện
                         } else {
                             throw new Error("Phản hồi xóa không thành công.");
                         }
@@ -1464,15 +1466,26 @@ function initializeHeader() {
             };
             previewContainer.appendChild(addPlaceholder);
         };
-        // END: MODIFIED SECTION
+
 
         const handleFileSelection = (files, fileStoreKey, folderMode = false) => {
             const newFiles = Array.from(files);
             const existingFileNames = managedFiles[fileStoreKey].map(f => f.name);
             
-            let uniqueNewFiles = newFiles.filter(f =>
-                f.type.startsWith('image/') && !existingFileNames.includes(f.name)
-            );
+            let uniqueNewFiles;
+
+            if (folderMode) {
+                uniqueNewFiles = newFiles.filter(f =>
+                    f.name.toLowerCase().endsWith('.webp') && !existingFileNames.includes(f.name)
+                );
+                if (newFiles.length > 0 && uniqueNewFiles.length === 0) {
+                    alert('Thư mục đã chọn không chứa file ảnh .webp nào.');
+                }
+            } else {
+                uniqueNewFiles = newFiles.filter(f =>
+                    f.type.startsWith('image/') && !existingFileNames.includes(f.name)
+                );
+            }
 
             if (uniqueNewFiles.length > 0) {
                 managedFiles[fileStoreKey].push(...uniqueNewFiles);
@@ -1574,12 +1587,11 @@ function initializeHeader() {
                 });
             }
 
-            // START: MODIFIED SECTION
-            const editProductForm = document.getElementById(`edit-product-form${suffix}`);
-            if (editProductForm) {
-                editProductForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    const formWrapper = editProductForm.closest('[id^="edit-form-wrapper"]');
+            // THAY ĐỔI BẮT ĐẦU TỪ ĐÂY: Chuyển sang sự kiện click cho nút Cập nhật
+            const updateBtn = document.getElementById(`update-product-btn${suffix}`);
+            if (updateBtn) {
+                updateBtn.addEventListener('click', async () => {
+                    const formWrapper = updateBtn.closest('[id^="edit-form-wrapper"]');
                     const productId = formWrapper.dataset.productId;
                     const originalData = formWrapper._originalData;
 
@@ -1589,38 +1601,26 @@ function initializeHeader() {
                     }
 
                     const formData = new FormData();
-                    let hasChanges = false;
-
-                    // Fields to check
+                    
+                    // Chỉ gửi các trường text
                     const fields = ['title', 'cost', 'about', 'feature', 'parameter', 'demo_link'];
                     fields.forEach(field => {
                         const input = document.getElementById(`edit-${field}${suffix}`);
-                        const newValue = input.value;
-                        const originalValue = originalData[field] || '';
-                        if (newValue !== originalValue) {
-                            formData.append(field, newValue);
-                            hasChanges = true;
-                        }
+                        formData.append(field, input.value);
                     });
 
-                    // Check for new main image
+                    // Kiểm tra ảnh chính mới
                     const newFiles = managedFiles[editFileStoreKey];
                     const newCoverFile = newFiles.find(f => f.name.split('.')[0] === '1');
                     if (newCoverFile) {
                         formData.append('cover_image', newCoverFile);
-                        hasChanges = true;
-                    }
-                    
-                    if (!hasChanges) {
-                        alert("Không có thay đổi nào để cập nhật.");
-                        return;
                     }
                     
                     try {
                         const response = await apiRequest(`/products/${productId}`, 'PATCH', formData);
                         if (response && response.message === "Updated successfully") {
                             alert("Cập nhật sản phẩm thành công!");
-                            // Optionally, refresh data after update
+                            // Tùy chọn: Làm mới dữ liệu hoặc đóng modal sau khi cập nhật
                         } else {
                              throw new Error("Phản hồi cập nhật không thành công.");
                         }
@@ -1630,15 +1630,15 @@ function initializeHeader() {
                     }
                 });
             }
-            // END: MODIFIED SECTION
-
+            // KẾT THÚC THAY ĐỔI
+            
             renderImagePreviews(addFileStoreKey, []);
             renderImagePreviews(editFileStoreKey, []);
         };
 
         initializeDashboardTab('Html');
         initializeDashboardTab('Fullstack');
-        
+
         const adminProjectFilters = document.querySelector('.admin-project-filters');
         const adminStatusFilters = document.querySelector('#panel-admin-orders .order-filters');
 
