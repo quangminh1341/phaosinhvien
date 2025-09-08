@@ -172,7 +172,7 @@ async function fetchAndDisplayUserProfile() {
         
         // Nếu hồ sơ đầy đủ, cập nhật UI và trả về true.
         window.currentUser = userData;
-        await showLoggedInState(currentUser)
+        await showLoggedInState();
         return true;
 
     } catch (error) {
@@ -208,7 +208,7 @@ async function showLoggedInState(user) {
     const notificationContainer = document.querySelector('.notification-container');
 
     if (headerAuth && profileContainer && notificationContainer && user) {
-        profileContainer.querySelector('.profile-name').textContent = user.full_name || user.email;
+        profileContainer.querySelector('.profile-name').textContent = window.currentUser.full_name || window.currentUser.email;
         profileContainer.querySelector('.profile-money').textContent = `Số dư: ${user.moneys?.toLocaleString('vi-VN') || 0} VNĐ`;
         
         const profileAvatar = profileContainer.querySelector('.profile-avatar');
