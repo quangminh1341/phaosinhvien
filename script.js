@@ -32,7 +32,7 @@ const discountContainer = document.querySelector('.discount-container');
 const discountToggle = document.getElementById('discount-toggle');
 const orderButton = document.querySelector('.order-button');
 const orderModal = document.getElementById('order-modal');
-const closeModalBtn = document.querySelector('.close-modal-btn');
+const closeModalBtn = document.querySelector('#order-modal .close-modal-btn');
 const orderForm = document.getElementById('order-form');
 const orderNameInput = document.getElementById('order-name');
 const liveDemoBtn = document.querySelector('.live-demo-btn');
@@ -632,11 +632,32 @@ function closeImageZoom() {
 }
 
 function openOrderModal() {
-    if (!currentProductData) return;
+    if (!currentProductData || !window.currentUser) return;
+
+    const orderContactInput = document.getElementById('order-contact');
+    const orderPhoneInput = document.getElementById('order-phone');
+
     orderNameInput.value = currentProductData.title;
+    orderContactInput.value = window.currentUser.email || '';
+    orderPhoneInput.value = window.currentUser.phone_number || '';
+
+    orderContactInput.readOnly = true;
+    orderPhoneInput.readOnly = true;
+    
     orderModal.classList.add('visible');
 }
-function closeOrderModal() { orderModal.classList.remove('visible'); }
+
+function closeOrderModal() {
+    orderModal.classList.remove('visible');
+    
+    const orderContactInput = document.getElementById('order-contact');
+    const orderPhoneInput = document.getElementById('order-phone');
+
+    if(orderContactInput) orderContactInput.readOnly = false;
+    if(orderPhoneInput) orderPhoneInput.readOnly = false;
+    
+    if(orderForm) orderForm.reset();
+}
 
 function generateOrderID() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -650,33 +671,41 @@ function generateOrderID() {
 async function handleOrderSubmit(e) {
     e.preventDefault();
 
-    const contactInput = document.getElementById('order-contact').value.trim();
-    const phoneInput = document.getElementById('order-phone').value.trim();
-
-    if (contactInput.includes('@') && !contactInput.toLowerCase().endsWith('@gmail.com')) {
-        showMessage("Lỗi: Nếu bạn nhập email, vui lòng chỉ sử dụng địa chỉ @gmail.com.");
-        return;
-    }
-
-    const phoneRegex = /^0\d{9}$/;
-    if (!phoneRegex.test(phoneInput)) {
-        showMessage("Lỗi: Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại bắt đầu bằng 0 và có đúng 10 chữ số.");
-        return;
-    }
-
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
     data.orderID = generateOrderID(); 
+
+    if (!currentProductData || !currentProductData.id) {
+        showMessage("Lỗi: Không tìm thấy thông tin sản phẩm. Vui lòng thử lại.");
+        return;
+    }
+    
+    const submitButton = e.target.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    submitButton.textContent = 'Đang xử lý...';
+
     try {
         await sendDiscordWebhook(data);
+
+        const orderPayload = {
+            product_id: currentProductData.id,
+            content: data.orderRequest || ""
+        };
+
+        await apiRequest('/users/me/order', 'POST', orderPayload);
+
         closeOrderModal();
-        e.target.reset();
-        showMessage("Gửi yêu cầu thành công! Chúng tôi sẽ liên lạc lại cho bạn sớm nhất. Xin cảm ơn!");
+        showMessage("Đặt hàng thành công! Chúng tôi sẽ xử lý đơn hàng của bạn sớm nhất. Xin cảm ơn!");
+
     } catch (error) {
-        console.error("Lỗi khi gửi Webhook:", error);
-        showMessage("Đã có lỗi xảy ra. Vui lòng thử lại sau.");
+        console.error("Lỗi khi đặt hàng:", error);
+        showMessage(`Đã có lỗi xảy ra khi đặt hàng: ${error.message}. Vui lòng thử lại sau.`);
+    } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Xác nhận';
     }
 }
+
 
 async function sendDiscordWebhook(data) {
     const embed = {
