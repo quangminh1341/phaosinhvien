@@ -1619,39 +1619,40 @@ function initializeHeader() {
                     let gallerySuccess = false;
 
                     try {
-                        // Lấy form hiện tại một cách chính xác
-                        const formElement = document.getElementById(`edit-product-form${suffix}`);
-                        if (!formElement) {
-                            throw new Error("Không tìm thấy form chỉnh sửa sản phẩm.");
-                        }
-
-                        // Tự động tạo FormData từ tất cả các trường có thuộc tính 'name' trong form
-                        const patchFormData = new FormData(formElement);
+                        const patchFormData = new FormData();
+                        const fields = ['title', 'cost', 'about', 'feature', 'parameter', 'demo_link'];
                         
-                        // Xử lý các file mới được thêm vào (nếu có)
+                        fields.forEach(field => {
+                            // Lấy giá trị từ các input của form SỬA
+                            const inputElement = document.getElementById(`edit-${field}${suffix}`);
+                            if (inputElement) {
+                                patchFormData.append(field, inputElement.value);
+                            }
+                        });
+
+                        // Bước 2: Kiểm tra và thêm ảnh bìa MỚI (nếu có)
                         const newFiles = managedFiles[editFileStoreKey];
                         const newCoverFile = newFiles.find(f => f.name.split('.')[0] === '1');
                         if (newCoverFile) {
-                            patchFormData.append('images', newCoverFile);
+                            // Sử dụng 'cover_image' để nhất quán với logic POST
+                            patchFormData.append('cover_image', newCoverFile);
                         }
                         
+                        // Bước 3: Gửi yêu cầu PATCH để cập nhật thông tin sản phẩm và ảnh bìa
                         const patchResponse = await apiRequest(`/products/${productId}`, 'PATCH', patchFormData);
                         if (patchResponse && patchResponse.message === "updated successfully") {
-                            console.log("Cập nhật thông tin text và ảnh bìa thành công!");
+                            console.log("Cập nhật thông tin sản phẩm thành công!");
                             updateSuccess = true;
                         } else {
-                            // Chuyển đổi phản hồi từ server thành chuỗi để dễ đọc
                             const serverResponseText = JSON.stringify(patchResponse, null, 2); 
-                            // Ném ra lỗi mới với thông tin chi tiết hơn
                             throw new Error(`Phản hồi cập nhật không thành công. Máy chủ trả về:\n\n${serverResponseText}`);
                         }
 
-                        // --- STEP 2: POST new gallery images ---
-                        const newGalleryFiles = newFiles.filter(f => f.name);
-                        
-                        if (newGalleryFiles.length > 0) {
+                        // Bước 4: Gửi yêu cầu POST để tải lên các ảnh phụ MỚI (nếu có)
+                        const newGalleryImages = newFiles.filter(f => f.name.split('.')[0] !== '1');
+                        if (newGalleryImages.length > 0) {
                             const galleryFormData = new FormData();
-                            newGalleryFiles.forEach(file => {
+                            newGalleryImages.forEach(file => {
                                 galleryFormData.append('images', file);
                             });
 
@@ -1663,20 +1664,23 @@ function initializeHeader() {
                                 throw new Error("Phản hồi tải lên ảnh phụ không thành công.");
                             }
                         } else {
+                            // Không có ảnh phụ mới để tải lên, coi như thành công
                             gallerySuccess = true;
                         }
 
-                        // --- FINAL: Show result ---
+                        // Bước 5: Hiển thị kết quả cuối cùng
                         if (updateSuccess && gallerySuccess) {
                             alert("Cập nhật sản phẩm thành công!");
-                            managedFiles[editFileStoreKey] = []; // Xóa file đã tải lên thành công
-                            // Bạn có thể thêm lệnh tải lại dữ liệu ở đây
+                            managedFiles[editFileStoreKey] = []; // Xóa các file đã xử lý
+                            // Optional: Tải lại dữ liệu sản phẩm để hiển thị thông tin mới nhất
+                            // populateAndShowEditForm(await fetchProductById(productId)); 
                         }
 
                     } catch (error) {
                         alert(`Lỗi khi cập nhật sản phẩm: ${error.message}`);
                         console.error("Lỗi chi tiết:", error);
                     }
+
                 });
             }
             // END: MODIFICATION
