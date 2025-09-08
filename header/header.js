@@ -171,7 +171,7 @@ async function fetchAndDisplayUserProfile() {
         }
         
         // Nếu hồ sơ đầy đủ, cập nhật UI và trả về true.
-        currentUser = userData;
+        window.currentUser = userData;
         await showLoggedInState(currentUser)
         return true;
 
@@ -194,7 +194,7 @@ async function handleLogout() {
     } finally {
         localStorage.clear();
         sessionStorage.clear();
-        currentUser = null;
+        window.currentUser = null;
         showLoggedOutState();
     }
 }
