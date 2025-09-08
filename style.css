@@ -1820,6 +1820,19 @@ body.light-mode .referral-date {
     flex-shrink: 0; /* Ngăn không cho menu bị co lại */
 }
 
+.product-title-wrapper {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.admin-actions-menu {
+    position: relative;
+    flex-shrink: 0;
+}
+
 .kebab-btn {
     background: transparent;
     border: 1px solid var(--border-color);
@@ -1842,7 +1855,7 @@ body.light-mode .referral-date {
 
 .kebab-dropdown {
     position: absolute;
-    top: calc(100% + 5px); /* Khoảng cách với nút */
+    top: calc(100% + 5px);
     right: 0;
     background-color: var(--bg-secondary);
     border: 1px solid var(--border-color);
@@ -2183,29 +2196,18 @@ body.light-mode .referral-date {
     display: none;
 }
 
-/* --- CSS MỚI CHO DASHBOARD IMAGE PREVIEWS --- */
-.image-previews {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-}
-
-.preview-item {
-    position: relative;
-    transition: transform 0.2s ease;
-}
-
+/* --- CSS CHO NÚT XÓA ẢNH TRONG DASHBOARD --- */
 .preview-item:hover {
-    transform: scale(1.05);
+    transform: scale(1.05); /* Thêm hiệu ứng phóng to nhẹ khi hover */
 }
 
 .remove-preview-btn {
     position: absolute;
-    top: -5px;
-    right: -5px;
+    top: -8px;
+    right: -8px;
     width: 24px;
     height: 24px;
-    background-color: rgba(229, 57, 53, 0.9);
+    background-color: rgba(229, 57, 53, 0.9); /* Màu đỏ */
     color: white;
     border: 2px solid var(--bg-primary);
     border-radius: 50%;
@@ -2231,29 +2233,4 @@ body.light-mode .referral-date {
 .remove-preview-btn:hover {
     background-color: #e53935;
     transform: scale(1.2);
-}
-
-.add-image-placeholder {
-    width: 120px;
-    height: 90px;
-    border: 2px dashed var(--border-color);
-    border-radius: 8px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    font-size: 3rem;
-    color: var(--border-color);
-    transition: all 0.2s ease;
-    position: relative;
-}
-
-.add-image-placeholder:hover {
-    border-color: var(--accent-primary);
-    color: var(--accent-primary);
-    background-color: var(--fomt-box-color);
-}
-
-.add-image-placeholder input[type="file"] {
-    display: none;
 }

@@ -408,16 +408,20 @@ function populateProductDetail(data) {
     }
     galleryThumbnails.innerHTML = '';
     galleryMain.innerHTML = '';
+	
+    // START: MODIFIED SECTION
+    // Xử lý imageGallery là một mảng các đối tượng {id, image_url}
     if (data.imageGallery && data.imageGallery.length > 0) {
-        data.imageGallery.forEach((imgSrc, index) => {
+        data.imageGallery.forEach((img, index) => { // img bây giờ là {id, image_url}
             const thumbButton = document.createElement('button');
             thumbButton.className = 'gallery-thumb-item';
             thumbButton.dataset.index = index;
-            thumbButton.innerHTML = `<img src="${imgSrc}" alt="Thumbnail ${index + 1}">`;
+            thumbButton.innerHTML = `<img src="${img.image_url}" alt="Thumbnail ${index + 1}">`;
+
             const mainImageItem = document.createElement('div');
             mainImageItem.className = 'gallery-main-item';
             mainImageItem.dataset.index = index;
-            mainImageItem.innerHTML = `<img src="${imgSrc}" alt="Product image ${index + 1}">`;
+            mainImageItem.innerHTML = `<img src="${img.image_url}" alt="Product image ${index + 1}">`;
             if (index === 0) {
                 thumbButton.classList.add('active');
                 mainImageItem.classList.add('active');
@@ -428,6 +432,8 @@ function populateProductDetail(data) {
     } else {
         galleryMain.innerHTML = `<img src="images/logo.png" alt="Ảnh chính sản phẩm">`;
     }
+    // END: MODIFIED SECTION
+	
     const overlayButtons = document.createElement('div');
     overlayButtons.className = 'image-overlay-buttons';
     overlayButtons.innerHTML = `
@@ -437,6 +443,7 @@ function populateProductDetail(data) {
     galleryMain.appendChild(overlayButtons);
     productDetailContainer.scrollTop = 0;
 }
+
 
 // --- CÁC HÀM XỬ LÝ SỰ KIỆN ---
 
@@ -509,11 +516,15 @@ async function handleThumbnailClick(e) {
         }
 
         const productDetails = productDetailsResponse.data;
-        const imageUrls = productImagesResponse.data ? productImagesResponse.data.map(img => img.image_url) : [];
+
+        // START: MODIFIED SECTION
+        // Giữ lại toàn bộ đối tượng ảnh (bao gồm id và image_url)
+        const imagesData = productImagesResponse.data ? productImagesResponse.data : [];
+        // END: MODIFIED SECTION
         
         const combinedProductData = {
             ...productDetails,
-            imageGallery: imageUrls
+            imageGallery: imagesData // Gán mảng đối tượng ảnh
         };
         
         populateProductDetail(combinedProductData);
@@ -533,6 +544,7 @@ async function handleThumbnailClick(e) {
         isDetailViewActive = false;
     }
 }
+
 
 function handleBackClick() {
     if (isAnimating) return;
@@ -591,7 +603,7 @@ function updateZoomedImage(index) {
     } else {
         currentZoomIndex = index;
     }
-    zoomedImage.src = gallery[currentZoomIndex];
+    zoomedImage.src = gallery[currentZoomIndex].image_url;
     zoomedImage.parentElement.scrollTop = 0;
 }
 

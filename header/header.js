@@ -12,14 +12,6 @@ let authModalOverlay, authContainer, modalAnimation, openModal, animatedText;
 let openPanelModal; 
 let populateAndShowEditForm;
 
-// --- BIẾN TOÀN CỤC CHO QUẢN LÝ TỆP ---
-let managedFiles = {
-    addHtml: [],
-    editHtml: [],
-    addFullstack: [],
-    editFullstack: []
-};
-
 
 // --- CẤU HÌNH API ---
 // ***** LƯU Ý: Đổi lại API_BASE_URL thành endpoint server của bạn khi deploy *****
@@ -226,22 +218,14 @@ async function showLoggedInState(user) {
         profileContainer.style.display = 'block';
         notificationContainer.style.display = 'block';
         
-        // --- BẮT ĐẦU VÙNG CODE ĐÃ SỬA ---
-        // Dòng code cũ đã bị xóa: updateNotificationUI(mockNotifications);
-
-        // Logic mới để gọi API lấy thông báo thực tế từ server
         try {
-            // Giả sử endpoint để lấy thông báo là '/users/me/notifications'
-            // Bạn cần đảm bảo endpoint này tồn tại trên server của bạn.
             const notificationResponse = await apiRequest('/users/me/notifications', 'GET');
-            const notifications = notificationResponse.data || []; // Lấy dữ liệu hoặc mảng rỗng nếu không có
+            const notifications = notificationResponse.data || []; 
             updateNotificationUI(notifications);
         } catch (error) {
             console.error("Lỗi khi tải thông báo:", error);
-            // Hiển thị danh sách rỗng nếu có lỗi, tránh làm sập toàn bộ quá trình đăng nhập
             updateNotificationUI([]); 
         }
-        // --- KẾT THÚC VÙNG CODE ĐÃ SỬA ---
 
         const panelUsername = document.querySelector('.panel-username');
         const panelAvatar = document.querySelector('.panel-avatar');
@@ -1008,7 +992,8 @@ function initializeHeader() {
     
         closePanelBtn.addEventListener('click', closePanelModal);
         userPanelModal.addEventListener('click', (e) => { if (e.target === userPanelModal) closePanelModal(); });
-
+        
+        // START: MODIFIED SECTION
         populateAndShowEditForm = (productData) => {
             openPanelModal('panel-dashboard');
 
@@ -1038,12 +1023,15 @@ function initializeHeader() {
                 document.getElementById(tabId).classList.add('active');
                 
                 const modeToggle = document.getElementById(`mode-toggle-${lowerType}`);
-                if (!modeToggle.checked) {
-                    modeToggle.click();
+                if (modeToggle.checked) {
+                    modeToggle.checked = false;
+                    const changeEvent = new Event('change');
+                    modeToggle.dispatchEvent(changeEvent);
                 }
 
                 const editFormWrapper = document.getElementById(`edit-form-wrapper${suffix}`);
                 editFormWrapper.dataset.productId = productData.id;
+                editFormWrapper._originalData = productData; // Lưu dữ liệu gốc
                 
                 document.getElementById(`edit-title${suffix}`).value = productData.title || '';
                 document.getElementById(`edit-cost${suffix}`).value = productData.cost || '';
@@ -1057,8 +1045,10 @@ function initializeHeader() {
                 renderImagePreviews(fileStoreKey, productData.imageGallery || []);
                 
                 editFormWrapper.style.display = 'block';
+
             }, 150);
         };
+        // END: MODIFIED SECTION
 
         const copyReferralBtn = document.getElementById('copy-referral-btn');
         const referralCodeInput = document.getElementById('profile-referral-code');
@@ -1205,7 +1195,7 @@ function initializeHeader() {
 
         if (openBankLinkModalBtn) openBankLinkModalBtn.addEventListener('click', () => openPaymentModal(bankLinkModal));
         if (openMomoLinkModalBtn) openMomoLinkModalBtn.addEventListener('click', () => openPaymentModal(momoLinkModal));
-        if (openZaloPayLinkModalBtn) openZaloPayLinkModalBtn.addEventListener('click', () => openPaymentModal(zalopayLinkModal));
+        if (openZaloPayLinkModalBtn) openZaloPayLinkModalBtn.addEventListener('click', () => openPaymentModal(zaloPayLinkModal));
 
         allPaymentModals.forEach(modal => {
             if (modal) {
@@ -1358,6 +1348,13 @@ function initializeHeader() {
             });
         }
         
+        let managedFiles = {
+            addHtml: [],
+            editHtml: [],
+            addFullstack: [],
+            editFullstack: []
+        };
+
         const dashboardFilters = document.querySelector('.dashboard-filters');
         const dashboardTabs = document.querySelectorAll('.dashboard-tab-content');
 
@@ -1377,11 +1374,116 @@ function initializeHeader() {
             });
         }
 
+        // START: MODIFIED SECTION
+        const renderImagePreviews = (fileStoreKey, existingImages = []) => {
+            let previewContainerId;
+            if (fileStoreKey === 'addHtml') previewContainerId = '#add-image-previews';
+            else if (fileStoreKey === 'editHtml') previewContainerId = '#edit-image-previews';
+            else if (fileStoreKey === 'addFullstack') previewContainerId = '#add-image-previews-fullstack';
+            else if (fileStoreKey === 'editFullstack') previewContainerId = '#edit-image-previews-fullstack';
+            else return;
+        
+            const previewContainer = document.querySelector(previewContainerId);
+            if (!previewContainer) return;
+        
+            previewContainer.innerHTML = '';
+        
+            existingImages.forEach((img, index) => {
+                const isMain = index === 0;
+                const previewItem = document.createElement('div');
+                previewItem.className = 'preview-item existing-image';
+                if (isMain) previewItem.classList.add('main-image');
+                previewItem.dataset.imageId = img.id;
+        
+                previewItem.innerHTML = `
+                    <img src="${img.image_url}" alt="Existing Preview">
+                    <div class="caption">${isMain ? 'Ảnh chính' : `Ảnh ${index + 1}`}</div>
+                    <button type="button" class="remove-preview-btn">&times;</button>
+                `;
+        
+                previewItem.querySelector('.remove-preview-btn').onclick = async () => {
+                    const formWrapper = previewItem.closest('.form-mode-container').querySelector('[id^="edit-form-wrapper"]');
+                    const productId = formWrapper.dataset.productId;
+                    const imageId = previewItem.dataset.imageId;
+                    
+                    try {
+                        const response = await apiRequest(`/products/${productId}/images/${imageId}`, 'DELETE');
+                        if (response && response.message === "Deleted successfully") {
+                            previewItem.remove();
+                        } else {
+                            throw new Error("Phản hồi xóa không thành công.");
+                        }
+                    } catch (error) {
+                        console.error(`Lỗi khi xóa ảnh ${imageId}:`, error);
+                        alert(`Không thể xóa ảnh: ${error.message}`);
+                    }
+                };
+                previewContainer.appendChild(previewItem);
+            });
+        
+            const newFiles = managedFiles[fileStoreKey] || [];
+            const sortedFiles = [...newFiles].sort((a, b) => {
+                const nameA = a.name.split('.')[0];
+                const nameB = b.name.split('.')[0];
+                if (nameA === '1') return -1;
+                if (nameB === '1') return 1;
+                return a.name.localeCompare(b.name, undefined, { numeric: true });
+            });
+        
+            sortedFiles.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const isMain = file.name.split('.')[0] === '1';
+                    const previewItem = document.createElement('div');
+                    previewItem.className = 'preview-item new-file';
+                    if (isMain) previewItem.classList.add('main-image');
+        
+                    previewItem.innerHTML = `
+                        <img src="${e.target.result}" alt="New Preview">
+                        <div class="caption">${isMain ? 'Ảnh chính (Mới)' : 'Ảnh phụ (Mới)'}</div>
+                        <button type="button" class="remove-preview-btn">&times;</button>
+                    `;
+                    previewItem.querySelector('.remove-preview-btn').onclick = () => {
+                        managedFiles[fileStoreKey] = managedFiles[fileStoreKey].filter(f => f.name !== file.name);
+                        renderImagePreviews(fileStoreKey, existingImages);
+                    };
+                    previewContainer.appendChild(previewItem);
+                };
+                reader.readAsDataURL(file);
+            });
+            
+            const addPlaceholder = document.createElement('div');
+            addPlaceholder.className = 'add-image-placeholder';
+            addPlaceholder.innerHTML = `+<input type="file" accept="image/*" multiple />`;
+            const fileInput = addPlaceholder.querySelector('input');
+            addPlaceholder.onclick = () => fileInput.click();
+        
+            fileInput.onchange = (event) => {
+                handleFileSelection(event.target.files, fileStoreKey, false);
+                renderImagePreviews(fileStoreKey, existingImages); 
+            };
+            previewContainer.appendChild(addPlaceholder);
+        };
+        // END: MODIFIED SECTION
+
+        const handleFileSelection = (files, fileStoreKey, folderMode = false) => {
+            const newFiles = Array.from(files);
+            const existingFileNames = managedFiles[fileStoreKey].map(f => f.name);
+            
+            let uniqueNewFiles = newFiles.filter(f =>
+                f.type.startsWith('image/') && !existingFileNames.includes(f.name)
+            );
+
+            if (uniqueNewFiles.length > 0) {
+                managedFiles[fileStoreKey].push(...uniqueNewFiles);
+            }
+        };
+
         const initializeDashboardTab = (type) => {
             const lowerType = type.toLowerCase();
             const suffix = type === 'Html' ? '' : `-${lowerType}`;
             const addFileStoreKey = `add${type}`;
-            const editFileStoreKey = `edit${lowerType}`;
+            const editFileStoreKey = `edit${type}`;
 
             const modeToggle = document.getElementById(`mode-toggle-${lowerType}`);
             if (modeToggle) {
@@ -1405,20 +1507,25 @@ function initializeHeader() {
             }
 
             const addFolderInput = document.getElementById(`add-images${suffix}`);
-                if (addFolderInput) {
-                    addFolderInput.addEventListener('change', (event) => {
-                        handleFileSelection(event.target.files, addFileStoreKey, true);
-                        event.target.value = '';
-                    });
-                }
+            if (addFolderInput) {
+                addFolderInput.addEventListener('change', (event) => {
+                    handleFileSelection(event.target.files, addFileStoreKey, true);
+                    renderImagePreviews(addFileStoreKey, []);
+                    event.target.value = '';
+                });
+            }
 
-                const editFolderInput = document.getElementById(`edit-images${suffix}`);
-                if (editFolderInput) {
-                    editFolderInput.addEventListener('change', (event) => {
-                        handleFileSelection(event.target.files, editFileStoreKey, true);
-                        event.target.value = '';
-                    });
-                }
+            const editFolderInput = document.getElementById(`edit-images${suffix}`);
+            if (editFolderInput) {
+                editFolderInput.addEventListener('change', (event) => {
+                    const formWrapper = editFolderInput.closest('[id^="edit-form-wrapper"]');
+                    const originalData = formWrapper._originalData || {};
+                    const existingImages = originalData.imageGallery || [];
+                    handleFileSelection(event.target.files, editFileStoreKey, true);
+                    renderImagePreviews(editFileStoreKey, existingImages);
+                    event.target.value = '';
+                });
+            }
 
             const addProductForm = document.getElementById(`add-product-form${suffix}`);
             if (addProductForm) {
@@ -1439,7 +1546,7 @@ function initializeHeader() {
                         productFormData.append('feature', document.getElementById(`add-feature${suffix}`).value);
                         productFormData.append('parameter', document.getElementById(`add-parameter${suffix}`).value);
                         productFormData.append('demo_link', document.getElementById(`add-demo-link${suffix}`).value);
-                        productFormData.append('images', coverFile);
+                        productFormData.append('cover_image', coverFile);
 
                         const category = type === 'Html' ? 'Website HTML' : 'Fullstack';
                         productFormData.append('category', category);
@@ -1459,61 +1566,74 @@ function initializeHeader() {
                         alert('Đăng bài và tải tất cả ảnh lên thành công!');
                         addProductForm.reset();
                         managedFiles[addFileStoreKey] = [];
-                        renderImagePreviews(addFileStoreKey);
+                        renderImagePreviews(addFileStoreKey, []);
                     } catch (error) {
                         alert(`Đã xảy ra lỗi khi đăng bài: ${error.message}`);
                         console.error('Lỗi chi tiết:', error);
                     }
                 });
             }
-            
+
+            // START: MODIFIED SECTION
             const editProductForm = document.getElementById(`edit-product-form${suffix}`);
             if (editProductForm) {
                 editProductForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
+                    const formWrapper = editProductForm.closest('[id^="edit-form-wrapper"]');
+                    const productId = formWrapper.dataset.productId;
+                    const originalData = formWrapper._originalData;
 
-                    const editFormWrapper = document.getElementById(`edit-form-wrapper${suffix}`);
-                    const productId = editFormWrapper.dataset.productId;
-                    if (!productId) {
-                        alert('Không tìm thấy ID sản phẩm để cập nhật.');
+                    if (!productId || !originalData) {
+                        alert('Lỗi: Không tìm thấy dữ liệu sản phẩm để cập nhật.');
                         return;
                     }
 
-                    const editFileStoreKey = `edit${type}`;
+                    const formData = new FormData();
+                    let hasChanges = false;
+
+                    // Fields to check
+                    const fields = ['title', 'cost', 'about', 'feature', 'parameter', 'demo_link'];
+                    fields.forEach(field => {
+                        const input = document.getElementById(`edit-${field}${suffix}`);
+                        const newValue = input.value;
+                        const originalValue = originalData[field] || '';
+                        if (newValue !== originalValue) {
+                            formData.append(field, newValue);
+                            hasChanges = true;
+                        }
+                    });
+
+                    // Check for new main image
                     const newFiles = managedFiles[editFileStoreKey];
+                    const newCoverFile = newFiles.find(f => f.name.split('.')[0] === '1');
+                    if (newCoverFile) {
+                        formData.append('cover_image', newCoverFile);
+                        hasChanges = true;
+                    }
                     
-                    const coverFile = newFiles.find(f => f.name.split('.')[0] === '1');
-                    
-                    const productFormData = new FormData();
-                    productFormData.append('title', document.getElementById(`edit-title${suffix}`).value);
-                    productFormData.append('cost', document.getElementById(`edit-cost${suffix}`).value);
-                    productFormData.append('about', document.getElementById(`edit-about${suffix}`).value);
-                    productFormData.append('feature', document.getElementById(`edit-feature${suffix}`).value);
-                    productFormData.append('parameter', document.getElementById(`edit-parameter${suffix}`).value);
-                    productFormData.append('demo_link', document.getElementById(`edit-demo-link${suffix}`).value);
-                    if (coverFile) {
-                        productFormData.append('cover_image', coverFile);
+                    if (!hasChanges) {
+                        alert("Không có thay đổi nào để cập nhật.");
+                        return;
                     }
                     
                     try {
-                        const response = await apiRequest(`/products/${productId}`, 'PATCH', productFormData);
-                        
-                        if (response.message === "Updated successfully") {
-                            alert('Cập nhật thành công!');
-                            editProductForm.reset();
-                            managedFiles[editFileStoreKey] = [];
-                            renderImagePreviews(editFileStoreKey);
-                            editFormWrapper.style.display = 'none';
+                        const response = await apiRequest(`/products/${productId}`, 'PATCH', formData);
+                        if (response && response.message === "Updated successfully") {
+                            alert("Cập nhật sản phẩm thành công!");
+                            // Optionally, refresh data after update
+                        } else {
+                             throw new Error("Phản hồi cập nhật không thành công.");
                         }
                     } catch (error) {
-                        alert(`Đã xảy ra lỗi khi cập nhật: ${error.message}`);
-                        console.error('Lỗi chi tiết:', error);
+                        alert(`Lỗi khi cập nhật sản phẩm: ${error.message}`);
+                        console.error("Lỗi chi tiết:", error);
                     }
                 });
             }
+            // END: MODIFIED SECTION
 
-            renderImagePreviews(addFileStoreKey);
-            renderImagePreviews(editFileStoreKey);
+            renderImagePreviews(addFileStoreKey, []);
+            renderImagePreviews(editFileStoreKey, []);
         };
 
         initializeDashboardTab('Html');
