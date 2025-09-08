@@ -1660,7 +1660,7 @@ function initializeHeader() {
                             
                             if (newCoverFile) {
                                 const coverFormData = new FormData();
-                                coverFormData.append('cover_image', newCoverFile);
+                                coverFormData.append('images', newCoverFile);
                                 
                                 // console.log('Đang gửi ảnh bìa mới...');
                                 // Giả định backend chấp nhận PATCH với chỉ một trường file
