@@ -1890,6 +1890,10 @@ body.light-mode .referral-date {
 }
 
 /* --- CSS CHO MESSAGE MODAL --- */
+#message-modal {
+    z-index: 300;
+}
+
 .message-modal-content {
     background-color: var(--bg-secondary);
     color: var(--text-primary);
