@@ -1619,42 +1619,56 @@ function initializeHeader() {
                     let gallerySuccess = false;
 
                     try {
+                        // --- BƯỚC 1: TẠO FORMDATA VÀ THÊM CÁC TRƯỜNG DỮ LIỆU ---
+                        // Giống hệt cách bạn làm trong POST, không dùng vòng lặp
                         const patchFormData = new FormData();
-                        const fields = ['title', 'cost', 'about', 'feature', 'parameter', 'demo_link'];
-                        
-                        fields.forEach(field => {
-                            // Lấy giá trị từ các input của form SỬA
-                            const inputElement = document.getElementById(`edit-${field}${suffix}`);
-                            if (inputElement) {
-                                patchFormData.append(field, inputElement.value);
-                            }
-                        });
+                        patchFormData.append('title', document.getElementById(`edit-title${suffix}`).value);
+                        patchFormData.append('cost', document.getElementById(`edit-cost${suffix}`).value);
+                        patchFormData.append('about', document.getElementById(`edit-about${suffix}`).value);
+                        patchFormData.append('feature', document.getElementById(`edit-feature${suffix}`).value);
+                        patchFormData.append('parameter', document.getElementById(`edit-parameter${suffix}`).value);
+                        // patchFormData.append('support', document.getElementById(`edit-support${suffix}`).value);
+                        patchFormData.append('demo_link', document.getElementById(`edit-demo-link${suffix}`).value);
 
-                        // Bước 2: Kiểm tra và thêm ảnh bìa MỚI (nếu có)
+                        // Xử lý và thêm ảnh bìa mới (nếu có)
                         const newFiles = managedFiles[editFileStoreKey];
                         const newCoverFile = newFiles.find(f => f.name.split('.')[0] === '1');
                         if (newCoverFile) {
-                            // Sử dụng 'cover_image' để nhất quán với logic POST
                             patchFormData.append('cover_image', newCoverFile);
                         }
-                        
-                        // Bước 3: Gửi yêu cầu PATCH để cập nhật thông tin sản phẩm và ảnh bìa
+
+                        // --- BƯỚC 2: CONSOLE LOG DỮ LIỆU SẮP GỬI ĐI ---
+                        console.log('--- [PATCH] Dữ liệu sản phẩm sắp gửi đi: ---');
+                        for (const [key, value] of patchFormData.entries()) {
+                            console.log(`${key}:`, value);
+                        }
+                        console.log('-------------------------------------------');
+
+
+                        // --- BƯỚC 3: GỬI YÊU CẦU API ĐỂ CẬP NHẬT SẢN PHẨM ---
                         const patchResponse = await apiRequest(`/products/${productId}`, 'PATCH', patchFormData);
                         if (patchResponse && patchResponse.message === "updated successfully") {
                             console.log("Cập nhật thông tin sản phẩm thành công!");
                             updateSuccess = true;
                         } else {
-                            const serverResponseText = JSON.stringify(patchResponse, null, 2); 
+                            const serverResponseText = JSON.stringify(patchResponse, null, 2);
                             throw new Error(`Phản hồi cập nhật không thành công. Máy chủ trả về:\n\n${serverResponseText}`);
                         }
 
-                        // Bước 4: Gửi yêu cầu POST để tải lên các ảnh phụ MỚI (nếu có)
+                        // --- BƯỚC 4: XỬ LÝ VÀ TẢI LÊN CÁC ẢNH PHỤ MỚI ---
                         const newGalleryImages = newFiles.filter(f => f.name.split('.')[0] !== '1');
                         if (newGalleryImages.length > 0) {
                             const galleryFormData = new FormData();
                             newGalleryImages.forEach(file => {
                                 galleryFormData.append('images', file);
                             });
+
+                            // Console log dữ liệu ảnh phụ sắp gửi đi
+                            console.log('--- [POST] Dữ liệu ảnh phụ sắp gửi đi: ---');
+                            for (const [key, value] of galleryFormData.entries()) {
+                                console.log(`${key}:`, value);
+                            }
+                            console.log('-----------------------------------------');
 
                             const galleryResponse = await apiRequest(`/products/${productId}/images`, 'POST', galleryFormData);
                             if (galleryResponse && galleryResponse.message === "Created successfully") {
@@ -1664,23 +1678,19 @@ function initializeHeader() {
                                 throw new Error("Phản hồi tải lên ảnh phụ không thành công.");
                             }
                         } else {
-                            // Không có ảnh phụ mới để tải lên, coi như thành công
                             gallerySuccess = true;
                         }
 
-                        // Bước 5: Hiển thị kết quả cuối cùng
+                        // --- BƯỚC 5: THÔNG BÁO KẾT QUẢ ---
                         if (updateSuccess && gallerySuccess) {
                             alert("Cập nhật sản phẩm thành công!");
-                            managedFiles[editFileStoreKey] = []; // Xóa các file đã xử lý
-                            // Optional: Tải lại dữ liệu sản phẩm để hiển thị thông tin mới nhất
-                            // populateAndShowEditForm(await fetchProductById(productId)); 
+                            managedFiles[editFileStoreKey] = [];
                         }
 
                     } catch (error) {
                         alert(`Lỗi khi cập nhật sản phẩm: ${error.message}`);
                         console.error("Lỗi chi tiết:", error);
                     }
-
                 });
             }
             // END: MODIFICATION
