@@ -102,7 +102,8 @@ function handleGoogleRedirect(action) {
         const fullName = document.getElementById('register-username').value;
         const phoneNumber = document.getElementById('register-phone').value;
         if (!fullName || !phoneNumber) {
-            alert('Vui lòng nhập đầy đủ Tên và Số điện thoại.');
+            // THAY ĐỔI: alert -> showMessage
+            showMessage('Vui lòng nhập đầy đủ Tên và Số điện thoại.');
             return;
         }
         const params = new URLSearchParams({
@@ -148,7 +149,8 @@ async function handleOAuthCallback() {
         }
     } catch (error) {
         console.error('Lỗi xử lý callback OAuth:', error);
-        alert('Đã có lỗi xảy ra trong quá trình xác thực.');
+        // THAY ĐỔI: alert -> showMessage
+        showMessage('Đã có lỗi xảy ra trong quá trình xác thực.', 'Lỗi');
     } finally {
         localStorage.removeItem('authAction');
     }
@@ -938,7 +940,8 @@ function initializeHeader() {
                 // Kiểm tra quyền admin (chỉ thực hiện khi đã chắc chắn đăng nhập)
                 const isAdminPanel = targetId.startsWith('panel-admin-') || targetId === 'panel-dashboard';
                 if (isAdminPanel && (!window.currentUser || window.currentUser.role !== 'admin')) {
-                    alert('Bạn không có quyền truy cập chức năng này.');
+                    // THAY ĐỔI: alert -> showMessage
+                    showMessage('Bạn không có quyền truy cập chức năng này.', 'Lỗi truy cập');
                     return;
                 }
             }
@@ -1016,9 +1019,21 @@ function initializeHeader() {
         closePanelBtn.addEventListener('click', closePanelModal);
         userPanelModal.addEventListener('click', (e) => { if (e.target === userPanelModal) closePanelModal(); });
         
-        populateAndShowEditForm = (productData) => {
+        // --- START: MODIFICATION ---
+        populateAndShowEditForm = async (productData) => {
             openPanelModal('panel-dashboard');
 
+            // Gọi API để lấy danh sách ảnh mới nhất bao gồm ID
+            try {
+                const imagesResponse = await apiRequest(`/products/${productData.id}/images`);
+                productData.imageGallery = imagesResponse.data || [];
+            } catch (error) {
+                console.error("Lỗi khi tải ảnh gallery của sản phẩm:", error);
+                productData.imageGallery = productData.imageGallery || []; // Sử dụng dữ liệu cũ nếu có lỗi
+                showMessage("Không thể tải thư viện ảnh mới nhất của sản phẩm.", "Lỗi");
+            }
+
+            // Dùng setTimeout để đảm bảo modal panel đã hiển thị xong
             setTimeout(() => {
                 const category = productData.category;
                 let tabId, type, suffix, lowerType;
@@ -1034,7 +1049,7 @@ function initializeHeader() {
                     suffix = '-fullstack';
                     lowerType = 'fullstack';
                 } else {
-                    alert(`Chức năng sửa cho danh mục "${category}" chưa được hỗ trợ.`);
+                    showMessage(`Chức năng sửa cho danh mục "${category}" chưa được hỗ trợ.`);
                     return;
                 }
 
@@ -1064,12 +1079,14 @@ function initializeHeader() {
                 
                 const fileStoreKey = `edit${type}`;
                 managedFiles[fileStoreKey] = [];
+                // Render ảnh với dữ liệu đã được cập nhật
                 renderImagePreviews(fileStoreKey, productData.imageGallery || []);
                 
                 editFormWrapper.style.display = 'block';
 
             }, 150);
         };
+        // --- END: MODIFICATION ---
 
         const copyReferralBtn = document.getElementById('copy-referral-btn');
         const referralCodeInput = document.getElementById('profile-referral-code');
@@ -1233,7 +1250,8 @@ function initializeHeader() {
                 if (form) {
                     form.addEventListener('submit', (e) => {
                         e.preventDefault();
-                        alert('Chức năng đang được phát triển!');
+                        // THAY ĐỔI: alert -> showMessage
+                        showMessage('Chức năng đang được phát triển!');
                         closePaymentModal(modal);
                     });
                 }
@@ -1301,18 +1319,21 @@ function initializeHeader() {
                 }
 
                 if (!hasChanges) {
-                    alert('Không có thay đổi nào để lưu.');
+                    // THAY ĐỔI: alert -> showMessage
+                    showMessage('Không có thay đổi nào để lưu.');
                     return;
                 }
 
                 try {
                     const response = await apiRequest('/users/me/profile', 'PATCH', formData);
                     if (response.message === "Updated successfully") {
-                        alert("Cập nhật hồ sơ thành công!");
+                        // THAY ĐỔI: alert -> showMessage
+                        showMessage("Cập nhật hồ sơ thành công!");
                         await fetchAndDisplayUserProfile();
                     }
                 } catch (error) {
-                    alert(`Lỗi cập nhật hồ sơ: ${error.message}`);
+                    // THAY ĐỔI: alert -> showMessage
+                    showMessage(`Lỗi cập nhật hồ sơ: ${error.message}`, 'Lỗi');
                 }
             });
         }
@@ -1331,13 +1352,15 @@ function initializeHeader() {
                 const newPhone = document.getElementById('profile-phone-new').value;
 
                 if (!oldPhone || !newPhone) {
-                    alert('Vui lòng nhập cả số điện thoại cũ và mới.');
+                    // THAY ĐỔI: alert -> showMessage
+                    showMessage('Vui lòng nhập cả số điện thoại cũ và mới.');
                     return;
                 }
 
                 const phoneRegex = /^0\d{9}$/;
                 if (!phoneRegex.test(newPhone)) {
-                    alert("Số điện thoại mới không hợp lệ. Vui lòng nhập SĐT bắt đầu bằng 0 và có 10 chữ số.");
+                    // THAY ĐỔI: alert -> showMessage
+                    showMessage("Số điện thoại mới không hợp lệ. Vui lòng nhập SĐT bắt đầu bằng 0 và có 10 chữ số.", "Lỗi");
                     return;
                 }
 
@@ -1349,7 +1372,8 @@ function initializeHeader() {
                     const response = await apiRequest('/users/me/profile', 'PATCH', payload);
 
                     if (response.message === "Updated successfully") {
-                        alert('Cập nhật số điện thoại thành công!');
+                        // THAY ĐỔI: alert -> showMessage
+                        showMessage('Cập nhật số điện thoại thành công!');
                         
                         await fetchAndDisplayUserProfile();
                         
@@ -1361,9 +1385,11 @@ function initializeHeader() {
                     }
                 } catch (error) {
                     if (error.message && error.message.toLowerCase().includes('old phone number does not match')) {
-                        alert('Số điện thoại cũ không khớp.');
+                        // THAY ĐỔI: alert -> showMessage
+                        showMessage('Số điện thoại cũ không khớp.', 'Lỗi');
                     } else {
-                        alert(`Lỗi cập nhật số điện thoại: ${error.message}`);
+                        // THAY ĐỔI: alert -> showMessage
+                        showMessage(`Lỗi cập nhật số điện thoại: ${error.message}`, 'Lỗi');
                     }
                 }
             });
@@ -1422,37 +1448,40 @@ function initializeHeader() {
                     <button type="button" class="remove-preview-btn">&times;</button>
                 `;
         
-                previewItem.querySelector('.remove-preview-btn').onclick = async () => {
+                // THAY ĐỔI: logic xóa ảnh dùng showMessage
+                previewItem.querySelector('.remove-preview-btn').onclick = () => {
                     const formWrapper = previewContainer.closest('[id^="edit-form-wrapper"]');
                     const productId = formWrapper.dataset.productId;
                     const imageId = previewItem.dataset.imageId;
                     
                     if (!productId || !imageId) {
-                        alert("Lỗi: Không tìm thấy ID sản phẩm hoặc ID ảnh.");
+                        showMessage("Lỗi: Không tìm thấy ID sản phẩm hoặc ID ảnh.", "Lỗi");
                         return;
                     }
 
-                    if (!confirm("Bạn có chắc chắn muốn xóa ảnh này không?")) {
-                        return;
-                    }
-
-                    try {
-                        const response = await apiRequest(`/products/${productId}/images/${imageId}`, 'DELETE');
-                        if (response && response.message === "Deleted successfully") {
-                            previewItem.remove();
-                            // Also remove from the local state to prevent it from being re-rendered
-                            const originalData = formWrapper._originalData;
-                            if (originalData && originalData.imageGallery) {
-                                originalData.imageGallery = originalData.imageGallery.filter(i => i.id !== imageId);
+                    showMessage(
+                        "Bạn có chắc chắn muốn xóa ảnh này không?",
+                        "Xác nhận xóa",
+                        true, // showConfirm
+                        async () => { // callback
+                            try {
+                                const response = await apiRequest(`/products/${productId}/images/${imageId}`, 'DELETE');
+                                if (response && response.message === "Deleted successfully") {
+                                    previewItem.remove();
+                                    const originalData = formWrapper._originalData;
+                                    if (originalData && originalData.imageGallery) {
+                                        originalData.imageGallery = originalData.imageGallery.filter(i => i.id !== imageId);
+                                    }
+                                    showMessage("Đã xóa ảnh thành công.");
+                                } else {
+                                    throw new Error("Phản hồi xóa từ server không thành công.");
+                                }
+                            } catch (error) {
+                                console.error(`Lỗi khi xóa ảnh ${imageId}:`, error);
+                                showMessage(`Không thể xóa ảnh: ${error.message}`, "Lỗi");
                             }
-                            alert("Đã xóa ảnh thành công.");
-                        } else {
-                            throw new Error("Phản hồi xóa từ server không thành công.");
                         }
-                    } catch (error) {
-                        console.error(`Lỗi khi xóa ảnh ${imageId}:`, error);
-                        alert(`Không thể xóa ảnh: ${error.message}`);
-                    }
+                    );
                 };
                 previewContainer.appendChild(previewItem);
             });
@@ -1517,7 +1546,8 @@ function initializeHeader() {
                     f.name.toLowerCase().endsWith('.webp') && !existingFileNames.includes(f.name)
                 );
                 if (newFiles.length > 0 && uniqueNewFiles.length === 0) {
-                    alert('Thư mục đã chọn không chứa file ảnh .webp nào.');
+                    // THAY ĐỔI: alert -> showMessage
+                    showMessage('Thư mục đã chọn không chứa file ảnh .webp nào.');
                 }
             } else {
                 uniqueNewFiles = newFiles.filter(f =>
@@ -1585,7 +1615,8 @@ function initializeHeader() {
                     const files = managedFiles[addFileStoreKey];
                     const coverFile = files.find(f => f.name.split('.')[0] === '1');
                     if (!coverFile) {
-                        alert('Vui lòng chọn ảnh và đảm bảo có một ảnh tên là "1" làm ảnh chính.');
+                        // THAY ĐỔI: alert -> showMessage
+                        showMessage('Vui lòng chọn ảnh và đảm bảo có một ảnh tên là "1" làm ảnh chính.', 'Lỗi');
                         return;
                     }
 
@@ -1617,12 +1648,15 @@ function initializeHeader() {
                         }
                         // --- KẾT THÚC THAY ĐỔI ---
 
-                        alert('Đăng bài và tải tất cả ảnh lên thành công!');
+                        // THAY ĐỔI: alert -> showMessage
+                        showMessage('Đăng bài và tải tất cả ảnh lên thành công!');
+                        await loadAllProducts();
                         addProductForm.reset();
                         managedFiles[addFileStoreKey] = [];
                         renderImagePreviews(addFileStoreKey, []);
                     } catch (error) {
-                        alert(`Đã xảy ra lỗi khi đăng bài: ${error.message}`);
+                        // THAY ĐỔI: alert -> showMessage
+                        showMessage(`Đã xảy ra lỗi khi đăng bài: ${error.message}`, 'Lỗi');
                         console.error('Lỗi chi tiết:', error);
                     }
                 });
@@ -1636,7 +1670,8 @@ function initializeHeader() {
                         const productId = formWrapper.dataset.productId;
                         
                         if (!productId) {
-                            alert('Lỗi: Không tìm thấy ID sản phẩm để cập nhật.');
+                            // THAY ĐỔI: alert -> showMessage
+                            showMessage('Lỗi: Không tìm thấy ID sản phẩm để cập nhật.', 'Lỗi');
                             return;
                         }
 
@@ -1670,13 +1705,16 @@ function initializeHeader() {
                                 await apiRequest(`/products/${productId}/images`, 'POST', galleryFormData);
                             }
 
-                            alert("Cập nhật sản phẩm thành công!");
+                            // THAY ĐỔI: alert -> showMessage
+                            showMessage("Cập nhật sản phẩm thành công!");
+                            await loadAllProducts();
                             
                             managedFiles[editFileStoreKey] = [];
                             // Cân nhắc tải lại dữ liệu sản phẩm và hiển thị lại form tại đây
                             
                         } catch (error) {
-                            alert(`Lỗi khi cập nhật sản phẩm: ${error.message}`);
+                            // THAY ĐỔI: alert -> showMessage
+                            showMessage(`Lỗi khi cập nhật sản phẩm: ${error.message}`, 'Lỗi');
                         } finally {
                             updateBtn.disabled = false;
                             updateBtn.textContent = 'Cập nhật';
@@ -1759,6 +1797,8 @@ function initializeHeader() {
         }
     }
     
+    // ĐIỀU CHỈNH QUAN TRỌNG: Di chuyển các lệnh gọi này vào trong initializeHeader
+    // để đảm bảo `showMessage` đã tồn tại khi chúng được thực thi.
     handleOAuthCallback();
     checkLoginStatus();
 }
