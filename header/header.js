@@ -1619,19 +1619,20 @@ function initializeHeader() {
                     let gallerySuccess = false;
 
                     try {
-                        // --- STEP 1: PATCH text data and new cover image ---
-                        const patchFormData = new FormData();
-                        // header.js (khoảng dòng 1625)
-                        const fields = ['title', 'cost', 'about', 'feature', 'parameter', 'support', 'demo_link'];
-                        fields.forEach(field => {
-                            const input = document.getElementById(`edit-${field}${suffix}`);
-                            patchFormData.append(field, input.value);
-                        });
+                        // Lấy form hiện tại một cách chính xác
+                        const formElement = document.getElementById(`edit-product-form${suffix}`);
+                        if (!formElement) {
+                            throw new Error("Không tìm thấy form chỉnh sửa sản phẩm.");
+                        }
 
+                        // Tự động tạo FormData từ tất cả các trường có thuộc tính 'name' trong form
+                        const patchFormData = new FormData(formElement);
+                        
+                        // Xử lý các file mới được thêm vào (nếu có)
                         const newFiles = managedFiles[editFileStoreKey];
                         const newCoverFile = newFiles.find(f => f.name.split('.')[0] === '1');
                         if (newCoverFile) {
-                            patchFormData.append('images', newCoverFile); // API docs say "images", not "cover_image" for PATCH
+                            patchFormData.append('images', newCoverFile);
                         }
                         
                         const patchResponse = await apiRequest(`/products/${productId}`, 'PATCH', patchFormData);
@@ -1642,8 +1643,8 @@ function initializeHeader() {
                             throw new Error("Phản hồi cập nhật thông tin không thành công.");
                         }
 
-                        // --- STEP 2: POST new gallery images (including the new cover as per request) ---
-                        const newGalleryFiles = newFiles.filter(f => f.name); // Get all new files
+                        // --- STEP 2: POST new gallery images ---
+                        const newGalleryFiles = newFiles.filter(f => f.name);
                         
                         if (newGalleryFiles.length > 0) {
                             const galleryFormData = new FormData();
@@ -1659,16 +1660,14 @@ function initializeHeader() {
                                 throw new Error("Phản hồi tải lên ảnh phụ không thành công.");
                             }
                         } else {
-                            // If there are no new gallery images, we consider this step successful.
                             gallerySuccess = true;
                         }
 
                         // --- FINAL: Show result ---
                         if (updateSuccess && gallerySuccess) {
                             alert("Cập nhật sản phẩm thành công!");
-                            // Optionally, refresh data or close modal
-                            managedFiles[editFileStoreKey] = []; // Clear uploaded files after success
-                            // You might want to re-fetch the product data and re-render the form
+                            managedFiles[editFileStoreKey] = []; // Xóa file đã tải lên thành công
+                            // Bạn có thể thêm lệnh tải lại dữ liệu ở đây
                         }
 
                     } catch (error) {
