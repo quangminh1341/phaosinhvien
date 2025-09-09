@@ -148,7 +148,7 @@ function groupProductsByCategory(products) {
  */
 async function loadAllProducts() {
     try {
-        const response = await apiRequest('/admin/products?page=1&limit=20'); // GET request to /admin/products
+        const response = await apiRequest('/products?page=1&limit=20'); // GET request to
         
         if (!response || !response.data) throw new Error('Cấu trúc phản hồi API không hợp lệ');
 
@@ -507,8 +507,8 @@ async function handleThumbnailClick(e) {
     
     try {
         const [productDetailsResponse, productImagesResponse] = await Promise.all([
-            apiRequest(`/admin/products/${productId}`),
-            apiRequest(`/admin/products/${productId}/images`)
+            apiRequest(`/products/${productId}`),
+            apiRequest(`/products/${productId}/images`)
         ]);
 
         if (!productDetailsResponse || !productDetailsResponse.data) {
