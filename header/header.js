@@ -15,7 +15,7 @@ let populateAndShowEditForm;
 
 // --- CẤU HÌNH API ---
 // ***** LƯU Ý: Đổi lại API_BASE_URL thành endpoint server của bạn khi deploy *****
-const API_BASE_URL = '/api'; 
+const API_BASE_URL = 'https://phaosinhvien.com/api'; 
 let currentUser = null;
 
 // --- HÀM TRỢ GIÚP API ---
@@ -209,15 +209,24 @@ async function showLoggedInState() {
     const profileContainer = document.querySelector('.profile-container');
     const notificationContainer = document.querySelector('.notification-container');
 
-    // SỬA Ở ĐÂY: Kiểm tra trực tiếp 'window.currentUser'
     if (headerAuth && profileContainer && notificationContainer && window.currentUser) { 
-        profileContainer.querySelector('.profile-name').textContent = window.currentUser.full_name || window.currentUser.email;
-        // SỬA Ở ĐÂY: Sử dụng 'window.currentUser'
-        profileContainer.querySelector('.profile-money').textContent = `Số dư: ${window.currentUser.moneys?.toLocaleString('vi-VN') || 0} VNĐ`; 
-        
+        // Cập nhật header chính
+        profileContainer.querySelector('.profile-details .profile-name').textContent = window.currentUser.full_name || window.currentUser.email;
+        profileContainer.querySelector('.profile-details .profile-money').textContent = `Số dư: ${window.currentUser.moneys?.toLocaleString('vi-VN') || 0} VNĐ`; 
         const profileAvatar = profileContainer.querySelector('.profile-avatar');
-        // SỬA Ở ĐÂY: Sử dụng 'window.currentUser'
         if (window.currentUser.avatar_url) profileAvatar.src = window.currentUser.avatar_url;
+
+        // === PHẦN MỚI: Cập nhật thông tin trong dropdown ===
+        const dropdownProfileName = profileContainer.querySelector('.dropdown-user-info .profile-name');
+        const dropdownProfileMoney = profileContainer.querySelector('.dropdown-user-info .profile-money');
+        
+        if (dropdownProfileName) {
+            dropdownProfileName.textContent = window.currentUser.full_name || window.currentUser.email;
+        }
+        if (dropdownProfileMoney) {
+            dropdownProfileMoney.textContent = `Số dư: ${window.currentUser.moneys?.toLocaleString('vi-VN') || 0} VNĐ`;
+        }
+        // === KẾT THÚC PHẦN MỚI ===
 
         headerAuth.style.display = 'none';
         profileContainer.style.display = 'block';
@@ -234,18 +243,15 @@ async function showLoggedInState() {
 
         const panelUsername = document.querySelector('.panel-username');
         const panelAvatar = document.querySelector('.panel-avatar');
-        // SỬA Ở ĐÂY: Sử dụng 'window.currentUser'
         if (panelUsername) panelUsername.textContent = window.currentUser.full_name || window.currentUser.email;
         if (panelAvatar) panelAvatar.src = window.currentUser.avatar_url || 'images/logo.png';
         
         const adminOnlyElements = document.querySelectorAll('.admin-only');
-        // SỬA Ở ĐÂY: Sử dụng 'window.currentUser'
         const displayStyle = (window.currentUser.role === 'admin') ? 'block' : 'none';
         adminOnlyElements.forEach(el => {
             el.style.display = displayStyle;
         });
         
-        // SỬA Ở ĐÂY: Sử dụng 'window.currentUser'
         populateProfilePanel(window.currentUser); 
     }
 }

@@ -1,13 +1,14 @@
 <header class="site-header">
+    <button class="nav-toggle" aria-label="toggle navigation">
+        <span class="hamburger"></span>
+    </button>
+
     <a href="#" class="logo" data-target="#trangchu-panel">PHAOSINHVIEN.com</a>
+    
     <nav class="site-nav">
         <a href="#" data-target="#trangchu-panel" data-text="Trang chủ">Trang chủ</a>
         <a href="#" data-target="#dichvu-panel" data-text="Dịch vụ">Dịch vụ</a>
         <a href="#" data-target="#lienhe-panel" data-text="Liên hệ">Liên hệ</a>
-        
-        <div class="nav-separator"></div>
-        <a href="#" class="auth-link-mobile login-btn-mobile">Đăng nhập</a>
-        <a href="#" class="auth-link-mobile register-btn-mobile">Đăng ký</a>
     </nav>
 
     <div class="header-controls">
@@ -39,6 +40,11 @@
                 <i class="fas fa-chevron-down profile-chevron"></i>
             </button>
             <div class="profile-dropdown">
+                <div class="dropdown-user-info">
+                    <span class="profile-name"></span>
+                    <span class="profile-money"></span>
+                </div>
+                <div class="dropdown-divider"></div>
                 <a href="#" id="profile-info-btn"> <i class="fas fa-user-circle"></i> Thông tin </a>
                 <a href="#" id="profile-orders-btn"> <i class="fas fa-receipt"></i> Đơn hàng </a>
                 <a href="#" id="profile-payments-btn"> <i class="fas fa-wallet"></i> Thanh toán </a>
@@ -55,10 +61,7 @@
             <i class="fas fa-sun"></i>
             <i class="fas fa-moon"></i>
         </div>
-        <button class="nav-toggle" aria-label="toggle navigation">
-            <span class="hamburger"></span>
-        </button>
-
+        
         <div id="chat-box" class="hidden">
             <div class="chat-header">
                 <span>Hỗ trợ</span>
@@ -72,6 +75,5 @@
                 <button id="chat-send-btn"><i class="fas fa-paper-plane"></i></button>
             </div>
         </div>
-
     </div>
 </header>

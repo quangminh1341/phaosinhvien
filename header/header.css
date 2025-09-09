@@ -161,129 +161,33 @@ body.light-mode .register-btn:hover {
     display: none;
 }
 
-
-/* --- Responsive cho Header --- */
-@media (max-width: 768px) {
-    .site-header { align-items: center; }
-    .site-header::after { display: none; }
-    
-    .header-auth {
-        display: none;
-    }
-
-    .nav-separator {
-        display: block;
-        height: 1px;
-        background-color: var(--border-color);
-        margin: 8px 20px;
-    }
-
-    .auth-link-mobile {
-        display: block;
-    }
-    
-    .site-nav {
-        position: absolute;
-        top: calc(var(--header-height) - 10px);
-        right: 20px;
-        left: auto;
-        width: 220px;
-        background: var(--bg-secondary);
-        border-radius: 8px;
-        box-shadow: 0 5px 25px rgba(0,0,0,0.2);
-        border: 1px solid var(--border-color);
-        padding: 10px 0;
-        opacity: 0;
-        transform: scale(0.95) translateY(-10px);
-        transform-origin: top right;
-        transition: opacity 0.2s ease, transform 0.2s ease;
-        pointer-events: none;
-        z-index: 150;
-    }
-    .site-nav.nav-open {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-        pointer-events: auto;
-    }
-    .site-nav a {
-        display: block;
-        opacity: 1;
-        transform: translateY(0);
-        margin: 0;
-        padding: 12px 20px;
-        font-size: 1rem;
-        transition: background-color 0.2s ease, color 0.2s ease;
-    }
-    .site-nav a:hover {
-        background-color: var(--accent-primary);
-        color: var(--text-on-accent);
-        transform: none;
-    }
-    
-    .header-controls {
-        gap: 5px;
-    }
-
-    .nav-toggle {
-        display: block;
-        position: relative;
-        z-index: 200;
-        background: transparent;
-        border: 0;
-        padding: 10px;
-        cursor: pointer;
-    }
-    .hamburger {
-        display: block;
-        position: relative;
-        width: 25px;
-        height: 2px;
-        background: var(--header-text-color);
-        transition: transform 0.3s ease, background-color 0.3s ease;
-    }
-    .hamburger::before,
-    .hamburger::after {
-        content: '';
-        position: absolute;
-        left: 0;
-        width: 100%;
-        height: 2px;
-        background: var(--header-text-color);
-        transition: transform 0.3s ease, top 0.3s ease, bottom 0.3s ease;
-    }
-    .hamburger::before { top: -8px; }
-    .hamburger::after { bottom: -8px; }
-    .nav-open .hamburger { background: transparent; }
-    .nav-open .hamburger::before { top: 0; transform: rotate(45deg); }
-    .nav-open .hamburger::after { bottom: 0; transform: rotate(-45deg); }
+/* --- PHẦN MỚI CHO DROPDOWN USER INFO --- */
+.profile-dropdown .dropdown-user-info {
+    padding: 12px 15px;
+    pointer-events: none;
 }
 
-@media (max-width: 480px) {
-    .site-header { padding: 0 20px; height: 70px; }
-    .nav-toggle {
-        position: absolute;
-        right: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-    }
-    .product-gallery {
-        flex-direction: column-reverse; 
-        gap: 15px;
-    }
-
-    .gallery-main {
-        width: 100%;
-        aspect-ratio: 4 / 3;
-    }
-
-    .gallery-thumbnails {
-        width: 100%;
-        flex-direction: row;
-        overflow-x: auto;
-        padding-bottom: 10px;
-        max-height: 80px;
-    }
+.dropdown-user-info .profile-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: block;
+    margin-bottom: 4px;
 }
+
+.dropdown-user-info .profile-money {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--accent-primary);
+    display: block;
+}
+
+.profile-dropdown .dropdown-divider {
+    height: 1px;
+    background-color: var(--border-color);
+    margin: 8px 0;
+}
+
 
 /* --- Theme Toggle Button --- */
 #theme-toggle {
@@ -529,14 +433,13 @@ body.light-mode #theme-toggle:hover .fa-sun {
     gap: 25px;
 }
 
+/* === FIX: Bỏ thuộc tính `bottom` để không bị lệch xuống === */
 .form-container h1 {
     font-weight: bold;
     margin: 0;
     font-size: 1.8rem;
     color: var(--text-primary);
     flex-shrink: 0;
-    position: relative;
-    bottom: 40px;
 }
 
 .overlay-panel h1 {
@@ -564,7 +467,6 @@ body.light-mode #theme-toggle:hover .fa-sun {
     font-size: 2.1rem; 
 }
 
-/* Quy tắc chung cho tất cả các thẻ p trong overlay */
 .overlay-panel p {
     font-size: 1rem;
     max-width: 90%;
@@ -606,6 +508,8 @@ body.light-mode #theme-toggle:hover .fa-sun {
     justify-content: center;
     align-items: center;
     gap: 10px;
+    /* === FIX: Thêm thuộc tính này để chống vỡ chữ === */
+    white-space: nowrap;
 }
 .auth-button:active {
     transform: scale(0.95);
@@ -660,60 +564,6 @@ body:not(.light-mode) .auth-button:not(.google-btn):hover {
     margin: 0;
 }
 
-
-@media (max-width: 768px) {
-    .auth-container {
-        width: 95vw;
-        max-width: 400px;
-        min-height: 500px;
-    }
-    .overlay-container {
-        display: none;
-    }
-    .form-container {
-        width: 100%;
-        position: absolute;
-    }
-    
-    .sign-in-container {
-        opacity: 1;
-        transform: translateX(0);
-        z-index: 1;
-    }
-    .sign-up-container {
-        opacity: 0;
-        transform: translateX(0);
-        z-index: 5;
-        pointer-events: none;
-    }
-    
-    .auth-container.right-panel-active .sign-in-container {
-        opacity: 0;
-        z-index: 1;
-        pointer-events: none;
-    }
-    .auth-container.right-panel-active .sign-up-container {
-        opacity: 1;
-        z-index: 5;
-        pointer-events: auto;
-    }
-     
-    .auth-close-btn { color: var(--text-primary); }
-    
-    .auth-container, body.light-mode .auth-container {
-        background: var(--bg-primary);
-    }
-}
-
-/* --- CSS cho hiệu ứng animation modal --- */
-.auth-container h1, .auth-container p {
-    visibility: hidden;
-}
-
-.char {
-    transform: translateY(15%);
-    transition: transform .5s;
-}
 
 /* --- CSS cho hiệu ứng animation modal --- */
 .auth-container h1, .auth-container p {
@@ -781,12 +631,12 @@ body:not(.light-mode) .auth-button:not(.google-btn):hover {
 }
 
 .user-profile-button.active .profile-chevron {
-    transform: rotate(180deg); /* Xoay icon khi menu mở */
+    transform: rotate(180deg);
 }
 
 .profile-dropdown {
     position: absolute;
-    top: calc(100% + 10px); /* Vị trí menu dưới nút bấm */
+    top: calc(100% + 10px);
     right: 0;
     width: 220px;
     background-color: var(--bg-secondary);
@@ -795,8 +645,6 @@ body:not(.light-mode) .auth-button:not(.google-btn):hover {
     box-shadow: 0 5px 15px rgba(0,0,0,0.2);
     z-index: 110;
     overflow: hidden;
-    
-    /* Hiệu ứng xuất hiện */
     opacity: 0;
     transform: translateY(-10px);
     pointer-events: none;
@@ -822,7 +670,7 @@ body:not(.light-mode) .auth-button:not(.google-btn):hover {
 }
 
 .profile-dropdown a i {
-    width: 16px; /* Căn chỉnh icon */
+    width: 16px;
     text-align: center;
 }
 
@@ -872,7 +720,6 @@ body:not(.light-mode) .auth-button:not(.google-btn):hover {
     background-color: var(--fomt-box-color);
 }
 
-
 .notification-badge {
     position: absolute;
     top: 5px;
@@ -904,8 +751,6 @@ body:not(.light-mode) .auth-button:not(.google-btn):hover {
     overflow: hidden;
     display: flex;
     flex-direction: column;
-
-    /* Hiệu ứng xuất hiện */
     opacity: 0;
     transform: translateY(-10px);
     pointer-events: none;
@@ -1091,7 +936,7 @@ body:not(.light-mode) .auth-button:not(.google-btn):hover {
     margin-bottom: 10px;
     line-height: 1.4;
     max-width: 85%;
-    word-wrap: break-word; /* Đảm bảo tin nhắn dài không bị tràn */
+    word-wrap: break-word;
 }
 
 .message-system {
@@ -1118,17 +963,213 @@ body:not(.light-mode) .auth-button:not(.google-btn):hover {
     color: var(--system-message-text);
 }
 
-/* --- CSS for Auth Notification --- */
 .auth-notification {
-    color: #e53935; /* Màu đỏ cho lỗi */
+    color: #e53935;
     font-size: 0.9rem;
     font-weight: 500;
-    margin-bottom: 15px; /* Giữ khoảng cách với tiêu đề bên dưới */
-    min-height: 40px; /* <<<< THAY ĐỔI Ở ĐÂY: Tăng chiều cao tối thiểu để chứa 2 dòng text */
+    margin-bottom: 15px;
+    min-height: 40px;
     max-width: 90%;
     line-height: 1.4;
-    visibility: hidden; /* Ẩn mặc định */
-    display: flex; /* <<<< THÊM VÀO: Căn giữa nội dung trong không gian đã đặt trước */
+    visibility: hidden;
+    display: flex;
     align-items: center;
     justify-content: center;
+}
+
+
+/* --- Responsive cho Header & Auth Modal --- */
+@media (max-width: 768px) {
+    .site-header { 
+        align-items: center; 
+        justify-content: space-between;
+    }
+    .site-header::after { display: none; }
+    
+    .logo {
+        display: none;
+    }
+
+    .header-auth {
+        display: none;
+    }
+
+    .nav-separator {
+        display: block;
+        height: 1px;
+        background-color: var(--border-color);
+        margin: 8px 20px;
+    }
+    
+    .site-nav {
+        position: absolute;
+        top: calc(var(--header-height) - 10px);
+        left: 20px; 
+        right: auto;
+        width: 220px;
+        background: var(--bg-secondary);
+        border-radius: 8px;
+        box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+        border: 1px solid var(--border-color);
+        padding: 10px 0;
+        opacity: 0;
+        transform: scale(0.95) translateY(-10px);
+        transform-origin: top left; 
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        pointer-events: none;
+        z-index: 150;
+    }
+    .site-nav.nav-open {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+        pointer-events: auto;
+    }
+    .site-nav a {
+        display: block;
+        opacity: 1;
+        transform: translateY(0);
+        margin: 0;
+        padding: 12px 20px;
+        font-size: 1rem;
+        transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    .site-nav a:hover {
+        background-color: var(--accent-primary);
+        color: var(--text-on-accent);
+        transform: none;
+    }
+    
+    .header-controls {
+        gap: 5px;
+    }
+    
+    .profile-container .user-profile-button .profile-details,
+    .profile-container .user-profile-button .profile-chevron {
+        display: none;
+    }
+    
+    .profile-container .user-profile-button {
+        padding: 4px;
+        gap: 0;
+    }
+
+    .profile-container .profile-avatar {
+        width: 38px;
+        height: 38px;
+    }
+
+    .nav-toggle {
+        display: block;
+        position: relative;
+        z-index: 200;
+        background: transparent;
+        border: 0;
+        padding: 10px;
+        cursor: pointer;
+    }
+    .hamburger {
+        display: block;
+        position: relative;
+        width: 25px;
+        height: 2px;
+        background: var(--header-text-color);
+        transition: transform 0.3s ease, background-color 0.3s ease;
+    }
+    .hamburger::before,
+    .hamburger::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: var(--header-text-color);
+        transition: transform 0.3s ease, top 0.3s ease, bottom 0.3s ease;
+    }
+    .hamburger::before { top: -8px; }
+    .hamburger::after { bottom: -8px; }
+    .nav-open .hamburger { background: transparent; }
+    .nav-open .hamburger::before { top: 0; transform: rotate(45deg); }
+    .nav-open .hamburger::after { bottom: 0; transform: rotate(-45deg); }
+
+    /* === FIX CHO AUTH MODAL TRÊN DI ĐỘNG (LẦN 3) === */
+    .auth-container {
+        width: 95vw;
+        max-width: 400px;
+        min-height: 500px;
+        /* Thêm viền màu bo tròn */
+        border: 4px solid var(--current-strip-1);
+        box-sizing: border-box;
+    }
+    
+    .overlay-container {
+        display: none;
+    }
+    
+    .form-container {
+        width: 100%;
+        position: absolute;
+    }
+
+    /* Căn giữa nội dung và đảm bảo không bị lỗi */
+    .form-container form {
+        justify-content: center;   /* Dùng lại justify-content: center cho ổn định */
+        padding: 0 40px;           /* Chỉ giữ padding hai bên */
+        gap: 20px;                 /* Giảm khoảng cách cho hợp lý */
+    }
+
+    /* Tăng khoảng cách dưới tiêu đề để đẩy nội dung xuống một chút */
+    .form-container h1 {
+        margin-bottom: 40px;
+    }
+    
+    .sign-in-container {
+        opacity: 1;
+        transform: translateX(0);
+        z-index: 1;
+    }
+    .sign-up-container {
+        opacity: 0;
+        transform: translateX(0);
+        z-index: 5;
+        pointer-events: none;
+    }
+    
+    .auth-container.right-panel-active .sign-in-container {
+        opacity: 0;
+        z-index: 1;
+        pointer-events: none;
+    }
+    .auth-container.right-panel-active .sign-up-container {
+        opacity: 1;
+        z-index: 5;
+        pointer-events: auto;
+    }
+     
+    .auth-close-btn { color: var(--text-primary); }
+    
+    .auth-container, body.light-mode .auth-container {
+        background: var(--bg-primary);
+    }
+}
+
+@media (max-width: 480px) {
+    .site-header { padding: 0 20px; height: 70px; }
+
+    .product-gallery {
+        flex-direction: column-reverse; 
+        gap: 15px;
+    }
+
+    .gallery-main {
+        width: 100%;
+        aspect-ratio: 4 / 3;
+    }
+
+    .gallery-thumbnails {
+        width: 100%;
+        flex-direction: row;
+        overflow-x: auto;
+        padding-bottom: 10px;
+        max-height: 80px;
+    }
 }
