@@ -1628,8 +1628,7 @@ function initializeHeader() {
                     }
 
                     try {
-                        // --- START: BUG FIX ---
-                        // BƯỚC 1: Gửi thông tin sản phẩm (CHỈ CÓ DỮ LIỆU VĂN BẢN)
+                        // --- Gửi thông tin sản phẩm và ảnh bìa ---
                         const productFormData = new FormData();
                         productFormData.append('title', document.getElementById(`add-title${suffix}`).value);
                         productFormData.append('cost', document.getElementById(`add-cost${suffix}`).value);
@@ -1637,6 +1636,7 @@ function initializeHeader() {
                         productFormData.append('feature', document.getElementById(`add-feature${suffix}`).value);
                         productFormData.append('parameter', document.getElementById(`add-parameter${suffix}`).value);
                         productFormData.append('demo_link', document.getElementById(`add-demo-link${suffix}`).value);
+                        productFormData.append('images', coverFile);
 
                         const category = type === 'Html' ? 'Website HTML' : 'Fullstack';
                         productFormData.append('category', category);
@@ -1646,21 +1646,23 @@ function initializeHeader() {
 
                         if (!productId) throw new Error("Không nhận được ID sản phẩm sau khi tạo.");
 
-                        // BƯỚC 2: Gửi TẤT CẢ ảnh (bao gồm cả ảnh bìa) lên gallery
+                        // --- THAY ĐỔI Ở ĐÂY: Gửi TẤT CẢ ảnh (bao gồm cả ảnh bìa) lên gallery ---
                         if (files.length > 0) {
                             const galleryFormData = new FormData();
+                            // Lặp qua tất cả các file đã chọn và thêm vào form data
                             files.forEach(file => galleryFormData.append('images', file));
-                            // Server sẽ tự nhận diện file '1.webp' để làm ảnh bìa
                             await apiRequest(`/admin/products/${productId}/images`, 'POST', galleryFormData);
                         }
-                        // --- END: BUG FIX ---
+                        // --- KẾT THÚC THAY ĐỔI ---
 
+                        // THAY ĐỔI: alert -> showMessage
                         showMessage('Đăng bài và tải tất cả ảnh lên thành công!');
                         await loadAllProducts();
                         addProductForm.reset();
                         managedFiles[addFileStoreKey] = [];
                         renderImagePreviews(addFileStoreKey, []);
                     } catch (error) {
+                        // THAY ĐỔI: alert -> showMessage
                         showMessage(`Đã xảy ra lỗi khi đăng bài: ${error.message}`, 'Lỗi');
                         console.error('Lỗi chi tiết:', error);
                     }
