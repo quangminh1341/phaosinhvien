@@ -1114,7 +1114,7 @@ body:not(.light-mode) .auth-button:not(.google-btn):hover {
 
     .form-container form {
         justify-content: flex-start;
-        padding: 20px 40px 0;
+        padding: 62px 40px 0;
         gap: 20px;
     }
     
@@ -1123,6 +1123,12 @@ body:not(.light-mode) .auth-button:not(.google-btn):hover {
     .auth-container.right-panel-active .sign-up-container {
         transform: translateX(0); /* Vô hiệu hóa transform */
         animation: none; /* Tắt animation 'show' không cần thiết */
+    }
+
+    .auth-notification {
+    
+        position: absolute;
+        top: 36px;
     }
 
     /* Mặc định: hiện đăng nhập, ẩn đăng ký */
