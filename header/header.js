@@ -138,14 +138,20 @@ async function handleOAuthCallback() {
         if (authAction === 'login') {
             if (isExist) {
                 await fetchAndDisplayUserProfile();
-                if (closeModalBtn) closeModalBtn.click();
+                // **SỬA LỖI: Trực tiếp ẩn modal thay vì dựa vào animation**
+                if (authModalOverlay) {
+                    authModalOverlay.classList.remove('visible');
+                }
             } else {
                 const message = "Tài khoản Google này chưa tồn tại. Vui lòng đăng ký.";
-                if (openModal) openModal(true, message, false); 
+                if (openModal) openModal(true, message, false);
             }
-        } else if (authAction === 'register') {           
-                await fetchAndDisplayUserProfile();
-                if (closeModalBtn) closeModalBtn.click();
+        } else if (authAction === 'register') {
+            await fetchAndDisplayUserProfile();
+            // **SỬA LỖI: Trực tiếp ẩn modal thay vì dựa vào animation**
+            if (authModalOverlay) {
+                authModalOverlay.classList.remove('visible');
+            }
         }
     } catch (error) {
         console.error('Lỗi xử lý callback OAuth:', error);
@@ -164,11 +170,11 @@ async function fetchAndDisplayUserProfile() {
     try {
         const response = await apiRequest('/users/me/profile');
         const userData = response.data;
-        // console.log('Dữ liệu người dùng nhận được từ API:', userData);
         
         if (!userData || !userData.full_name || !userData.phone_number) {
             console.warn("Hồ sơ người dùng chưa hoàn chỉnh (thiếu tên hoặc SĐT). Yêu cầu cập nhật.");
-            // Không hiển thị trạng thái đăng nhập và trả về false.
+            // FIX: Luôn hiển thị trạng thái đã đăng xuất để các nút bấm hiện ra
+            showLoggedOutState(); 
             return false;
         }
         
@@ -793,14 +799,15 @@ function initializeHeader() {
                 authContainer.classList.toggle('right-panel-active', showRegister);
                 authModalOverlay.classList.add('visible');
 
-                if (useAnimation) {
-                    modalAnimation.restart();
-                } else {
-                    gsap.set(authContainer, { y: 0, opacity: 1 });
-                    gsap.set('.auth-container h1, .auth-container p', { visibility: 'visible' });
-                    gsap.set(animatedText.chars, { yPercent: 0 });
-                    gsap.set('.form-container input, .auth-button', { opacity: 1, y: 0 });
+                // ---- BẮT ĐẦU PHẦN SỬA LỖI ----
+                // Luôn khởi động lại timeline animation để đảm bảo trạng thái nhất quán
+                modalAnimation.restart();
+
+                // Nếu không yêu cầu animation, tua nhanh đến cuối timeline (hoàn thành ngay lập tức)
+                if (!useAnimation) {
+                    modalAnimation.progress(1);
                 }
+                // ---- KẾT THÚC PHẦN SỬA LỖI ----
 
                 if (message) {
                     const targetId = showRegister ? '#auth-notification-signup' : '#auth-notification-signin';
@@ -918,6 +925,22 @@ function initializeHeader() {
         const closePanelBtn = userPanelModal.querySelector('.user-panel-close-btn');
         const panelSidebarNav = userPanelModal.querySelector('.user-panel-nav');
         
+        // ==========================================================
+        // === BẮT ĐẦU KHU VỰC CHỈNH SỬA CHO SIDEBAR TRÊN DI ĐỘNG ===
+        // ==========================================================
+        const userPanelContainer = userPanelModal.querySelector('.user-panel-container');
+        const showSidebarBtn = userPanelModal.querySelector('#show-sidebar-btn');
+
+        // 1. Logic cho nút mũi tên để mở sidebar
+        if (showSidebarBtn && userPanelContainer) {
+            showSidebarBtn.addEventListener('click', () => {
+                userPanelContainer.classList.add('sidebar-visible');
+            });
+        }
+        // ========================================================
+        // === KẾT THÚC KHU VỰC CHỈNH SỬA CHO SIDEBAR DI ĐỘNG 1 ===
+        // ========================================================
+
         const showPanel = async (targetId) => {
             const protectedPanels = [
                 'panel-profile', 'panel-orders', 'panel-payments',
@@ -1018,6 +1041,16 @@ function initializeHeader() {
                 } 
                 else if (link.dataset.target) {
                     showPanel(link.dataset.target);
+                    // ============================================================
+                    // === BẮT ĐẦU KHU VỰC CHỈNH SỬA CHO SIDEBAR TRÊN DI ĐỘNG 2 ===
+                    // ============================================================
+                    // 2. Tự động ẩn sidebar sau khi chọn một mục (chỉ trên mobile)
+                    if (window.innerWidth <= 992 && userPanelContainer) {
+                        userPanelContainer.classList.remove('sidebar-visible');
+                    }
+                    // ==========================================================
+                    // === KẾT THÚC KHU VỰC CHỈNH SỬA CHO SIDEBAR DI ĐỘNG 2 ===
+                    // ==========================================================
                 }
             });
         }

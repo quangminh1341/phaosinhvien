@@ -266,7 +266,8 @@
                 .then(response => response.text())
                 .then(data => {
                     document.getElementById('header-placeholder').innerHTML = data;
-                    initializePage(); 
+                    // Bọc initializePage() trong setTimeout để đảm bảo DOM đã sẵn sàng
+                    setTimeout(initializePage, 0); 
                 });
         });
     </script>
@@ -319,6 +320,11 @@
     <div id="user-panel-modal" class="modal-overlay">
         <div class="user-panel-container">
             <button class="close-modal-btn user-panel-close-btn">&times;</button>
+
+            <button id="show-sidebar-btn" class="show-sidebar-btn">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+
             <div class="user-panel-sidebar">
                 <div class="user-panel-profile-header">
                     <img src="images/logo.png" alt="User Avatar" class="panel-avatar">

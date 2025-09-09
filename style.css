@@ -382,9 +382,9 @@ input:checked + .slider:before { transform: translateX(22px); }
 .modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center;
-    z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+    z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; visibility: hidden;
 }
-.modal-overlay.visible { opacity: 1; pointer-events: auto; }
+.modal-overlay.visible { opacity: 1; pointer-events: auto; visibility: visible; }
 .modal-content {
     background-color: var(--bruh-color); color: var(--text-primary);
     padding: 40px; border-radius: 16px; width: 90%; max-width: 500px;
@@ -628,6 +628,9 @@ body.light-mode .site-footer-panel::before {
     padding-top: 20px;
     border-right: 1px solid var(--border-color);
     overflow-y: auto;
+    transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Mặc định trên desktop, sidebar luôn hiển thị */
+    margin-left: 0; 
 }
 
 .user-panel-profile-header {
@@ -663,7 +666,69 @@ body.light-mode .site-footer-panel::before {
     flex-grow: 1;
     padding: 40px;
     overflow-y: auto;
+    transition: padding-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+.show-sidebar-btn {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    z-index: 15;
+    background: var(--fomt-box-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.3s, transform 0.3s, background-color 0.2s;
+    /* Ẩn nút này trên desktop */
+    opacity: 0;
+    pointer-events: none;
+}
+
+.show-sidebar-btn:hover {
+    background-color: var(--accent-primary);
+}
+
+
+/* --- BẮT ĐẦU LOGIC CHO GIAO DIỆN DI ĐỘNG --- */
+@media (max-width: 992px) {
+    .user-panel-sidebar {
+        /* Trên mobile, mặc định ẩn sidebar */
+        margin-left: -240px;
+    }
+
+    .user-panel-content {
+        /* Tạo khoảng trống cho nút mũi tên */
+        padding-left: 70px;
+    }
+
+    /* Khi sidebar được kích hoạt (có class .sidebar-visible) */
+    .user-panel-container.sidebar-visible .user-panel-sidebar {
+        margin-left: 0; /* Hiện sidebar */
+    }
+
+    .user-panel-container.sidebar-visible .user-panel-content {
+        padding-left: 40px; /* Trả lại padding ban đầu */
+    }
+    
+    .user-panel-container.sidebar-visible .show-sidebar-btn {
+        opacity: 0; /* Ẩn nút mũi tên khi sidebar đang mở */
+        pointer-events: none;
+    }
+
+    /* Khi sidebar bị ẩn (KHÔNG có class .sidebar-visible) */
+    .user-panel-container:not(.sidebar-visible) .show-sidebar-btn {
+        opacity: 1; /* Hiện nút mũi tên */
+        pointer-events: auto;
+    }
+}
+/* --- KẾT THÚC LOGIC CHO GIAO DIỆN DI ĐỘNG --- */
+
 
 .panel-content-item {
     display: none;

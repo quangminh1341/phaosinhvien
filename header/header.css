@@ -427,7 +427,7 @@ body.light-mode #theme-toggle:hover .fa-sun {
     align-items: center;
     justify-content: center;
     padding: 0 50px;
-    padding-bottom: 160px;
+    padding-bottom: 90px;
     height: 100%;
     text-align: center;
     box-sizing: border-box;
@@ -968,7 +968,7 @@ body:not(.light-mode) .auth-button:not(.google-btn):hover {
     color: #e53935;
     font-size: 0.9rem;
     font-weight: 500;
-    margin-bottom: 15px;
+    margin-bottom: -55px;
     min-height: 40px;
     max-width: 90%;
     line-height: 1.4;
@@ -1116,6 +1116,7 @@ body:not(.light-mode) .auth-button:not(.google-btn):hover {
         justify-content: flex-start;
         padding: 62px 40px 0;
         gap: 20px;
+        height: auto;
     }
     
     /* FIX: Ngăn chặn hiệu ứng trượt trên di động */
@@ -1125,8 +1126,7 @@ body:not(.light-mode) .auth-button:not(.google-btn):hover {
         animation: none; /* Tắt animation 'show' không cần thiết */
     }
 
-    .auth-notification {
-    
+    .auth-notification {    
         position: absolute;
         top: 36px;
     }
