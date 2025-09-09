@@ -425,8 +425,9 @@ body.light-mode #theme-toggle:hover .fa-sun {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-start;
-    padding: 80px 40px 0;
+    justify-content: center;
+    padding: 0 50px;
+    padding-bottom: 160px;
     height: 100%;
     text-align: center;
     box-sizing: border-box;
@@ -436,7 +437,7 @@ body.light-mode #theme-toggle:hover .fa-sun {
 /* === FIX: Bỏ thuộc tính `bottom` để không bị lệch xuống === */
 .form-container h1 {
     font-weight: bold;
-    margin: 0;
+    margin: 40px;
     font-size: 1.8rem;
     color: var(--text-primary);
     flex-shrink: 0;
@@ -978,7 +979,6 @@ body:not(.light-mode) .auth-button:not(.google-btn):hover {
 }
 
 
-/* --- Responsive cho Header & Auth Modal --- */
 @media (max-width: 768px) {
     .site-header { 
         align-items: center; 
@@ -1091,12 +1091,11 @@ body:not(.light-mode) .auth-button:not(.google-btn):hover {
     .nav-open .hamburger::before { top: 0; transform: rotate(45deg); }
     .nav-open .hamburger::after { bottom: 0; transform: rotate(-45deg); }
 
-    /* === FIX CHO AUTH MODAL TRÊN DI ĐỘNG (LẦN 3) === */
+    /* === START: SỬA LỖI CHO AUTH MODAL TRÊN DI ĐỘNG === */
     .auth-container {
         width: 95vw;
         max-width: 400px;
         min-height: 500px;
-        /* Thêm viền màu bo tròn */
         border: 4px solid var(--current-strip-1);
         box-sizing: border-box;
     }
@@ -1108,32 +1107,37 @@ body:not(.light-mode) .auth-button:not(.google-btn):hover {
     .form-container {
         width: 100%;
         position: absolute;
+        top: 0;
+        left: 0;
+        transition: opacity 0.3s ease-in-out, z-index 0.3s ease-in-out;
     }
 
-    /* Căn giữa nội dung và đảm bảo không bị lỗi */
     .form-container form {
-        justify-content: center;   /* Dùng lại justify-content: center cho ổn định */
-        padding: 0 40px;           /* Chỉ giữ padding hai bên */
-        gap: 20px;                 /* Giảm khoảng cách cho hợp lý */
-    }
-
-    /* Tăng khoảng cách dưới tiêu đề để đẩy nội dung xuống một chút */
-    .form-container h1 {
-        margin-bottom: 200px;
+        justify-content: flex-start;
+        padding: 20px 40px 0;
+        gap: 20px;
     }
     
+    /* FIX: Ngăn chặn hiệu ứng trượt trên di động */
+    .auth-container.right-panel-active .sign-in-container,
+    .auth-container.right-panel-active .sign-up-container {
+        transform: translateX(0); /* Vô hiệu hóa transform */
+        animation: none; /* Tắt animation 'show' không cần thiết */
+    }
+
+    /* Mặc định: hiện đăng nhập, ẩn đăng ký */
     .sign-in-container {
         opacity: 1;
-        transform: translateX(0);
-        z-index: 1;
+        z-index: 2;
+        pointer-events: auto;
     }
     .sign-up-container {
         opacity: 0;
-        transform: translateX(0);
-        z-index: 5;
+        z-index: 1;
         pointer-events: none;
     }
-    
+
+    /* Khi chuyển sang đăng ký: ẩn đăng nhập, hiện đăng ký */
     .auth-container.right-panel-active .sign-in-container {
         opacity: 0;
         z-index: 1;
@@ -1141,7 +1145,7 @@ body:not(.light-mode) .auth-button:not(.google-btn):hover {
     }
     .auth-container.right-panel-active .sign-up-container {
         opacity: 1;
-        z-index: 5;
+        z-index: 2;
         pointer-events: auto;
     }
      
@@ -1150,6 +1154,7 @@ body:not(.light-mode) .auth-button:not(.google-btn):hover {
     .auth-container, body.light-mode .auth-container {
         background: var(--bg-primary);
     }
+    /* === END: SỬA LỖI CHO AUTH MODAL TRÊN DI ĐỘNG === */
 }
 
 @media (max-width: 480px) {

@@ -1696,6 +1696,8 @@ function initializeHeader() {
                             metadataFormData.append('feature', document.getElementById(`edit-feature${suffix}`).value);
                             metadataFormData.append('parameter', document.getElementById(`edit-parameter${suffix}`).value);
                             metadataFormData.append('demo_link', document.getElementById(`edit-demo-link${suffix}`).value);
+
+                            console.log("Dữ liệu gửi đi để cập nhật:", Object.fromEntries(metadataFormData.entries()));
                             
                             // Gửi yêu cầu PATCH chỉ với metadata. Yêu cầu này sẽ thành công.
                             await apiRequest(`/admin/products/${productId}`, 'PATCH', metadataFormData);
