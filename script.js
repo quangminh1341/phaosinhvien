@@ -148,7 +148,7 @@ function groupProductsByCategory(products) {
  */
 async function loadAllProducts() {
     try {
-        const response = await apiRequest('/products?page=1&limit=20'); // GET request to /products
+        const response = await apiRequest('/admin/products?page=1&limit=20'); // GET request to /admin/products
         
         if (!response || !response.data) throw new Error('Cấu trúc phản hồi API không hợp lệ');
 
@@ -473,7 +473,7 @@ function handleDeleteProduct(e) {
         true,
         async () => {
             try {
-                const response = await apiRequest(`/products/${currentProductData.id}`, 'DELETE');
+                const response = await apiRequest(`/admin/products/${currentProductData.id}`, 'DELETE');
                 if (response && response.message === "Deleted successfully") {
                     showMessage('Đã xóa sản phẩm thành công!');
                     handleBackClick();
@@ -507,8 +507,8 @@ async function handleThumbnailClick(e) {
     
     try {
         const [productDetailsResponse, productImagesResponse] = await Promise.all([
-            apiRequest(`/products/${productId}`),
-            apiRequest(`/products/${productId}/images`)
+            apiRequest(`/admin/products/${productId}`),
+            apiRequest(`/admin/products/${productId}/images`)
         ]);
 
         if (!productDetailsResponse || !productDetailsResponse.data) {

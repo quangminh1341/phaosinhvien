@@ -1031,7 +1031,7 @@ function initializeHeader() {
 
             // Gọi API để lấy danh sách ảnh mới nhất bao gồm ID
             try {
-                const imagesResponse = await apiRequest(`/products/${productData.id}/images`);
+                const imagesResponse = await apiRequest(`/admin/products/${productData.id}/images`);
                 console.log("DỮ LIỆU ẢNH TỪ API:", imagesResponse.data);
                 productData.imageGallery = imagesResponse.data || [];
             } catch (error) {
@@ -1472,7 +1472,7 @@ function initializeHeader() {
                         true, // showConfirm
                         async () => { // callback
                             try {
-                                const response = await apiRequest(`/products/${productId}/images/${imageId}`, 'DELETE');
+                                const response = await apiRequest(`/admin/products/${productId}/images/${imageId}`, 'DELETE');
                                 if (response && response.message === "Deleted successfully") {
                                     previewItem.remove();
                                     const originalData = formWrapper._originalData;
@@ -1641,7 +1641,7 @@ function initializeHeader() {
                         const category = type === 'Html' ? 'Website HTML' : 'Fullstack';
                         productFormData.append('category', category);
 
-                        const productResponse = await apiRequest('/products', 'POST', productFormData);
+                        const productResponse = await apiRequest('/admin/products', 'POST', productFormData);
                         const productId = productResponse.data.id;
 
                         if (!productId) throw new Error("Không nhận được ID sản phẩm sau khi tạo.");
@@ -1651,7 +1651,7 @@ function initializeHeader() {
                             const galleryFormData = new FormData();
                             // Lặp qua tất cả các file đã chọn và thêm vào form data
                             files.forEach(file => galleryFormData.append('images', file));
-                            await apiRequest(`/products/${productId}/images`, 'POST', galleryFormData);
+                            await apiRequest(`/admin/products/${productId}/images`, 'POST', galleryFormData);
                         }
                         // --- KẾT THÚC THAY ĐỔI ---
 
@@ -1698,7 +1698,7 @@ function initializeHeader() {
                             metadataFormData.append('demo_link', document.getElementById(`edit-demo-link${suffix}`).value);
                             
                             // Gửi yêu cầu PATCH chỉ với metadata. Yêu cầu này sẽ thành công.
-                            await apiRequest(`/products/${productId}`, 'PATCH', metadataFormData);
+                            await apiRequest(`/admin/products/${productId}`, 'PATCH', metadataFormData);
 
                             // --- BƯỚC 2: Tải lên TẤT CẢ các ảnh MỚI vào gallery ---
                             const newFiles = managedFiles[editFileStoreKey];
@@ -1709,7 +1709,7 @@ function initializeHeader() {
                                 });
                                 // Yêu cầu này sẽ tải tất cả ảnh mới lên.
                                 // Server sẽ tự xử lý file tên "1.webp" để cập nhật ảnh bìa.
-                                await apiRequest(`/products/${productId}/images`, 'POST', galleryFormData);
+                                await apiRequest(`/admin/products/${productId}/images`, 'POST', galleryFormData);
                             }
 
                             // THAY ĐỔI: alert -> showMessage
