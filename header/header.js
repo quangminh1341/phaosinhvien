@@ -1031,7 +1031,7 @@ function initializeHeader() {
 
             // Gọi API để lấy danh sách ảnh mới nhất bao gồm ID
             try {
-                const imagesResponse = await apiRequest(`/admin/products/${productData.id}/images`);
+                const imagesResponse = await apiRequest(`/products/${productData.id}/images`);
                 console.log("DỮ LIỆU ẢNH TỪ API:", imagesResponse.data);
                 productData.imageGallery = imagesResponse.data || [];
             } catch (error) {
