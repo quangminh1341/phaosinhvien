@@ -1184,3 +1184,112 @@ body:not(.light-mode) .auth-button:not(.google-btn):hover {
         max-height: 80px;
     }
 }
+
+/* Làm cho thẻ có thể chứa các thành phần định vị tuyệt đối */
+.linked-account-card {
+    position: relative;
+    padding-bottom: 60px; /* Thêm khoảng trống cho các nút hành động */
+}
+
+/* Định dạng cho nhãn trạng thái */
+.account-status-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #fff;
+    border: 1px solid rgba(0,0,0,0.2);
+}
+
+.account-status-badge.status-pending {
+    background-color: #ff9800; /* Màu cam */
+}
+
+.account-status-badge.status-active {
+    background-color: #4CAF50; /* Màu xanh lá */
+}
+
+.account-status-badge.status-block {
+    background-color: #f44336; /* Màu đỏ */
+}
+
+/* Đường kẻ ngăn cách giữa các tài khoản */
+.account-divider {
+    border: none;
+    height: 1px;
+    background-color: var(--border-color);
+    margin: 15px 0;
+}
+
+/* Container cho các nút hành động ở cuối thẻ */
+.card-actions {
+    position: absolute;
+    bottom: 10px;
+    right: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+/* Định dạng chung cho các nút hành động */
+.action-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border-color);
+    background-color: var(--fomt-box-color);
+    color: var(--text-primary);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.action-btn:hover {
+    background-color: var(--accent-primary);
+    color: var(--text-on-accent);
+    border-color: var(--accent-primary);
+}
+
+/* Wrapper cho nút xóa và menu dropdown */
+.delete-action-wrapper {
+    position: relative;
+}
+
+/* Menu thả xuống để chọn tài khoản xóa */
+.delete-dropdown-menu {
+    position: absolute;
+    bottom: calc(100% + 5px); /* Hiển thị phía trên nút xóa */
+    right: 0;
+    list-style: none;
+    padding: 5px 0;
+    margin: 0;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    width: 200px;
+    z-index: 10;
+    display: none; /* Mặc định ẩn */
+}
+
+.delete-dropdown-menu.visible {
+    display: block; /* Hiển thị khi có class visible */
+}
+
+.delete-dropdown-menu li a {
+    display: block;
+    padding: 8px 15px;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.delete-dropdown-menu li a:hover {
+    background-color: var(--accent-primary);
+    color: var(--text-on-accent);
+}

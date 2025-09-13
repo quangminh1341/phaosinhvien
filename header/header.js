@@ -15,7 +15,7 @@ let populateAndShowEditForm;
 
 // --- CẤU HÌNH API ---
 // ***** LƯU Ý: Đổi lại API_BASE_URL thành endpoint server của bạn khi deploy *****
-const API_BASE_URL = 'https://phaosinhvien.com/api'; 
+const API_BASE_URL = '/api'; 
 let currentUser = null;
 
 // --- HÀM TRỢ GIÚP API ---
@@ -330,74 +330,100 @@ function updateNotificationUI(notifications) {
     }
 }
 
-async function renderOrders() {
-    const orderListContainer = document.querySelector('.order-list');
-    const searchInput = document.getElementById('order-search-input');
-    const activeFilter = document.querySelector('.order-filters .filter-btn.active');
+function populateOrderMonthFilter(selectId) {
+    const monthFilter = document.getElementById(selectId);
+    if (!monthFilter || monthFilter.options.length > 1) return;
 
-    if (!orderListContainer || !searchInput || !activeFilter) return;
+    monthFilter.innerHTML = '<option value="all">Tất cả tháng</option>';
+
+    const options = [];
+    const startDate = new Date('2025-07-01');
+    const endDate = new Date(); 
+
+    let currentDate = new Date(endDate);
+
+    while (currentDate >= startDate) {
+        const month = currentDate.getMonth() + 1;
+        const year = currentDate.getFullYear();
+        const monthPadded = month.toString().padStart(2, '0');
+        
+        options.push(`<option value="${year}-${monthPadded}">Tháng ${month}/${year}</option>`);
+
+        currentDate.setMonth(currentDate.getMonth() - 1);
+    }
+    
+    monthFilter.innerHTML += options.join('');
+}
+
+
+async function renderOrders() {
+    const orderListContainer = document.querySelector('#panel-orders .order-list');
+    if (!orderListContainer) return;
 
     orderListContainer.innerHTML = '<p class="no-orders">Đang tải đơn hàng...</p>';
 
+    const searchInput = document.getElementById('order-search-input');
+    const activeFilter = document.querySelector('#panel-orders .order-filters .filter-btn.active');
+    const monthFilter = document.getElementById('user-order-month-filter');
+
     const searchTerm = searchInput.value.trim().toLowerCase();
     const filterStatus = activeFilter.dataset.status;
+    const monthValue = monthFilter.value;
+
+    const params = {};
+    if (searchTerm) params.search = searchTerm;
+    
+    if (monthValue !== 'all') {
+        const [year, month] = monthValue.split('-');
+        params.year = year;
+        params.month = month;
+    }
+
+    if (filterStatus === 'editing') {
+        orderListContainer.innerHTML = '<p class="no-orders">Chức năng đang được phát triển.</p>';
+        return;
+    }
 
     try {
-        const params = {};
-        if (searchTerm) {
-            params.search = searchTerm;
-        }
-
+        // SỬA LỖI: Luôn gửi request mà không có tham số 'status'
         const response = await apiRequest('/users/me/order-history', 'GET', params);
-        const allOrders = response.data || [];
+        let allOrders = response.data || [];
         let processedOrders = [];
 
-        const statusMap = {
-            'Chờ xác nhận': 'pending',
-            'Tiến hành': 'inprogress',
-            'Hoàn thành': 'completed',
-        };
-
-        if (filterStatus === 'Tất cả') {
-            processedOrders = allOrders;
-        } else if (filterStatus === 'Hết bảo hành') {
-            const now = new Date();
-            const thirtyDaysInMillis = 30 * 24 * 60 * 60 * 1000;
-            processedOrders = allOrders.filter(order => {
-                if (order.status.toLowerCase() !== 'completed') return false;
-                const orderDate = new Date(order.created_at);
-                return (now - orderDate) > thirtyDaysInMillis;
-            });
-        } else if (filterStatus === 'Đã hủy') {
-            processedOrders = allOrders.filter(order =>
-                ['canceled', 'rejected'].includes(order.status.toLowerCase())
-            );
-        } else {
-            const apiStatusToFilter = statusMap[filterStatus];
-            processedOrders = allOrders.filter(order => order.status.toLowerCase() === apiStatusToFilter);
+        // SỬA LỖI: Thực hiện lọc trạng thái ở client
+        switch (filterStatus) {
+            case 'pending':
+                processedOrders = allOrders.filter(o => o.status.toLowerCase() === 'pending');
+                break;
+            case 'sold':
+                processedOrders = allOrders.filter(o => o.status.toLowerCase() === 'sold');
+                break;
+            case 'expired':
+                const now = new Date();
+                processedOrders = allOrders.filter(o => o.expired_at && now > new Date(o.expired_at));
+                break;
+            case 'all':
+            default:
+                processedOrders = allOrders;
+                break;
         }
 
-        if (processedOrders.length > 0) {
-            orderListContainer.innerHTML = processedOrders.map(order => {
-                let statusClass = '';
-                const statusDisplayMap = {
-                    'completed': 'Hoàn thành',
-                    'canceled': 'Đã hủy',
-                    'rejected': 'Từ Chối',
-                    'inprogress': 'Tiến hành',
-                    'pending': 'Chờ xác nhận'
-                };
-                const displayStatus = statusDisplayMap[order.status.toLowerCase()] || order.status;
 
-                switch (order.status.toLowerCase()) {
-                    case 'completed': statusClass = 'status-completed'; break;
-                    case 'canceled':
-                    case 'rejected':
-                        statusClass = 'status-canceled';
-                        break;
-                    case 'inprogress': statusClass = 'status-inprogress'; break;
-                    case 'pending': statusClass = 'status-pending'; break;
-                }
+        if (processedOrders.length > 0) {
+            const statusDisplayMap = {
+                'sold': 'Hoàn thành',
+                'canceled': 'Đã hủy',
+                'rejected': 'Từ Chối',
+                'inprogress': 'Tiến hành',
+                'pending': 'Chờ thanh toán'
+            };
+            
+            orderListContainer.innerHTML = processedOrders.map(order => {
+                const statusKey = order.status.toLowerCase();
+                const displayStatus = statusDisplayMap[statusKey] || order.status;
+                let statusClass = `status-${statusKey}`;
+
+                if (statusKey === 'sold') statusClass = 'status-completed';
 
                 return `
                     <div class="order-item">
@@ -422,6 +448,94 @@ async function renderOrders() {
         orderListContainer.innerHTML = '<p class="no-orders">Đã xảy ra lỗi khi tải dữ liệu đơn hàng.</p>';
     }
 }
+
+async function renderAdminOrders() {
+    const orderListContainer = document.querySelector('.order-list-admin');
+    if (!orderListContainer) return;
+
+    orderListContainer.innerHTML = '<p class="no-orders">Đang tải đơn hàng...</p>';
+
+    const searchInput = document.getElementById('admin-order-search-input');
+    const activeFilter = document.querySelector('#panel-admin-orders .order-filters .filter-btn.active');
+    const monthFilter = document.getElementById('admin-month-filter');
+
+    const searchTerm = searchInput.value.trim().toLowerCase();
+    const filterStatus = activeFilter.dataset.status;
+    const monthValue = monthFilter.value;
+    
+    const params = {};
+    if (searchTerm) params.search = searchTerm;
+    
+    if (monthValue !== 'all') {
+        const [year, month] = monthValue.split('-');
+        params.year = year;
+        params.month = month;
+    }
+    
+    if (filterStatus === 'editing') {
+        orderListContainer.innerHTML = '<p class="no-orders">Chức năng đang được phát triển.</p>';
+        return;
+    }
+
+    try {
+        // SỬA LỖI: Thay đổi endpoint từ /admin/users/orders thành /admin/orders
+        const response = await apiRequest('/admin/orders', 'GET', params);
+        const allOrders = response.data || [];
+        let processedOrders = [];
+
+        // SỬA LỖI: Thực hiện lọc trạng thái ở client
+        switch (filterStatus) {
+            case 'pending':
+                processedOrders = allOrders.filter(o => o.status.toLowerCase() === 'pending');
+                break;
+            case 'sold':
+                processedOrders = allOrders.filter(o => o.status.toLowerCase() === 'sold');
+                break;
+            case 'all':
+            default:
+                processedOrders = allOrders;
+                break;
+        }
+
+        if (processedOrders.length > 0) {
+            const statusDisplayMap = {
+                'sold': 'Hoàn thành',
+                'canceled': 'Đã hủy',
+                'rejected': 'Từ Chối',
+                'inprogress': 'Tiến hành',
+                'pending': 'Chờ thanh toán'
+            };
+            
+            orderListContainer.innerHTML = processedOrders.map(order => {
+                const statusKey = order.status.toLowerCase();
+                const displayStatus = statusDisplayMap[statusKey] || order.status;
+                let statusClass = `status-${statusKey}`;
+                if (statusKey === 'sold') statusClass = 'status-completed';
+
+                return `
+                    <div class="order-item">
+                        <div class="order-info">
+                            <span class="order-id">#${order.order_code} (User: ${order.user_email || 'N/A'})</span>
+                            <p class="order-product">${order.title}</p>
+                            <span class="order-date">${new Date(order.created_at).toLocaleString('vi-VN')}</span>
+                        </div>
+                        <div class="order-details">
+                            <span class="order-price">${Number(order.money_pay).toLocaleString('vi-VN')} VNĐ</span>
+                            <span class="order-revisions">Sửa: ${order.edit_count}</span>
+                            <span class="order-status ${statusClass}">${displayStatus}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } else {
+            orderListContainer.innerHTML = '<p class="no-orders">Không tìm thấy đơn hàng nào.</p>';
+        }
+    } catch (error) {
+        console.error("Lỗi khi tải đơn hàng admin:", error);
+        orderListContainer.innerHTML = '<p class="no-orders">Đã xảy ra lỗi khi tải dữ liệu.</p>';
+    }
+}
+
 
 function populateProfilePanel(user) {
     if (!user) return;
@@ -506,79 +620,69 @@ function populateMonthFilter() {
     ).join('');
 }
 
-function renderTransactions() {
+async function renderTransactions() {
     const transactionListContainer = document.querySelector('.transaction-list');
     const activeTypeFilter = document.querySelector('.payment-filters .filter-btn.active');
     const monthFilter = document.getElementById('month-filter');
 
-    if (!transactionListContainer || !activeTypeFilter || !monthFilter.value) return;
+    // Kiểm tra các thành phần UI cần thiết đã sẵn sàng chưa
+    if (!transactionListContainer || !activeTypeFilter || !monthFilter.value) {
+        if(transactionListContainer) transactionListContainer.innerHTML = '<p class="no-orders">Vui lòng chọn tháng để xem giao dịch.</p>';
+        return;
+    }
+
+    // Hiển thị trạng thái đang tải
+    transactionListContainer.innerHTML = '<p class="no-orders">Đang tải giao dịch...</p>';
 
     const filterType = activeTypeFilter.dataset.type;
     const [selectedYear, selectedMonth] = monthFilter.value.split('-').map(Number);
-    
-    const startDate = new Date(selectedYear, selectedMonth - 1, 1);
-    const endDate = new Date(selectedYear, selectedMonth, 0, 23, 59, 59);
 
-    let processedTransactions = mockTransactions;
-
-    processedTransactions = processedTransactions.filter(t => {
-        const transactionDate = new Date(t.date);
-        return transactionDate >= startDate && transactionDate <= endDate;
-    });
-
+    // Theo yêu cầu của bạn, panel "Thanh toán" sẽ hiển thị lịch sử nhận hoa hồng.
+    // Do đó, các bộ lọc như "Đã nạp", "Đã chi tiêu" sẽ không có dữ liệu tương ứng.
     if (filterType !== 'all') {
-        processedTransactions = processedTransactions.filter(t => t.type === filterType);
+        transactionListContainer.innerHTML = `<p class="no-orders">Lịch sử hoa hồng không áp dụng cho bộ lọc này.</p>`;
+        return;
     }
 
-    if (processedTransactions.length > 0) {
-        transactionListContainer.innerHTML = processedTransactions.map(t => {
-            if (t.type === 'deposit') {
+    try {
+        // Chuẩn bị tham số cho yêu cầu API
+        const params = {
+            year: selectedYear,
+            month: selectedMonth,
+            page: 1,
+            limit: 100 // Lấy tối đa 100 bản ghi cho tháng đã chọn
+        };
+
+        // Gửi yêu cầu đến endpoint bạn đã chỉ định
+        const response = await apiRequest('/users/me/marketing/commission', 'GET', params);
+        const commissions = response.history || []; // Dữ liệu nằm trong thuộc tính 'history'
+
+        if (commissions.length > 0) {
+            // Nếu có dữ liệu, tạo HTML và hiển thị
+            transactionListContainer.innerHTML = commissions.map(c => {
+                // Chuyển đổi dữ liệu hoa hồng để hiển thị theo định dạng của một giao dịch
                 return `
                     <div class="transaction-item">
-                        <div class="transaction-icon deposit"><i class="fas fa-arrow-down"></i></div>
+                        <div class="transaction-icon deposit"><i class="fas fa-hand-holding-usd"></i></div>
                         <div class="transaction-info">
-                            <p class="transaction-title">Nạp tiền vào tài khoản</p>
-                            <span class="transaction-detail">Phương thức: ${t.method}</span>
-                            <span class="transaction-date">${new Date(t.date).toLocaleString('vi-VN')}</span>
+                            <p class="transaction-title">Nhận hoa hồng giới thiệu</p>
+                            <span class="transaction-detail">Từ: ${c.full_name} - SP: ${c.product_title}</span>
+                            <span class="transaction-date">${new Date(c.created_at).toLocaleString('vi-VN')}</span>
                         </div>
                         <div class="transaction-amount">
-                            <span class="amount positive">+${t.amount.toLocaleString('vi-VN')} VNĐ</span>
-                            <span class="ending-balance">Số dư: ${t.endingBalance.toLocaleString('vi-VN')} VNĐ</span>
+                            <span class="amount positive">+${c.money_commission.toLocaleString('vi-VN')} VNĐ</span>
+                            <span class="ending-balance"></span>
                         </div>
                     </div>`;
-            }
-            if (t.type === 'withdrawal') {
-                 return `
-                    <div class="transaction-item">
-                        <div class="transaction-icon withdrawal"><i class="fas fa-arrow-up"></i></div>
-                        <div class="transaction-info">
-                            <p class="transaction-title">Rút tiền hoa hồng</p>
-                            <span class="transaction-date">${new Date(t.date).toLocaleString('vi-VN')}</span>
-                        </div>
-                        <div class="transaction-amount">
-                            <span class="amount negative">-${t.amount.toLocaleString('vi-VN')} VNĐ</span>
-                            <span class="ending-balance">Hoa hồng còn lại: ${t.endingCommissionBalance.toLocaleString('vi-VN')} VNĐ</span>
-                        </div>
-                    </div>`;
-            }
-            if (t.type === 'spent') {
-                 return `
-                    <div class="transaction-item">
-                        <div class="transaction-icon spent"><i class="fas fa-shopping-cart"></i></div>
-                        <div class="transaction-info">
-                            <p class="transaction-title">Thanh toán đơn hàng</p>
-                            <span class="transaction-detail">Sản phẩm: ${t.productName}</span>
-                            <span class="transaction-date">${new Date(t.date).toLocaleString('vi-VN')}</span>
-                        </div>
-                        <div class="transaction-amount">
-                            <span class="amount negative">-${t.amount.toLocaleString('vi-VN')} VNĐ</span>
-                            <span class="ending-balance">Số dư: ${t.endingBalance.toLocaleString('vi-VN')} VNĐ</span>
-                        </div>
-                    </div>`;
-            }
-        }).join('');
-    } else {
-        transactionListContainer.innerHTML = '<p class="no-orders">Không có giao dịch nào trong tháng này.</p>';
+            }).join('');
+        } else {
+            // Nếu không có dữ liệu, hiển thị thông báo
+            transactionListContainer.innerHTML = '<p class="no-orders">Không có hoa hồng nào được ghi nhận trong tháng này.</p>';
+        }
+    } catch (error) {
+        // Xử lý và hiển thị lỗi nếu yêu cầu API thất bại
+        console.error("Lỗi khi tải lịch sử hoa hồng cho panel thanh toán:", error);
+        transactionListContainer.innerHTML = '<p class="no-orders">Đã xảy ra lỗi khi tải dữ liệu.</p>';
     }
 }
 
@@ -716,6 +820,281 @@ async function renderCommissionView() {
         console.error("Lỗi khi tải lịch sử hoa hồng:", error);
         commissionListContainer.innerHTML = '<p class="no-orders">Đã xảy ra lỗi khi tải dữ liệu.</p>';
         if (monthlyCommissionCard) monthlyCommissionCard.textContent = '0 VNĐ';
+    }
+}
+
+// --- START: CÁC HÀM MỚI CHO LIÊN KẾT THANH TOÁN ---
+const openPaymentModal = (modal) => {
+            if (modal) modal.classList.add('visible');
+        };
+
+const closePaymentModal = (modal) => {
+            if (modal) modal.classList.remove('visible');
+        };
+/**
+ * Hiển thị các tài khoản thanh toán đã liên kết và ẩn các nút liên kết tương ứng.
+ */
+async function renderPaymentLinks() {
+    const container = document.querySelector('.payment-links-container');
+    if (!container) return;
+
+    // 1. Reset trạng thái: Hiện lại tất cả các nút và xóa các thẻ cũ
+    container.querySelectorAll('.payment-link-btn').forEach(btn => btn.style.display = 'flex');
+    container.querySelectorAll('.linked-account-card').forEach(card => card.remove());
+
+    try {
+        const response = await apiRequest('/users/me/payout-accounts', 'GET');
+        const linkedAccounts = response.data || [];
+
+        const groupedAccounts = linkedAccounts.reduce((acc, account) => {
+            const method = account.method.toLowerCase();
+            if (!acc[method]) {
+                acc[method] = [];
+            }
+            acc[method].push(account);
+            return acc;
+        }, {});
+
+        // --- BẮT ĐẦU PHẦN THAY ĐỔI ---
+        // Mảng xác định thứ tự hiển thị mong muốn
+        const displayOrder = ['bank', 'momo', 'zalopay'];
+
+        // Lặp qua mảng thứ tự để đảm bảo hiển thị đúng vị trí
+        displayOrder.forEach(method => {
+            // Kiểm tra xem có tài khoản nào cho phương thức này không
+            if (groupedAccounts[method]) {
+                const accountsInMethod = groupedAccounts[method];
+                
+                const originalButton = container.querySelector(`.payment-link-btn[data-method="${method}"]`);
+                if (originalButton) originalButton.style.display = 'none';
+
+                const card = document.createElement('div');
+                card.className = 'linked-account-card';
+                card.dataset.method = method;
+
+                const cardInfo = {
+                    bank: { icon: 'fa-university', title: 'Ngân hàng đã liên kết' },
+                    momo: { icon: 'fa-mobile-alt', title: 'Momo đã liên kết' },
+                    zalopay: { icon: 'fa-wallet', title: 'ZaloPay đã liên kết' }
+                }[method];
+
+                const accountsHtml = accountsInMethod.map(account => {
+                    let statusBadge = '';
+                    switch (account.status) {
+                        case 'pending':
+                            statusBadge = '<span class="account-status-badge status-pending">Chưa xác thực</span>';
+                            break;
+                        case 'active':
+                            statusBadge = '<span class="account-status-badge status-active">Đã xác thực</span>';
+                            break;
+                        case 'block':
+                            statusBadge = '<span class="account-status-badge status-block">Đã từ chối</span>';
+                            break;
+                    }
+
+                    let detailsHtml = '';
+                    if (method === 'bank') {
+                        detailsHtml = `
+                            <div class="detail-item"><label>Ngân hàng:</label><span>${account.bank_name}</span></div>
+                            <div class="detail-item"><label>Chủ thẻ:</label><span>${account.account_name}</span></div>
+                            <div class="detail-item"><label>Số tài khoản:</label><span>${account.account_number}</span></div>
+                        `;
+                    } else {
+                        detailsHtml = `
+                            <div class="detail-item"><label>Chủ khoản:</label><span>${account.account_name}</span></div>
+                            <div class="detail-item"><label>Số điện thoại:</label><span>${account.account_number}</span></div>
+                        `;
+                    }
+
+                    return `
+                        <div class="account-entry" data-payout-id="${account.id}">
+                            ${statusBadge}
+                            <div class="linked-account-details">
+                                ${detailsHtml}
+                            </div>
+                        </div>
+                    `;
+                }).join('<hr class="account-divider">');
+
+                const deleteMenuItems = accountsInMethod.map(account => {
+                    const displayText = method === 'bank' 
+                        ? `${account.bank_name} - ${account.account_number}` 
+                        : account.account_number;
+                    return `<li><a href="#" class="delete-item-btn" data-payout-id="${account.id}">${displayText}</a></li>`;
+                }).join('');
+
+                card.innerHTML = `
+                    <div class="linked-account-header">
+                        <i class="fas ${cardInfo.icon}"></i>
+                        <span>${cardInfo.title}</span>
+                    </div>
+                    <div class="accounts-list">
+                        ${accountsHtml}
+                    </div>
+                    <div class="card-actions">
+                        <button class="action-btn add-more-btn" title="Thêm liên kết">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                        <div class="delete-action-wrapper">
+                             <button class="action-btn delete-btn" title="Xóa liên kết">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <ul class="delete-dropdown-menu">
+                                ${deleteMenuItems}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            }
+        });
+        // --- KẾT THÚC PHẦN THAY ĐỔI ---
+
+        attachPaymentCardEvents();
+
+    } catch (error) {
+        console.error('Lỗi khi tải các tài khoản thanh toán đã liên kết:', error);
+    }
+}
+
+/**
+ * Gắn các trình xử lý sự kiện cho các nút thêm/xóa trên thẻ thanh toán.
+ */
+function attachPaymentCardEvents() {
+    // Đóng tất cả menu dropdown khi click ra ngoài
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.delete-action-wrapper')) {
+            document.querySelectorAll('.delete-dropdown-menu.visible').forEach(menu => menu.classList.remove('visible'));
+        }
+    });
+
+    document.querySelectorAll('.add-more-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const card = e.currentTarget.closest('.linked-account-card');
+            const method = card.dataset.method;
+            const modals = {
+                bank: document.getElementById('bank-link-modal'),
+                momo: document.getElementById('momo-link-modal'),
+                zalopay: document.getElementById('zalopay-link-modal')
+            };
+            if (modals[method]) {
+                openPaymentModal(modals[method]);
+            }
+        });
+    });
+
+    document.querySelectorAll('.delete-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const card = e.currentTarget.closest('.linked-account-card');
+            const accounts = card.querySelectorAll('.account-entry');
+            
+            if (accounts.length > 1) {
+                // Hiển thị menu dropdown nếu có nhiều tài khoản
+                const dropdown = button.nextElementSibling;
+                dropdown.classList.toggle('visible');
+            } else if (accounts.length === 1) {
+                // Xóa trực tiếp nếu chỉ có một tài khoản
+                const payoutId = accounts[0].dataset.payoutId;
+                handleDeleteRequest(payoutId);
+            }
+        });
+    });
+    
+    document.querySelectorAll('.delete-item-btn').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const payoutId = e.currentTarget.dataset.payoutId;
+            handleDeleteRequest(payoutId);
+        });
+    });
+}
+
+/**
+ * Xử lý yêu cầu xóa một liên kết thanh toán.
+ * @param {string} payoutAccountId - ID của tài khoản cần xóa.
+ */
+async function handleDeleteRequest(payoutAccountId) {
+    if (!payoutAccountId) return;
+    
+    showMessage(
+        'Bạn có chắc chắn muốn xóa liên kết này không?',
+        'Xác nhận xóa',
+        true, // Hiển thị nút xác nhận
+        async () => { // Hàm callback khi người dùng nhấn "Có"
+            try {
+                // Thay thế endpoint theo yêu cầu của bạn
+                await apiRequest(`payout-accounts/auth/delete-request/${payoutAccountId}`, 'GET');
+                showMessage('Đã xóa liên kết thành công!');
+                await renderPaymentLinks(); // Tải lại danh sách để cập nhật giao diện
+            } catch (error) {
+                showMessage(`Xóa liên kết thất bại: ${error.message}`, 'Lỗi');
+                console.error(`Lỗi khi xóa tài khoản ${payoutAccountId}:`, error);
+            }
+        }
+    );
+}
+
+/**
+ * Xử lý việc gửi thông tin từ các form liên kết tài khoản thanh toán (Ngân hàng, Momo, ZaloPay).
+ * @param {Event} e - Đối tượng sự kiện submit của form.
+ * @param {HTMLElement} modal - Modal chứa form đang được gửi đi.
+ */
+async function handlePayoutLinkSubmit(e, modal) {
+    // 1. Ngăn chặn hành vi mặc định của form (tải lại trang) - ĐÂY LÀ BƯỚC QUAN TRỌNG NHẤT
+    e.preventDefault();
+
+    const form = e.target;
+    const submitButton = form.querySelector('button[type="submit"]');
+    if (!submitButton) return;
+
+    // Vô hiệu hóa nút bấm để tránh người dùng nhấn nhiều lần
+    submitButton.disabled = true;
+    submitButton.textContent = 'Đang xử lý...';
+
+    try {
+        const formData = new FormData(form);
+        const payload = {};
+
+        // 2. Xác định loại liên kết và xây dựng payload cho API
+        switch (form.id) {
+            case 'bank-link-form':
+                payload.method = 'bank';
+                payload.bank_name = formData.get('bankName');
+                payload.account_name = formData.get('accountName');
+                payload.account_number = formData.get('accountNumber');
+                break;
+            case 'momo-link-form':
+                payload.method = 'momo';
+                payload.account_name = formData.get('accountName');
+                payload.account_number = formData.get('phoneNumber'); // API dùng account_number cho SĐT
+                break;
+            case 'zalopay-link-form':
+                payload.method = 'zalopay';
+                payload.account_name = formData.get('accountName');
+                payload.account_number = formData.get('phoneNumber'); // Tương tự Momo
+                break;
+            default:
+                throw new Error('Loại form không xác định.');
+        }
+
+        // 3. Gửi yêu cầu API để thêm tài khoản mới
+        await apiRequest('/users/me/payout-accounts', 'POST', payload);
+
+        // 4. Xử lý khi thành công
+        closePaymentModal(modal); // Đóng modal hiện tại
+        showMessage('Yêu cầu liên kết tài khoản đã được gửi thành công!');
+        await renderPaymentLinks(); // Tải lại danh sách để hiển thị tài khoản mới
+
+    } catch (error) {
+        // 5. Xử lý khi có lỗi
+        console.error('Lỗi khi liên kết tài khoản:', error);
+        showMessage(`Liên kết tài khoản thất bại: ${error.message}`, 'Lỗi');
+    } finally {
+        // 6. Kích hoạt lại nút bấm dù thành công hay thất bại
+        submitButton.disabled = false;
+        submitButton.textContent = 'Liên kết';
     }
 }
 
@@ -945,7 +1324,8 @@ function initializeHeader() {
             const protectedPanels = [
                 'panel-profile', 'panel-orders', 'panel-payments',
                 'panel-marketing', 'panel-dashboard', 'panel-admin-orders',
-                'panel-admin-notifications', 'panel-admin-codes'
+                'panel-admin-notifications', 'panel-admin-codes',
+                'panel-payment-links' // Thêm panel này vào danh sách cần bảo vệ
             ];
 
             // --- BẮT ĐẦU PHẦN CHỈNH SỬA ---
@@ -1000,18 +1380,24 @@ function initializeHeader() {
                 }
             }
             
-            if (targetId === 'panel-orders') await renderOrders();
+            if (targetId === 'panel-orders') {
+                populateOrderMonthFilter('user-order-month-filter');
+                await renderOrders();
+            }
             if (targetId === 'panel-payments') {
                 populateMonthFilter();
                 renderTransactions();
             }
             if (targetId === 'panel-marketing') await renderMarketingStats();
             if (targetId === 'panel-admin-orders') {
-                const projectFilters = document.querySelector('.admin-project-filters');
-                if(projectFilters.querySelector('.active')) {
-                     renderAdminOrders();
-                }
+                populateOrderMonthFilter('admin-month-filter');
+                await renderAdminOrders();
             }
+            // --- START: GỌI HÀM MỚI ---
+            if (targetId === 'panel-payment-links') {
+                await renderPaymentLinks();
+            }
+            // --- END: GỌI HÀM MỚI ---
         };
         
         openPanelModal = (initialPanelId) => {
@@ -1143,20 +1529,24 @@ function initializeHeader() {
             });
         });
         
-        const orderFilters = document.querySelector('.order-filters');
-        const searchInput = document.getElementById('order-search-input');
+        const userOrderFilters = document.querySelector('#panel-orders .order-filters');
+        const userSearchInput = document.getElementById('order-search-input');
+        const userMonthFilter = document.getElementById('user-order-month-filter');
 
-        if (orderFilters) {
-            orderFilters.addEventListener('click', (e) => {
+        if (userOrderFilters) {
+            userOrderFilters.addEventListener('click', (e) => {
                 if (e.target.classList.contains('filter-btn')) {
-                    orderFilters.querySelector('.active').classList.remove('active');
+                    userOrderFilters.querySelector('.active').classList.remove('active');
                     e.target.classList.add('active');
                     renderOrders();
                 }
             });
         }
-        if (searchInput) {
-            searchInput.addEventListener('input', renderOrders);
+        if (userSearchInput) {
+            userSearchInput.addEventListener('input', renderOrders);
+        }
+        if (userMonthFilter) {
+            userMonthFilter.addEventListener('change', renderOrders);
         }
 
         const paymentFilters = document.querySelector('.payment-filters');
@@ -1257,14 +1647,6 @@ function initializeHeader() {
 
         const allPaymentModals = [bankLinkModal, momoLinkModal, zaloPayLinkModal];
 
-        const openPaymentModal = (modal) => {
-            if (modal) modal.classList.add('visible');
-        };
-
-        const closePaymentModal = (modal) => {
-            if (modal) modal.classList.remove('visible');
-        };
-
         const bankSelect = document.getElementById('bank-select');
         if (bankSelect) {
             bankSelect.innerHTML = '<option value="" disabled selected>Chọn ngân hàng của bạn</option>' +
@@ -1275,6 +1657,7 @@ function initializeHeader() {
         if (openMomoLinkModalBtn) openMomoLinkModalBtn.addEventListener('click', () => openPaymentModal(momoLinkModal));
         if (openZaloPayLinkModalBtn) openZaloPayLinkModalBtn.addEventListener('click', () => openPaymentModal(zaloPayLinkModal));
 
+        // --- START: THAY THẾ LOGIC XỬ LÝ FORM CŨ ---
         allPaymentModals.forEach(modal => {
             if (modal) {
                 modal.addEventListener('click', (e) => {
@@ -1288,15 +1671,12 @@ function initializeHeader() {
                 }
                 const form = modal.querySelector('form');
                 if (form) {
-                    form.addEventListener('submit', (e) => {
-                        e.preventDefault();
-                        // THAY ĐỔI: alert -> showMessage
-                        showMessage('Chức năng đang được phát triển!');
-                        closePaymentModal(modal);
-                    });
+                    // Gán hàm xử lý mới cho sự kiện submit
+                    form.addEventListener('submit', (e) => handlePayoutLinkSubmit(e, modal));
                 }
             }
         });
+        // --- END: THAY THẾ LOGIC XỬ LÝ FORM CŨ ---
         
         const profileForm = document.getElementById('profile-form');
         const changePhoneBtn = document.getElementById('change-phone-btn');
@@ -1771,71 +2151,24 @@ function initializeHeader() {
         initializeDashboardTab('Html');
         initializeDashboardTab('Fullstack');
 
-        const adminProjectFilters = document.querySelector('.admin-project-filters');
-        const adminStatusFilters = document.querySelector('#panel-admin-orders .order-filters');
+        const adminOrderFilters = document.querySelector('#panel-admin-orders .order-filters');
+        const adminSearchInput = document.getElementById('admin-order-search-input');
+        const adminMonthFilter = document.getElementById('admin-month-filter');
 
-        const renderAdminOrders = () => {
-            const orderListContainer = document.querySelector('.order-list-admin');
-            const activeProjectTypeBtn = adminProjectFilters.querySelector('.active');
-            const activeStatusBtn = adminStatusFilters.querySelector('.active');
-
-            if (!activeProjectTypeBtn || !activeStatusBtn) {
-                orderListContainer.innerHTML = '<p class="no-orders">Vui lòng chọn bộ lọc.</p>';
-                return;
-            }
-
-            const activeProjectType = activeProjectTypeBtn.dataset.projectType;
-            const activeStatus = activeStatusBtn.dataset.status;
-
-            const mockAdminOrders = [
-                { id: 'PSV-001', user: 'User A', productName: 'Website Tĩnh A', projectType: 'Website HTML', status: 'Mới' },
-                { id: 'PSV-002', user: 'User B', productName: 'Fullstack App B', projectType: 'Fullstack', status: 'Tiến hành' },
-                { id: 'PSV-003', user: 'User C', productName: 'Website Tĩnh C', projectType: 'Website HTML', status: 'Hoàn thành' },
-                { id: 'PSV-004', user: 'User D', productName: 'Fullstack App D', projectType: 'Fullstack', status: 'Đã hủy' },
-                { id: 'PSV-005', user: 'User E', productName: 'Website Tĩnh E', projectType: 'Website HTML', status: 'Tiến hành' },
-            ];
-
-            let filteredOrders = mockAdminOrders.filter(order => order.projectType === activeProjectType);
-
-            if (activeStatus !== 'Tất cả') {
-                filteredOrders = filteredOrders.filter(order => order.status === activeStatus);
-            }
-
-            if (filteredOrders.length > 0) {
-                orderListContainer.innerHTML = filteredOrders.map(order => `
-                    <div class="order-item">
-                        <div class="order-info">
-                            <span class="order-id">#${order.id} (User: ${order.user})</span>
-                            <p class="order-product">${order.productName}</p>
-                        </div>
-                        <div class="order-details">
-                            <span class="order-status">${order.status}</span>
-                        </div>
-                    </div>
-                `).join('');
-            } else {
-                orderListContainer.innerHTML = '<p class="no-orders">Không có đơn hàng nào phù hợp.</p>';
-            }
-        };
-
-        if (adminProjectFilters) {
-            adminProjectFilters.addEventListener('click', (e) => {
+        if (adminOrderFilters) {
+            adminOrderFilters.addEventListener('click', (e) => {
                 if (e.target.classList.contains('filter-btn')) {
-                    adminProjectFilters.querySelector('.active').classList.remove('active');
+                    adminOrderFilters.querySelector('.active').classList.remove('active');
                     e.target.classList.add('active');
                     renderAdminOrders();
                 }
             });
         }
-
-        if (adminStatusFilters) {
-            adminStatusFilters.addEventListener('click', (e) => {
-                if (e.target.classList.contains('filter-btn')) {
-                    adminStatusFilters.querySelector('.active').classList.remove('active');
-                    e.target.classList.add('active');
-                    renderAdminOrders();
-                }
-            });
+         if (adminSearchInput) {
+            adminSearchInput.addEventListener('input', renderAdminOrders);
+        }
+        if (adminMonthFilter) {
+            adminMonthFilter.addEventListener('change', renderAdminOrders);
         }
     }
     

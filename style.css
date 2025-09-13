@@ -399,7 +399,7 @@ input:checked + .slider:before { transform: translateX(22px); }
 .close-modal-btn:hover { color: var(--hover-color); }
 .modal-content h2 { margin-top: 0; margin-bottom: 30px; color: var(--accent-secondary); text-align: center; }
 .form-group { margin-bottom: 20px; }
-.form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary); }
+.form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-primary); }
 .form-group input, .form-group textarea, #bank-select {
     width: 100%; padding: 12px; background-color: var(--bg-primary);
     border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 8px;
@@ -1045,7 +1045,7 @@ body.light-mode .site-footer-panel::before {
 }
 
 /* --- CSS CHO PANEL ĐƠN HÀNG --- */
-#panel-orders h1 {
+#panel-orders h1, #panel-admin-orders h1 {
     margin-bottom: 25px;
 }
 
@@ -1097,7 +1097,7 @@ body.light-mode .site-footer-panel::before {
     font-family: 'Montserrat', sans-serif;
 }
 
-.order-list {
+.order-list, .order-list-admin {
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -1199,7 +1199,9 @@ body.light-mode .site-footer-panel::before {
 }
 
 #month-filter,
-#commission-month-filter {
+#commission-month-filter,
+#user-order-month-filter,
+#admin-month-filter {
     padding: 8px 12px;
     background-color: var(--fomt-box-color);
     border: 1px solid var(--border-color);
@@ -2302,4 +2304,164 @@ body.light-mode .referral-date {
 .remove-preview-btn:hover {
     background-color: #e53935;
     transform: scale(1.2);
+}
+
+/* Thêm các đường kẻ ngăn cách */
+#order-modal .order-price-line,
+#order-modal .order-price-line.total-price {
+    padding-top: 20px;
+    margin-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Định dạng layout cho phần giá và mã giảm giá */
+#order-modal .order-price-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+}
+#order-modal .order-price-line.total-price {
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+/* Thay đổi màu chữ của giá gốc theo màu chủ đạo */
+#order-modal #order-base-price {
+    color: var(--accent-primary);
+    font-weight: 700;
+}
+
+/* Thêm class 'discounted' để đổi màu thành tiền khi có giảm giá */
+#order-modal #order-total-price.discounted {
+    color: var(--red-price); /* Màu đỏ đã được định nghĩa sẵn */
+}
+
+/* Khi có giảm giá, gạch ngang giá gốc */
+#order-modal .order-price-line.discount-applied #order-base-price {
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
+
+/* Căn chỉnh ô nhập mã giảm giá và nút bấm trên cùng một hàng */
+#order-modal .form-group-discount .discount-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 300px; /* Giới hạn chiều dài của cả cụm */
+}
+
+#order-modal .form-group-discount input {
+    flex-grow: 1; /* Ô input chiếm phần không gian còn lại */
+}
+
+#order-modal .form-group-discount button {
+    flex-shrink: 0; /* Nút bấm không bị co lại */
+}
+
+/* Định dạng cho thông báo mã giảm giá */
+#order-modal #order-discount-message {
+    margin-top: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    min-height: 20px;
+}
+#order-modal #order-discount-message.success {
+    color: #4CAF50; /* Màu xanh lá cây */
+}
+#order-modal #order-discount-message.error {
+    color: var(--red-price); /* Màu đỏ */
+}
+
+/* --- Các style cho trạng thái SAU KHI áp dụng mã thành công --- */
+/* Thêm class 'success' vào div.form-group-discount để kích hoạt */
+
+/* Ẩn nút "Kiểm tra" */
+#order-modal .form-group-discount.success #check-discount-btn {
+    display: none;
+}
+
+/* Biến ô input thành không thể chỉnh sửa */
+#order-modal .form-group-discount.success #order-discount-code {
+    background-color: var(--bg-secondary);
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+/* Thêm icon dấu tích vào bên cạnh ô input */
+#order-modal .form-group-discount.success .discount-input-wrapper {
+    position: relative;
+}
+
+#order-modal .form-group-discount.success .discount-input-wrapper::after {
+    content: '\f058'; /* Mã icon dấu tích của Font Awesome */
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    color: #4CAF50; /* Màu xanh lá cây */
+    font-size: 1.3rem;
+    position: absolute;
+    right: -30px; /* Điều chỉnh vị trí của icon */
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* --- Thẻ liên kết payment --- */
+.linked-account-card {
+    background-color: var(--fomt-box-color);
+    border: 1px solid var(--accent-primary);
+    border-radius: 8px;
+    padding: 20px;
+    color: var(--text-primary);
+    margin-top: 20px; /* Thêm khoảng cách với các mục khác nếu cần */
+}
+
+.linked-account-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.linked-account-header i {
+    font-size: 1.5rem;
+    color: var(--accent-secondary);
+    width: 30px;
+    text-align: center;
+}
+
+.linked-account-header span {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.linked-account-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.linked-account-details .detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.95rem;
+}
+
+.linked-account-details .detail-item label {
+    font-weight: 500;
+    color: #aaa;
+    margin-right: 15px;
+}
+
+body.light-mode .linked-account-details .detail-item label {
+    color: #555;
+}
+
+.linked-account-details .detail-item span {
+    font-weight: 600;
+    text-align: right;
 }

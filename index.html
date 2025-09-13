@@ -12,8 +12,8 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
-    <link rel="stylesheet" href="style.css?v=2.4.2.2">
-    <link rel="stylesheet" href="header/header.css?v=2.4.2.2">
+    <link rel="stylesheet" href="style.css?v=2.4.2.3">
+    <link rel="stylesheet" href="header/header.css?v=2.4.2.3">
 </head>
 <body>
 
@@ -82,7 +82,6 @@
                         </div>
                     </div>
                     <div class="product-payment-info">
-                        <!-- START: Updated Section -->
                         <div class="product-title-wrapper">
                             <h2 class="product-title">Tên sản phẩm</h2>
                             <div class="admin-actions-menu admin-only" style="display: none;">
@@ -93,7 +92,6 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- END: Updated Section -->
                         <div class="price-section">
                             <div class="product-price">Giá tiền</div>
                             <div class="discount-container">
@@ -221,15 +219,54 @@
             <button class="close-modal-btn">&times;</button>
             <h2>Thông tin đơn hàng</h2>
             <form id="order-form">
-                <div class="form-group"><label for="order-name">Tên đơn hàng:</label><input type="text" id="order-name" name="orderName" readonly></div>
-                <div class="form-group"><label for="order-request">Nội dung yêu cầu:</label><textarea id="order-request" name="orderRequest" rows="4" required></textarea></div>
-                <div class="form-group"><label for="order-contact">Địa chỉ gmail:</label><input type="text" id="order-contact" name="orderContact" required></div>
-                <div class="form-group"><label for="order-phone">Số điện thoại:</label><input type="tel" id="order-phone" name="orderPhone" required pattern="0[0-9]{9}" maxlength="10" title="Số điện thoại phải bắt đầu bằng số 0 và có đúng 10 chữ số."></div>
+                <div class="form-group">
+                    <label for="order-name">Tên đơn hàng:</label>
+                    <input type="text" id="order-name" name="orderName" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="order-contact">Địa chỉ gmail:</label>
+                    <input type="text" id="order-contact" name="orderContact" required>
+                </div>
+                <div class="form-group">
+                    <label for="order-phone">Số điện thoại:</label>
+                    <input type="tel" id="order-phone" name="orderPhone" required pattern="0[0-9]{9}" maxlength="10" title="Số điện thoại phải bắt đầu bằng số 0 và có đúng 10 chữ số.">
+                </div>
+                <div class="form-group form-group-toggle">
+                    <label for="order-edit-toggle">Yêu cầu chỉnh sửa</label>
+                    <label class="switch">
+                        <input type="checkbox" id="order-edit-toggle" name="requestEdit">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+
+                <div id="order-request-container" class="form-group" style="display: none;">
+                    <label for="order-request-content">Nội dung chỉnh sửa:</label>
+                    <textarea id="order-request-content" name="orderRequest" rows="4" placeholder="Nhập yêu cầu chi tiết của bạn ở đây..."></textarea>
+                </div>
+                
+                <div class="order-price-line">
+                    <span>Giá gốc:</span>
+                    <span id="order-base-price">0 VNĐ</span>
+                </div>
+
+                <div class="form-group form-group-discount">
+                    <label for="order-discount-code">Mã giảm giá:</label>
+                    <div class="discount-input-wrapper">
+                        <input type="text" id="order-discount-code" name="discountCode" placeholder="Nhập mã">
+                        <button type="button" id="check-discount-btn" class="sp-button">Kiểm tra</button>
+                    </div>
+                    <span id="order-discount-message" class="discount-message"></span>
+                </div>
+
+                <div class="order-price-line total-price">
+                    <span>Thành tiền:</span>
+                    <span id="order-total-price">0 VNĐ</span>
+                </div>
+
                 <button type="submit" class="sp-button form-submit-btn">Xác nhận</button>
             </form>
         </div>
     </div>
-
     <div id="image-zoom-modal" class="modal-overlay">
         <div class="zoom-modal-content">
             <button class="close-zoom-modal-btn">&times;</button>
@@ -239,7 +276,6 @@
         <button class="zoom-nav-btn" id="next-zoom-btn" aria-label="Next image"><i class="fas fa-chevron-right"></i></button>
     </div>
     
-    <!-- START: New Message Modal -->
     <div id="message-modal" class="modal-overlay">
         <div class="message-modal-content">
             <h3 id="message-modal-title">Thông báo</h3>
@@ -250,15 +286,13 @@
             </div>
         </div>
     </div>
-    <!-- END: New Message Modal -->
-
     <script src="https://unpkg.com/split-type"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollToPlugin.min.js"></script>
     
-    <script src="header/header.js?v=2.4.2.2"></script>
-    <script src="script.js?v=2.4.2.2"></script>
+    <script src="header/header.js?v=2.4.2.3"></script>
+    <script src="script.js?v=2.4.2.3"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -466,15 +500,7 @@
                             <span class="stat-label">Mã đã được dùng</span>
                             <h3 id="stat-codes-used" class="stat-value">0</h3>
                         </div>
-                        <!-- <div class="stat-card">
-                            <span class="stat-label">Hoa hồng cấp hiện tại</span>
-                            <h3 id="stat-current-commission" class="stat-value">0%</h3>
                         </div>
-                        <div class="stat-card">
-                            <span class="stat-label">Hoa hồng cấp tiếp theo</span>
-                            <h3 id="stat-next-commission" class="stat-value">0%</h3>
-                        </div> -->
-                    </div>
 
                     <div class="marketing-controls">
                         <div class="marketing-filters">
@@ -509,52 +535,49 @@
                 <div id="panel-partners" class="panel-content-item">
                     <h1>Đối tác</h1>
                     <div class="update-notification">
-                        <p>Hệ thống đang được update, dự tính hoạt động vào 12/09/2025</p>
+                        <p>Hệ thống đang được update, dự tính hoạt động vào 20/09/2025</p>
                     </div>
                 </div>
                 <div id="panel-deposit" class="panel-content-item">
                     <h1>Nạp tiền</h1>
                     <div class="update-notification">
-                        <p>Hệ thống đang được update, dự tính hoạt động vào 12/09/2025</p>
+                        <p>Hệ thống đang được update, dự tính hoạt động vào 20/09/2025</p>
                     </div>
                 </div>
                 <div id="panel-withdrawal" class="panel-content-item">
                     <h1>Rút tiền</h1>
                     <div class="update-notification">
-                        <p>Hệ thống đang được update, dự tính hoạt động vào 12/09/2025</p>
+                        <p>Hệ thống đang được update, dự tính hoạt động vào 20/09/2025</p>
                     </div>
                 </div>
                 <div id="panel-payment-links" class="panel-content-item">
                     <h1>Liên kết thanh toán</h1>
-                    <div class="update-notification">
-                        <p>Hệ thống đang được update, dự tính hoạt động vào 12/09/2025</p>
-                    </div>
-                    <!-- <div class="payment-links-container">
-                        <button class="payment-link-btn" id="open-bank-link-modal-btn">
+                    <div class="payment-links-container">
+                        <button class="payment-link-btn" id="open-bank-link-modal-btn" data-method="bank">
                             <i class="fas fa-university"></i>
                             <span>Liên kết Ngân hàng</span>
                         </button>
-                        <button class="payment-link-btn" id="open-momo-link-modal-btn">
+                        <button class="payment-link-btn" id="open-momo-link-modal-btn" data-method="momo">
                             <i class="fas fa-mobile-alt"></i>
                             <span>Liên kết Momo</span>
                         </button>
-                        <button class="payment-link-btn" id="open-zalopay-link-modal-btn">
+                        <button class="payment-link-btn" id="open-zalopay-link-modal-btn" data-method="zalopay">
                             <i class="fas fa-wallet"></i>
                             <span>Liên kết ZaloPay</span>
                         </button>
-                    </div> -->
-                </div>
+                    </div>
+                    </div>
                 <div id="panel-orders" class="panel-content-item">
                     <h1>Lịch sử đơn hàng</h1>
                     <div class="order-controls">
                         <div class="order-filters">
-                            <button class="filter-btn active" data-status="Tất cả">Tất cả</button>
-                            <button class="filter-btn" data-status="Chờ xác nhận">Chờ xác nhận</button>
-                            <button class="filter-btn" data-status="Tiến hành">Tiến hành</button>
-                            <button class="filter-btn" data-status="Hoàn thành">Hoàn thành</button>
-                            <button class="filter-btn" data-status="Hết bảo hành">Hết bảo hành</button>
-                            <button class="filter-btn" data-status="Đã hủy">Đã hủy</button>
+                            <button class="filter-btn active" data-status="all">Tất cả</button>
+                            <button class="filter-btn" data-status="pending">Chờ thanh toán</button>                       
+                            <button class="filter-btn" data-status="sold">Hoàn thành</button>
+                            <button class="filter-btn" data-status="editing">Chỉnh sửa</button>
+                            <button class="filter-btn" data-status="expired">Hết bảo hành</button>
                         </div>
+                        <select id="user-order-month-filter"></select>
                         <div class="order-search">
                             <input type="text" id="order-search-input" placeholder="Tìm theo mã đơn hàng, tên sản phẩm...">
                         </div>
@@ -587,7 +610,6 @@
                     </div>
                 
                     <div class="dashboard-content">
-                        <!-- Bảng điều khiển cho Website HTML -->
                         <div id="website-html-panel" class="dashboard-tab-content active">
                             <div class="mode-toggle-container">
                                 <span class="toggle-label">Sửa</span>
@@ -598,7 +620,6 @@
                                 <span class="toggle-label active">Thêm</span>
                             </div>
                 
-                            <!-- Form Thêm Sản Phẩm -->
                             <div id="add-product-container" class="form-mode-container active">
                                 <form id="add-product-form">
                                     <div class="form-grid">
@@ -636,7 +657,6 @@
                                 </form>
                             </div>
                 
-                            <!-- Form Sửa Sản Phẩm -->
                             <div id="edit-product-container" class="form-mode-container">
                                 <div class="form-group">
                                     <label for="search-product">Tìm kiếm (theo tên hoặc ID sản phẩm):</label>
@@ -668,11 +688,7 @@
                                                 <label for="edit-parameter">Thông số (cách nhau bởi dấu phẩy):</label>
                                                 <input type="text" id="edit-parameter" name="parameter">
                                             </div>
-                                             <!-- <div class="form-group">
-                                                <label for="edit-support">Hỗ trợ (cách nhau bởi dấu phẩy):</label>
-                                                <input type="text" id="edit-support" name="support">
-                                            </div> -->
-                                            <div class="form-group">
+                                             <div class="form-group">
                                                 <label for="edit-demo-link">Link Demo:</label>
                                                 <input type="url" id="edit-demo-link" name="demo_link">
                                             </div>
@@ -688,7 +704,6 @@
                             </div>
                         </div>
                         
-                        <!-- Các panel cho Fullstack và Đồ Án (tạm thời) -->
                         <div id="fullstack-panel" class="dashboard-tab-content">
                             <div class="mode-toggle-container">
                                 <span class="toggle-label">Sửa</span>
@@ -767,11 +782,7 @@
                                                 <label for="edit-parameter-fullstack">Thông số (cách nhau bởi dấu phẩy):</label>
                                                 <input type="text" id="edit-parameter-fullstack" name="parameter">
                                             </div>
-                                                <!-- <div class="form-group">
-                                                <label for="edit-support-fullstack">Hỗ trợ (cách nhau bởi dấu phẩy):</label>
-                                                <input type="text" id="edit-support-fullstack" name="support">
-                                            </div> -->
-                                            <div class="form-group">
+                                                <div class="form-group">
                                                 <label for="edit-demo-link-fullstack">Link Demo:</label>
                                                 <input type="url" id="edit-demo-link-fullstack" name="demo_link">
                                             </div>
@@ -793,21 +804,20 @@
                 </div>
                  <div id="panel-admin-orders" class="panel-content-item">
                     <h1>Quản lý Đơn hàng</h1>
-                    <div class="admin-order-controls">
-                        <div class="admin-project-filters">
-                            <button class="filter-btn active" data-project-type="Website HTML">Website HTML</button>
-                            <button class="filter-btn" data-project-type="Fullstack">Fullstack</button>
+                    <div class="order-controls">
+                        <div class="order-filters admin-order-filters">
+                            <button class="filter-btn active" data-status="all">Tất cả</button>
+                            <button class="filter-btn" data-status="pending">Chờ thanh toán</button>
+                            <button class="filter-btn" data-status="sold">Hoàn thành</button>
+                            <button class="filter-btn" data-status="editing">Chỉnh sửa</button>
                         </div>
-                        <div class="order-filters">
-                            <button class="filter-btn active" data-status="Tất cả">Tất cả</button>
-                            <button class="filter-btn" data-status="Mới">Mới</button>
-                            <button class="filter-btn" data-status="Tiến hành">Tiến hành</button>
-                            <button class="filter-btn" data-status="Hoàn thành">Hoàn thành</button>
-                            <button class="filter-btn" data-status="Đã hủy">Đã hủy</button>
+                        <select id="admin-month-filter"></select>
+                        <div class="order-search">
+                            <input type="text" id="admin-order-search-input" placeholder="Tìm theo mã đơn hàng, tên sản phẩm, email...">
                         </div>
                     </div>
                     <div class="order-list-admin">
-                        <p class="no-orders">Vui lòng chọn loại dự án để xem đơn hàng.</p>
+                        <p class="no-orders">Vui lòng chọn tháng để xem đơn hàng.</p>
                     </div>
                 </div>
 

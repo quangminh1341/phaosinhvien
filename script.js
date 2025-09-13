@@ -7,7 +7,6 @@ let isAnimating = false;
 let currentProductData = null;
 let isDetailViewActive = false;
 let currentZoomIndex = 0;
-const discordWebhookUrl = 'https://discord.com/api/webhooks/1410604044707434587/k1qjnS9rookO1XC4XjTJCR7v0zy2JKkiGCrBqvgoLTBuugR4AmJ3JLRg_dOPATdyiz2E';
 
 let homeTl, panel2Tl;
 
@@ -41,6 +40,17 @@ const closeZoomModalBtn = document.querySelector('.close-zoom-modal-btn');
 const zoomedImage = imageZoomModal.querySelector('img');
 const prevZoomBtn = document.getElementById('prev-zoom-btn');
 const nextZoomBtn = document.getElementById('next-zoom-btn');
+
+// --- START: BIẾN MỚI CHO ORDER MODAL ---
+const orderEditToggle = document.getElementById('order-edit-toggle');
+const orderRequestContainer = document.getElementById('order-request-container');
+const orderBasePrice = document.getElementById('order-base-price');
+const orderTotalPrice = document.getElementById('order-total-price');
+const checkDiscountBtn = document.getElementById('check-discount-btn');
+const orderDiscountCodeInput = document.getElementById('order-discount-code');
+const orderDiscountMessage = document.getElementById('order-discount-message');
+// --- END: BIẾN MỚI CHO ORDER MODAL ---
+
 
 // --- START: BIẾN TOÀN CỤC CHO MODAL THÔNG BÁO ---
 let messageModal, messageModalTitle, messageModalText, messageModalActions, confirmBtn, cancelBtn;
@@ -310,6 +320,17 @@ async function initializeServicePanel() {
     prevZoomBtn.addEventListener('click', () => updateZoomedImage(currentZoomIndex - 1));
     nextZoomBtn.addEventListener('click', () => updateZoomedImage(currentZoomIndex + 1));
     
+    // --- START: GÁN SỰ KIỆN CHO CÁC THÀNH PHẦN MỚI ---
+    orderEditToggle.addEventListener('change', (e) => {
+        if (e.target.checked) {
+            orderRequestContainer.style.display = 'block';
+        } else {
+            orderRequestContainer.style.display = 'none';
+        }
+    });
+    checkDiscountBtn.addEventListener('click', handleCheckDiscount);
+    // --- END: GÁN SỰ KIỆN CHO CÁC THÀNH PHẦN MỚI ---
+
     const kebabBtn = document.querySelector('.kebab-btn');
     const kebabDropdown = document.querySelector('.kebab-dropdown');
     const deleteProductBtn = document.getElementById('delete-product-btn-detail');
@@ -644,6 +665,23 @@ function openOrderModal() {
     orderContactInput.readOnly = true;
     orderPhoneInput.readOnly = true;
     
+    // --- START: LOGIC MỚI KHI MỞ MODAL ---
+    orderEditToggle.checked = false;
+    orderRequestContainer.style.display = 'none';
+    orderRequestContainer.querySelector('textarea').value = '';
+    orderDiscountCodeInput.value = '';
+    orderDiscountMessage.textContent = '';
+    orderDiscountMessage.className = 'discount-message';
+
+
+    const baseCost = Number(currentProductData.cost) * 1000;
+    const formattedBaseCost = baseCost.toLocaleString('vi-VN') + ' VNĐ';
+    
+    orderBasePrice.textContent = formattedBaseCost;
+    orderTotalPrice.textContent = formattedBaseCost;
+    orderTotalPrice.dataset.amount = baseCost; // Lưu giá trị số để tính toán
+    // --- END: LOGIC MỚI KHI MỞ MODAL ---
+    
     orderModal.classList.add('visible');
 }
 
@@ -668,12 +706,45 @@ function generateOrderID() {
     return result;
 }
 
+// --- START: HÀM MỚI ĐỂ KIỂM TRA MÃ GIẢM GIÁ ---
+function handleCheckDiscount() {
+    const code = orderDiscountCodeInput.value.trim().toUpperCase();
+    const baseCost = Number(currentProductData.cost) * 1000;
+
+    orderDiscountMessage.textContent = '';
+    orderDiscountMessage.className = 'discount-message';
+
+    if (!code) {
+        orderDiscountMessage.textContent = 'Vui lòng nhập mã.';
+        orderDiscountMessage.classList.add('error');
+        return;
+    }
+    
+    // Logic kiểm tra mã giả định
+    if (code === 'GIAM20') {
+        const discountedPrice = baseCost * 0.8;
+        orderTotalPrice.textContent = discountedPrice.toLocaleString('vi-VN') + ' VNĐ';
+        orderTotalPrice.dataset.amount = discountedPrice;
+        orderDiscountMessage.textContent = 'Áp dụng mã thành công!';
+        orderDiscountMessage.classList.add('success');
+    } else {
+        orderTotalPrice.textContent = baseCost.toLocaleString('vi-VN') + ' VNĐ';
+        orderTotalPrice.dataset.amount = baseCost;
+        orderDiscountMessage.textContent = 'Mã giảm giá không hợp lệ.';
+        orderDiscountMessage.classList.add('error');
+    }
+}
+// --- END: HÀM MỚI ĐỂ KIỂM TRA MÃ GIẢM GIÁ ---
+
 async function handleOrderSubmit(e) {
     e.preventDefault();
 
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
     data.orderID = generateOrderID(); 
+    data.basePrice = orderBasePrice.textContent;
+    data.totalPrice = orderTotalPrice.textContent;
+
 
     if (!currentProductData || !currentProductData.id) {
         showMessage("Lỗi: Không tìm thấy thông tin sản phẩm. Vui lòng thử lại.");
@@ -685,10 +756,10 @@ async function handleOrderSubmit(e) {
     submitButton.textContent = 'Đang xử lý...';
 
     try {
-        await sendDiscordWebhook(data);
 
         const orderPayload = {
             product_id: currentProductData.id,
+            // Sử dụng tên "orderRequest" từ textarea trong form
             content: data.orderRequest || ""
         };
 
@@ -704,27 +775,4 @@ async function handleOrderSubmit(e) {
         submitButton.disabled = false;
         submitButton.textContent = 'Xác nhận';
     }
-}
-
-
-async function sendDiscordWebhook(data) {
-    const embed = {
-        title: "📢 Yêu Cầu Đặt Hàng Mới",
-        color: 0x2ecc71, // Green
-        fields: [
-            { name: "Mã Đơn Hàng", value: `\`\`\`${data.orderID}\`\`\``, inline: false },
-            { name: "Tên sản phẩm", value: data.orderName, inline: false },
-            { name: "Thông tin liên lạc", value: data.orderContact, inline: false },
-            { name: "Số điện thoại", value: `||${data.orderPhone}||`, inline: false },
-            { name: "Nội dung yêu cầu", value: data.orderRequest || "Không có", inline: false }
-        ],
-        footer: { text: `Gửi lúc: ${new Date().toLocaleString('vi-VN')}` }
-    };
-    const payload = { username: "Bot Đơn Hàng", avatar_url: "https://i.imgur.com/4M34hi2.png", embeds: [embed] };
-    const response = await fetch(discordWebhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    });
-    if (!response.ok) { throw new Error(`Could not send webhook. Status: ${response.status}`); }
 }
